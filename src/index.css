@@ -1,0 +1,98 @@
+/* Cores e fontes do protótipo (mesa-de-fichas.html). */
+:root {
+  --mesa: #e9ebea;
+  --ponto: rgba(0, 0, 0, 0.09);
+  --cartao: #ffffff;
+  --tinta: #1f2a33;
+  --tinta-2: #5b6770;
+  --rotulo: #7a5a2e;
+  --borda: #d4d8db;
+  --barra: rgba(255, 255, 255, 0.95);
+  --barra-borda: rgba(31, 42, 51, 0.12);
+  --linha: #3a6ea8;
+  --erro: #c4473d;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.06);
+  --serifa: 'Spectral', Georgia, 'Times New Roman', serif;
+  --sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mesa: #181b1d;
+    --ponto: rgba(255, 255, 255, 0.06);
+    --cartao: #23282c;
+    --tinta: #e4e7ea;
+    --tinta-2: #a3acb4;
+    --rotulo: #d4b07a;
+    --borda: #353c42;
+    --barra: rgba(24, 27, 29, 0.95);
+    --barra-borda: rgba(255, 255, 255, 0.1);
+    --linha: #79a7dc;
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--mesa);
+  color: var(--tinta);
+  font-family: var(--sans);
+  background-image: radial-gradient(var(--ponto) 1.2px, transparent 1.3px);
+  background-size: 24px 24px;
+}
+
+.barra {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 14px;
+  background: var(--barra);
+  border-bottom: 1px solid var(--barra-borda);
+}
+.marca {
+  font: 600 18px/1 var(--serifa);
+}
+
+.inicio {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 110px 16px 40px;
+}
+.cartao {
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-left: 5px solid var(--linha);
+  border-radius: 6px;
+  box-shadow: var(--sombra);
+  padding: 14px 16px;
+}
+.cartao.problema {
+  border-left-color: var(--erro);
+}
+.cartao h1 {
+  font: 600 18px/1.25 var(--serifa);
+  margin: 0 0 8px;
+}
+.cartao p {
+  font: 400 14.5px/1.5 var(--serifa);
+  margin: 6px 0 0;
+}
+.cartao code {
+  font-size: 13px;
+}
+.rotulo {
+  font: 600 11.5px/1.2 var(--sans);
+  color: var(--rotulo);
+  margin-top: 10px;
+}
