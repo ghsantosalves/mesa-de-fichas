@@ -4,7 +4,7 @@ import { memo, useContext, useMemo, useState } from 'react'
 import { Handle, Position, useReactFlow, type Node, type NodeProps } from '@xyflow/react'
 import { Contexto, normalizar } from './contexto.ts'
 import { linkZotero, type Ficha } from '../zotero/biblioteca.ts'
-import { CAMPOS, CORES, NOMES_CAMPOS, type Campo, type Cor } from '../estado/mesa.ts'
+import { CAMPOS, CORES, NOMES_CAMPOS, type Campo, type CampoGrifo, type Cor, type Grifo } from '../estado/mesa.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
 import { tirarFichaDaMesa, type ArestaAssoc } from './assoc.ts'
 
@@ -14,6 +14,7 @@ export type DadosFicha = {
   cor?: Cor
   recolhida: boolean
   ocultos: Campo[]
+  grifos?: Grifo[]
   /** A ficha sumiu do Zotero: mostra o último conteúdo conhecido e a opção de tirar da mesa. */
   removida?: { em: string; associacoes: number }
 }
@@ -29,6 +30,56 @@ function link(url: string, texto: string) {
       {texto}
     </a>
   )
+}
+
+/**
+ * Mostra um texto com trechos grifados. Se o texto mudou no Zotero, o grifo é
+ * procurado pelo trecho; se o trecho não existe mais, o grifo não aparece.
+ */
+function TextoGrifado({
+  texto,
+  grifos,
+  grifando,
+  aoTirar,
+}: {
+  texto: string
+  grifos: Grifo[]
+  grifando: boolean
+  aoTirar: (g: Grifo) => void
+}) {
+  if (!grifos.length) return <>{texto}</>
+  const posicionados = grifos
+    .map((g) => {
+      if (texto.slice(g.inicio, g.fim) === g.trecho) return { g, i: g.inicio, f: g.fim }
+      const i = texto.indexOf(g.trecho)
+      return i >= 0 ? { g, i, f: i + g.trecho.length } : null
+    })
+    .filter((x): x is { g: Grifo; i: number; f: number } => !!x)
+    .sort((a, b) => a.i - b.i)
+  const partes: React.ReactNode[] = []
+  let pos = 0
+  for (const { g, i, f } of posicionados) {
+    if (i < pos) continue // sobreposto a outro: ignora
+    if (i > pos) partes.push(texto.slice(pos, i))
+    partes.push(
+      <mark
+        key={`${i}-${f}`}
+        className={`grifo${grifando ? ' removivel' : ''}`}
+        style={{ backgroundColor: `color-mix(in srgb, ${g.cor} 60%, transparent)` }}
+        title={grifando ? 'Clique para tirar o grifo' : undefined}
+        onClick={(e) => {
+          if (!grifando) return
+          e.stopPropagation()
+          aoTirar(g)
+        }}
+      >
+        {texto.slice(i, f)}
+      </mark>,
+    )
+    pos = f
+  }
+  if (pos < texto.length) partes.push(texto.slice(pos))
+  return <>{partes}</>
 }
 
 /** Cartão de uma ficha que sumiu do Zotero. */
@@ -74,7 +125,7 @@ function CartaoNaMesa(props: NodeProps<NoFicha>) {
 
 function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   const rf = useReactFlow<NoMesa>()
-  const { escolhida, pontas, busca } = useContext(Contexto)
+  const { escolhida, pontas, busca, ferramenta } = useContext(Contexto)
   const [menu, setMenu] = useState(false)
   const f = data.ficha
   // Busca em todos os campos, inclusive o uso, mesmo os ocultos.
@@ -90,12 +141,22 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   const ve = (c: Campo) => !data.ocultos.includes(c)
   const alternarCampo = (c: Campo) =>
     mudarFichas(rf, [id], { ocultos: ve(c) ? [...data.ocultos, c] : data.ocultos.filter((x) => x !== c) })
-  const campo = (c: Campo, v: string) =>
+  const grifos = data.grifos ?? []
+  // Ao grifar, o mouse no texto seleciona: a mesa não deve arrastar nem andar a partir dali.
+  const classeTexto = ferramenta === 'grifar' ? 'nopan nodrag' : undefined
+  const tirarGrifo = (g: Grifo) => mudarFichas(rf, [id], { grifos: grifos.filter((x) => x !== g) })
+  /** Texto de um campo com os trechos grifados. */
+  const comGrifos = (c: CampoGrifo, texto: string) => (
+    <TextoGrifado texto={texto} grifos={grifos.filter((g) => g.campo === c)} grifando={ferramenta === 'grifar'} aoTirar={tirarGrifo} />
+  )
+  const campo = (c: Campo & CampoGrifo, v: string) =>
     v &&
     ve(c) && (
       <div>
         <dt>{NOMES_CAMPOS[c]}</dt>
-        <dd>{v}</dd>
+        <dd data-campo={c} className={classeTexto}>
+          {comGrifos(c, v)}
+        </dd>
       </div>
     )
 
@@ -144,7 +205,11 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
               </div>
             )}
           </dl>
-          {f.ref && ve('ref') && <p className="ref">{f.ref}</p>}
+          {f.ref && ve('ref') && (
+            <p className={`ref ${classeTexto ?? ''}`} data-campo="ref">
+              {comGrifos('ref', f.ref)}
+            </p>
+          )}
           <div className="pe">
             <span className="bibs">
               {ve('colecoes') && data.colecoes.join(' · ')}

@@ -708,6 +708,85 @@ input {
   }
 }
 
+/* Botões com ícone (pacote Lucide) */
+.btn.icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 9px;
+}
+.btn.com-icone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Desenho: camada que recebe o mouse, barra de ferramentas e grifos */
+.camada-desenho {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  touch-action: none;
+}
+.camada-desenho.caneta,
+.camada-desenho.marcador {
+  cursor: crosshair;
+}
+.camada-desenho.borracha {
+  cursor: cell;
+}
+.barra-desenho {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 24px);
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  box-shadow: var(--sombra-alta);
+  padding: 6px 8px;
+}
+.bd-cores {
+  display: inline-flex;
+  gap: 5px;
+  padding: 0 4px;
+}
+.bd-cor {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--cartao);
+  box-shadow: 0 0 0 1px var(--borda);
+  padding: 0;
+  cursor: pointer;
+}
+.bd-cor.ativa {
+  box-shadow: 0 0 0 2px var(--tinta);
+}
+.bd-dica {
+  font: 400 12.5px/1.3 var(--sans);
+  color: var(--tinta-2);
+}
+.mark,
+mark.grifo {
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+mark.grifo.removivel {
+  cursor: pointer;
+}
+.mesa.grifando .ficha-mesa [data-campo] {
+  user-select: text;
+  cursor: text;
+}
+
 /* Faixa "Novas fichas" */
 .faixa-novas {
   position: absolute;

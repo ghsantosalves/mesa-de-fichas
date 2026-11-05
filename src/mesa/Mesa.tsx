@@ -21,6 +21,8 @@ import { NoAreaMemo } from './NoArea.tsx'
 import { noDeArea, type NoMesa } from './operacoes.ts'
 import { VER_TUDO } from './opcoes.ts'
 import { FaixaNovas, TIPO_ARRASTE } from './FaixaNovas.tsx'
+import { Desenhos } from './Desenhos.tsx'
+import type { Ferramenta } from './contexto.ts'
 
 const tiposDeNo = { ficha: NoFichaMemo, area: NoAreaMemo }
 const tiposDeAresta = { assoc: ArestaAssocMemo }
@@ -57,11 +59,13 @@ type Props = {
   colecao: string
   ligando: boolean
   notas: boolean
+  ferramenta: Ferramenta | null
+  aoMudarFerramenta: (f: Ferramenta | null) => void
   aoClicarFicha: (chave: string) => void
   aoClicarFundo: () => void
 }
 
-export function Mesa({ bib, colecao, ligando, notas, aoClicarFicha, aoClicarFundo }: Props) {
+export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramenta, aoClicarFicha, aoClicarFundo }: Props) {
   const [nos, setNos, aoMudarNos] = useNodesState<NoMesa>([])
   const [arestas, setArestas, aoMudarArestas] = useEdgesState<ArestaAssoc>([])
   const { fitView, getNodes } = useReactFlow<NoMesa, ArestaAssoc>()
@@ -95,6 +99,7 @@ export function Mesa({ bib, colecao, ligando, notas, aoClicarFicha, aoClicarFund
           cor: salvo?.cor,
           recolhida: !!salvo?.recolhida,
           ocultos: salvo?.ocultos ?? [],
+          grifos: salvo?.grifos ?? [],
           ...extra,
         },
         hidden: !passa(f, filtro),
@@ -310,7 +315,7 @@ export function Mesa({ bib, colecao, ligando, notas, aoClicarFicha, aoClicarFund
 
   return (
     <div
-      className={`mesa${ligando ? ' ligando' : ''}${notas ? '' : ' sem-notas'}`}
+      className={`mesa${ligando ? ' ligando' : ''}${notas ? '' : ' sem-notas'}${ferramenta === 'grifar' ? ' grifando' : ''}`}
       onDragOver={aoPassarArrastando}
       onDrop={aoSoltarDaFaixa}
     >
@@ -344,9 +349,12 @@ export function Mesa({ bib, colecao, ligando, notas, aoClicarFicha, aoClicarFund
         zoomOnDoubleClick={false}
         deleteKeyCode={null}
         nodesConnectable={false}
+        // Ao grifar texto, as fichas não se arrastam (o mouse seleciona o texto).
+        nodesDraggable={ferramenta !== 'grifar'}
         colorMode="system"
       >
         <Background variant={BackgroundVariant.Dots} gap={24} size={1.2} />
+        <Desenhos ferramenta={ferramenta} aoMudarFerramenta={aoMudarFerramenta} colecao={colecao} />
       </ReactFlow>
       {visiveis === 0 && (
         <div className="mesa-vazia">

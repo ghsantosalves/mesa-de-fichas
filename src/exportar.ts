@@ -46,7 +46,7 @@ export async function imagemDaMesa(rf: ReactFlowInstance<NoMesa>): Promise<Blob>
   // As setas ficam numa camada SVG sem tamanho definido; na tela ela "transborda",
   // mas a captura corta o que passa do tamanho padrão. Durante a captura, a camada
   // ganha o tamanho exato da área exportada; depois volta ao que era.
-  const svgs = [...alvo.querySelectorAll<SVGSVGElement>('.react-flow__edges svg')]
+  const svgs = [...alvo.querySelectorAll<SVGSVGElement>('.react-flow__edges svg, svg.desenhos')]
   const antes = svgs.map((s) => ['style', 'viewBox', 'width', 'height'].map((a) => s.getAttribute(a)))
   const x0 = Math.floor(limites.x - margem * 2)
   const y0 = Math.floor(limites.y - margem * 2)

@@ -2,7 +2,7 @@
 // e o estado salvo. Usadas pelos cartões, pelas áreas e pela barra.
 
 import type { ReactFlowInstance } from '@xyflow/react'
-import { alterarMesa, arredondar, type Area, type Campo, type Cor } from '../estado/mesa.ts'
+import { alterarMesa, arredondar, type Area, type Campo, type Cor, type Grifo } from '../estado/mesa.ts'
 import type { NoFicha } from './NoFicha.tsx'
 import type { NoArea } from './NoArea.tsx'
 
@@ -15,7 +15,7 @@ export const idNoArea = (id: string) => `area:${id}`
 export function mudarFichas(
   rf: Mesa,
   chaves: string[],
-  m: { cor?: Cor | null; recolhida?: boolean; ocultos?: Campo[] },
+  m: { cor?: Cor | null; recolhida?: boolean; ocultos?: Campo[]; grifos?: Grifo[] },
 ) {
   const alvo = new Set(chaves)
   rf.setNodes((ns) =>
@@ -25,6 +25,7 @@ export function mudarFichas(
       if ('cor' in m) data.cor = m.cor ?? undefined
       if ('recolhida' in m) data.recolhida = !!m.recolhida
       if (m.ocultos) data.ocultos = m.ocultos
+      if (m.grifos) data.grifos = m.grifos
       return { ...n, data }
     }),
   )
@@ -42,6 +43,10 @@ export function mudarFichas(
       if (m.ocultos) {
         if (m.ocultos.length) f.ocultos = [...m.ocultos]
         else delete f.ocultos
+      }
+      if (m.grifos) {
+        if (m.grifos.length) f.grifos = m.grifos.map((g) => ({ ...g }))
+        else delete f.grifos
       }
       e.fichas[chave] = f
     }

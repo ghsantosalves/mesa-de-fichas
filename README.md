@@ -18,6 +18,7 @@ O passo a passo completo, com a chave do Zotero, o plugin e a skill do Claude, e
 | `src/` | Código do app (React + TypeScript + React Flow). |
 | `zotero-plugin/` | Plugin do Zotero que abre o site pelo menu Ferramentas. |
 | `skill/ficha-academica/` | Skill do Claude que gera fichas no formato que o app lê. |
+| `skill/relacoes-entre-textos/` | Skill do Claude que sugere relações entre os textos do projeto, para importar na Mesa. |
 | `docs/TUTORIAL.md` | Tutorial de instalação e uso. |
 | `.github/workflows/site.yml` | Publica o site e o plugin no GitHub Pages a cada envio. |
 | `.env.example` | Modelo do `.env.local`, para rodar no computador com `npm run dev`. |

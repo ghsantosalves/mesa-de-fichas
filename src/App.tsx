@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ReactFlowProvider, useReactFlow, useStore } from '@xyflow/react'
+import { Paintbrush } from 'lucide-react'
 import {
   carregarBiblioteca,
   comSubcolecoes,
@@ -16,7 +17,7 @@ import { BarraZoom } from './mesa/BarraZoom.tsx'
 import { BarraMesa } from './mesa/BarraMesa.tsx'
 import { PainelAssoc } from './mesa/PainelAssoc.tsx'
 import { criarAssociacao, type ArestaAssoc } from './mesa/assoc.ts'
-import { Contexto, normalizar, type ContextoMesa } from './mesa/contexto.ts'
+import { Contexto, normalizar, type ContextoMesa, type Ferramenta } from './mesa/contexto.ts'
 import type { NoMesa } from './mesa/operacoes.ts'
 import { alterarMesa, mesa, useSituacao, type Tema } from './estado/mesa.ts'
 import { aoMudarSistema, aplicarTema } from './tema.ts'
@@ -158,10 +159,23 @@ function Interior() {
     return e ? `${e.source}|${e.target}` : ''
   })
 
+  // --- Desenho (caneta, marcador, grifo, borracha) ---
+  const [ferramenta, setFerramenta] = useState<Ferramenta | null>(null)
+  const mudarFerramenta = (f: Ferramenta | null) => {
+    setFerramenta(f)
+    if (f) {
+      setLigando(false)
+      setEscolhida(null)
+    }
+  }
+
   const alternarLigando = (on: boolean) => {
     setLigando(on)
     setEscolhida(null)
-    if (on) avisar('Clique em duas fichas para associá-las. Esc para sair.')
+    if (on) {
+      setFerramenta(null)
+      avisar('Clique em duas fichas para associá-las. Esc para sair.')
+    }
   }
   const aoClicarFicha = (chave: string) => {
     if (!ligando) return
@@ -182,18 +196,19 @@ function Interior() {
     if (ligando) setEscolhida(null)
   }
 
-  // Esc sai do modo de associar ou fecha o painel.
+  // Esc sai do desenho, depois do modo de associar, depois fecha o painel.
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return
-      if (ligando) {
+      if (ferramenta) setFerramenta(null)
+      else if (ligando) {
         setLigando(false)
         setEscolhida(null)
       } else setAtiva(null)
     }
     addEventListener('keydown', aoTeclar)
     return () => removeEventListener('keydown', aoTeclar)
-  }, [ligando])
+  }, [ligando, ferramenta])
 
   const contexto: ContextoMesa = useMemo(
     () => ({
@@ -203,9 +218,10 @@ function Interior() {
       pontas: pontasTexto ? pontasTexto.split('|') : [],
       notas,
       busca: normalizar(busca.trim()),
+      ferramenta,
       abrirAssoc: (id: string) => abrirAssoc(id),
     }),
-    [ligando, escolhida, ativa, pontasTexto, notas, busca, abrirAssoc],
+    [ligando, escolhida, ativa, pontasTexto, notas, busca, ferramenta, abrirAssoc],
   )
 
   return (
@@ -254,6 +270,15 @@ function Interior() {
                     <BarraMesa colecao={colecao} />
                     <button className="btn" aria-pressed={ligando} onClick={() => alternarLigando(!ligando)}>
                       Associar fichas
+                    </button>
+                    <button
+                      className="btn icone"
+                      aria-pressed={!!ferramenta}
+                      aria-label="Desenhar"
+                      title="Desenhar: caneta, marcador e grifo (Esc para sair)"
+                      onClick={() => mudarFerramenta(ferramenta ? null : 'caneta')}
+                    >
+                      <Paintbrush size={17} strokeWidth={2} aria-hidden="true" />
                     </button>
                     <button
                       className="btn"
@@ -315,6 +340,8 @@ function Interior() {
               notas={notas}
               aoClicarFicha={aoClicarFicha}
               aoClicarFundo={aoClicarFundo}
+              ferramenta={modo === 'mesa' ? ferramenta : null}
+              aoMudarFerramenta={mudarFerramenta}
             />
             {modo === 'mesa' && ativa && (
               // key: cada associação abre um painel novo (zera a confirmação de remover).

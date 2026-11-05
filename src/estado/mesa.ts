@@ -9,6 +9,7 @@ const ATRASO_MS = 700
 
 export type Posicao = { x: number; y: number }
 export type Vista = { x: number; y: number; zoom: number }
+const COR_VALIDA = /^#[0-9a-f]{6}$/i
 export const LARGURA_MIN_AREA = 240
 export const ALTURA_MIN_AREA = 160
 export const CORES = ['amarelo', 'azul', 'verde', 'rosa', 'cinza'] as const
@@ -25,7 +26,14 @@ export const NOMES_CAMPOS: Record<Campo, string> = {
   ref: 'Referência',
   colecoes: 'Coleções',
 }
-export type EstadoFicha = Posicao & { cor?: Cor; recolhida?: boolean; ocultos?: Campo[] }
+/** Campos da ficha onde dá para grifar texto. */
+export const CAMPOS_GRIFO = ['tese', 'conceitos', 'lembrar', 'dialogos', 'ref'] as const
+export type CampoGrifo = (typeof CAMPOS_GRIFO)[number]
+/** Trecho grifado num campo: posição no texto e o próprio trecho (para achar de novo se o texto mudar). */
+export type Grifo = { campo: CampoGrifo; inicio: number; fim: number; trecho: string; cor: string }
+export type EstadoFicha = Posicao & { cor?: Cor; recolhida?: boolean; ocultos?: Campo[]; grifos?: Grifo[] }
+/** Traço feito à mão na mesa (caneta ou marcador). Pontos em coordenadas da mesa: x1, y1, x2, y2… */
+export type Traco = { id: string; tipo: 'caneta' | 'marcador'; cor: string; pontos: number[]; colecao: string }
 /** Área da mesa. `colecao` é a coleção em que foi criada ('*' = aparece em todas). */
 export type Area = { id: string; x: number; y: number; w: number; h: number; titulo: string; colecao: string }
 /**
@@ -65,6 +73,7 @@ export type EstadoMesa = {
   fichas: Record<string, EstadoFicha>
   areas: Area[]
   associacoes: Associacao[]
+  desenhos: Traco[]
   /** Mostrar as anotações dentro das caixas das associações. */
   notas: boolean
   vista: Vista | null
@@ -88,6 +97,7 @@ function vazio(): EstadoMesa {
     fichas: {},
     areas: [],
     associacoes: [],
+    desenhos: [],
     notas: true,
     vista: null,
     colecao: '*',
@@ -109,6 +119,19 @@ function validar(d: unknown): EstadoMesa {
       if (Array.isArray(q.ocultos)) {
         const ocultos = CAMPOS.filter((c) => (q.ocultos as unknown[]).includes(c))
         if (ocultos.length) f.ocultos = ocultos
+      }
+      if (Array.isArray(q.grifos)) {
+        const grifos = (q.grifos as Record<string, unknown>[]).filter(
+          (g): g is Grifo =>
+            !!g &&
+            CAMPOS_GRIFO.includes(g.campo as CampoGrifo) &&
+            typeof g.inicio === 'number' &&
+            typeof g.fim === 'number' &&
+            typeof g.trecho === 'string' &&
+            typeof g.cor === 'string' &&
+            COR_VALIDA.test(g.cor),
+        )
+        if (grifos.length) f.grifos = grifos
       }
       e.fichas[k] = f
     }
@@ -142,6 +165,16 @@ function validar(d: unknown): EstadoMesa {
         if (typeof x[k] === 'number' && Number.isFinite(x[k])) s[k] = x[k] as number
       }
       e.associacoes.push(s)
+    }
+  }
+  if (Array.isArray(o.desenhos)) {
+    for (const t of o.desenhos as Record<string, unknown>[]) {
+      if (!t || typeof t.id !== 'string' || !Array.isArray(t.pontos)) continue
+      if (t.tipo !== 'caneta' && t.tipo !== 'marcador') continue
+      if (typeof t.cor !== 'string' || !COR_VALIDA.test(t.cor)) continue
+      const pontos = (t.pontos as unknown[]).filter((n): n is number => typeof n === 'number' && Number.isFinite(n))
+      if (pontos.length < 4 || pontos.length % 2) continue
+      e.desenhos.push({ id: t.id, tipo: t.tipo, cor: t.cor, pontos, colecao: typeof t.colecao === 'string' ? t.colecao : '*' })
     }
   }
   if (o.notas === false) e.notas = false

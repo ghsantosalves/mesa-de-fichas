@@ -64,16 +64,18 @@ Sem o plugin, a Mesa funciona do mesmo jeito: basta abrir o site no navegador (v
 
 Nas próximas vezes, o site abre direto na mesa, como você deixou.
 
-## 4. Instalar a skill de fichas no Claude
+## 4. Instalar as skills no Claude
 
-A pasta [`skill/ficha-academica/`](../skill/ficha-academica/) tem uma *skill* do Claude: instruções que ensinam o Claude a escrever fichas exatamente no formato que a Mesa lê.
+O projeto traz duas *skills* do Claude (instruções que ensinam o Claude a fazer uma tarefa sempre do mesmo jeito):
 
-**No Claude (site ou app):**
-1. Baixe o projeto em https://github.com/ghsantosalves/mesa-de-fichas (**Code → Download ZIP**) e descompacte.
-2. Compacte a pasta `skill/ficha-academica` num arquivo `.zip` (no Windows: botão direito na pasta → Compactar para arquivo ZIP). O `.zip` deve conter a pasta `ficha-academica` com o `SKILL.md` dentro.
-3. No Claude, abra **Configurações → Capacidades** (ou **Skills**) e envie o `.zip`.
+| Skill | O que faz | Baixar |
+| --- | --- | --- |
+| `ficha-academica` | Escreve fichas exatamente no formato que a Mesa lê. | https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip |
+| `relacoes-entre-textos` | Sugere relações entre os textos do seu projeto, para importar na Mesa (veja [Sugerir relações com o Claude](#sugerir-relações-com-o-claude)). | https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip |
 
-**No Claude Code:** copie a pasta `skill/ficha-academica` para `~/.claude/skills/` (no Windows, `C:\Users\<seu usuário>\.claude\skills\`).
+**No Claude (site ou app):** baixe o `.zip`, abra **Configurações → Capacidades** (ou **Skills**) e envie o arquivo. Não descompacte.
+
+**No Claude Code:** descompacte e copie a pasta (por exemplo `relacoes-entre-textos`) para `~/.claude/skills/` (no Windows, `C:\Users\<seu usuário>\.claude\skills\`).
 
 Se o menu estiver com outro nome na sua versão, procure por "Skills" nas configurações do Claude.
 
@@ -110,7 +112,7 @@ Notas com a tag `ficha` que estiverem fora desse formato não somem: aparecem no
 
 ## Usando a mesa
 
-A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Associar fichas**, **Anotações visíveis**) · zoom e **Menu**.
+A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Associar fichas**, **🖌 Desenhar**, **Anotações visíveis**) · zoom e **Menu**.
 
 - **Mover:** arraste uma ficha pelo cartão; arraste o fundo (ou role a roda do mouse) para andar pela mesa.
 - **Zoom:** Ctrl + roda do mouse, pinça no touchpad, ou os botões − e + da barra. **Ver tudo** enquadra as fichas.
@@ -123,12 +125,32 @@ A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa
 - **Associar fichas:** ligue **Associar fichas**, clique na ficha de onde parte a relação e depois na outra. Aparece uma seta da primeira para a segunda, com uma caixa no meio, e abre o painel da associação. Esc sai do modo de associar.
 - **Painel da associação:** mostra as duas fichas (autor, obra, tese). Escreva a **relação** (texto livre; os botões sugerem as já usadas) e a **anotação**. **Inverter direção**, **Recentralizar caixa** e **Remover associação** (pede um segundo clique). Fechar ou Esc fecha o painel.
 - **Caixa da associação:** clique para abrir o painel; arraste para tirá-la de cima de alguma coisa (um tracejado a liga à seta); puxe o canto para mudar o tamanho. **Anotações visíveis** mostra ou esconde as anotações nas caixas.
+- **Desenhar (botão do pincel 🖌):** abre uma paleta no alto da mesa:
+  - **Caneta**: traços finos à mão (setas, círculos, sublinhados), em cinco cores;
+  - **Marcador**: traços largos e transparentes, como marca-texto, por cima de fichas ou da mesa;
+  - **Grifar texto**: selecione um trecho de uma ficha (tese, conceitos, para lembrar, diálogos ou referência) e ele fica grifado na cor escolhida. Clique num grifo para tirá-lo. Enquanto essa ferramenta está ligada, as fichas não se arrastam;
+  - **Borracha**: passe por cima de um traço para apagá-lo;
+  - **Desfazer** (ou Ctrl+Z) e **✕** (ou Esc) para parar de desenhar.
+
+  Os desenhos acompanham a mesa ao arrastar e dar zoom, aparecem na coleção em que foram feitos, ficam salvos e saem na imagem exportada. Grifos e desenhos não mudam nada no Zotero.
 - **Menu:**
   - **Buscar novidades no Zotero** (a Mesa também faz isso sozinha ao voltar para a aba) e **Ler tudo do Zotero de novo** (se algo parecer desatualizado).
   - **Tema:** claro, escuro ou igual ao sistema, com cinco cores editáveis, guardadas separadamente para o claro e o escuro.
-  - **Exportar:** imagem PNG do que está visível na coleção escolhida; **resumo das associações** em Markdown (copiar ou baixar `.md`).
+  - **Exportar:** imagem PNG do que está visível na coleção escolhida; **resumo das associações** em Markdown (copiar ou baixar `.md`); **fichas para o Claude** (veja abaixo).
+  - **Importar associações:** coloca na mesa as relações sugeridas pelo Claude.
   - **Salvar ou abrir:** baixa um `.json` com toda a arrumação ou abre um salvo antes (a mesa anterior fica como cópia de segurança no navegador).
   - **Desconectar do Zotero:** esquece o número e a chave neste navegador.
+
+## Sugerir relações com o Claude
+
+Com a skill `relacoes-entre-textos` instalada (passo 4):
+
+1. Na Mesa, escolha a coleção e abra **Menu → Exportar… → Fichas para o Claude → Baixar fichas para o Claude**. O arquivo traz cada ficha com um identificador, como `[ABCD1234]`, e as associações que já existem.
+2. No Claude, envie esse arquivo junto com o **contexto do projeto** (tema, pergunta de pesquisa, objetivos, capítulos ou eixos; pode ser o texto do projeto) e peça: **"sugira as relações entre esses textos para a mesa de fichas"**.
+3. O Claude responde com um panorama, uma lista legível (Autor → relação → Autor, com justificativa e confiança) e um bloco de código no fim.
+4. Na Mesa, **Menu → Importar associações**: cole a resposta inteira (ou só o bloco). Aparece a lista; as sugestões que repetem associações existentes vêm desmarcadas, e as que citam fichas que não existem ficam bloqueadas. Marque as que quiser e clique em **Colocar na mesa**.
+
+As associações importadas são iguais às feitas à mão: dá para editar a relação e a anotação, inverter, mover a caixa ou remover. Se uma das fichas ainda estiver na faixa "Novas fichas", a seta aparece quando ela for colocada na mesa.
 
 ## Fichas novas e fichas removidas
 
