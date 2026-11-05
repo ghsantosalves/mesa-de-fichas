@@ -1,17 +1,20 @@
 # Tutorial da Mesa de fichas
 
-Este guia é para quem não é programador. Siga na ordem; cada passo diz o que você deve ver.
+Este guia é para quem não é programador. Siga na ordem; cada passo diz o que você deve ver. Não é preciso instalar nada além do Zotero: a Mesa de fichas é um site.
+
+**Site:** https://ghsantosalves.github.io/mesa-de-fichas/
 
 1. [Como funciona](#como-funciona)
-2. [Instalar o que é preciso](#1-instalar-o-que-é-preciso)
-3. [Baixar o projeto](#2-baixar-o-projeto)
-4. [Criar a chave do Zotero](#3-criar-a-chave-do-zotero)
-5. [Configurar o `.env.local`](#4-configurar-o-envlocal)
-6. [Abrir o app](#5-abrir-o-app)
-7. [Instalar a skill de fichas no Claude](#6-instalar-a-skill-de-fichas-no-claude)
-8. [Criar fichas e colocá-las no Zotero](#7-criar-fichas-e-colocá-las-no-zotero)
-9. [O que já funciona](#o-que-já-funciona)
+2. [Criar a chave do Zotero](#1-criar-a-chave-do-zotero)
+3. [Instalar o botão no Zotero](#2-instalar-o-botão-no-zotero)
+4. [Abrir a mesa e conectar](#3-abrir-a-mesa-e-conectar)
+5. [Instalar a skill de fichas no Claude](#4-instalar-a-skill-de-fichas-no-claude)
+6. [Criar fichas e colocá-las no Zotero](#5-criar-fichas-e-colocá-las-no-zotero)
+7. [Usando a mesa](#usando-a-mesa)
+8. [Fichas novas e fichas removidas](#fichas-novas-e-fichas-removidas)
+9. [Onde ficam os dados](#onde-ficam-os-dados)
 10. [Problemas comuns](#problemas-comuns)
+11. [Para quem desenvolve](#para-quem-desenvolve)
 
 ## Como funciona
 
@@ -21,113 +24,60 @@ texto lido ──► Claude (skill ficha-academica) ──► nota no Zotero com
 
 1. Você lê um texto e pede ao Claude uma ficha curta, usando a skill que vem neste projeto.
 2. Cola a ficha como **nota filha** do item no Zotero e coloca a tag `ficha`.
-3. A Mesa de fichas busca essas notas no Zotero e mostra cada uma como um cartão.
+3. A Mesa de fichas busca essas notas no Zotero e mostra cada uma como um cartão, numa mesa onde você arrasta, agrupa em áreas e liga os textos entre si.
 
-O conteúdo das fichas mora no Zotero (para corrigir uma ficha, edite a nota lá). A arrumação da mesa (posições, cores, áreas, associações, anotações) mora no app, no seu navegador.
+O conteúdo das fichas mora no Zotero (para corrigir uma ficha, edite a nota lá). A arrumação da mesa (posições, cores, áreas, associações, anotações) mora no seu navegador. A Mesa **só lê** o Zotero: nunca muda nada lá.
 
-## 1. Instalar o que é preciso
+Você precisa de uma conta no **Zotero** com a biblioteca sincronizada na nuvem (no Zotero: Editar → Configurações → Sincronização).
 
-- **Node.js**, versão LTS: baixe em https://nodejs.org e instale com as opções padrão. É ele que roda o app.
-- **Git** (opcional, para baixar e atualizar o projeto): https://git-scm.com.
-- Uma conta no **Zotero** com a biblioteca sincronizada na nuvem (em Zotero → Editar → Configurações → Sincronização).
+## 1. Criar a chave do Zotero
 
-No Windows, dá para instalar os dois pelo PowerShell:
-
-```bash
-winget install OpenJS.NodeJS.LTS
-```
-
-```bash
-winget install Git.Git
-```
-
-Depois de instalar, feche e abra o PowerShell (ou o Terminal) de novo. Para conferir, rode `node --version`: deve aparecer algo como `v24.x.x`.
-
-## 2. Baixar o projeto
-
-**Com Git:**
-
-```bash
-git clone https://github.com/ghsantosalves/mesa-de-fichas.git
-```
-
-**Sem Git:** em https://github.com/ghsantosalves/mesa-de-fichas, clique em **Code → Download ZIP** e descompacte.
-
-> Evite colocar a pasta dentro do OneDrive, Dropbox ou Google Drive: a instalação cria milhares de arquivos que essas ferramentas tentam sincronizar.
-
-Depois, entre na pasta e instale as dependências (só na primeira vez):
-
-```bash
-cd mesa-de-fichas
-```
-
-```bash
-npm install
-```
-
-Deve terminar com algo como `added NN packages` e `found 0 vulnerabilities`.
-
-## 3. Criar a chave do Zotero
+A chave é o que deixa a Mesa ler suas notas.
 
 1. Entre em https://www.zotero.org/settings/keys (com sua conta).
-2. Anote o número em **"Your userID for use in API calls is …"**. Esse é o seu `ZOTERO_USER_ID`.
+2. Anote o número em **"Your user ID for use in API calls is …"**.
 3. Clique em **Create new private key** e marque **apenas**:
    - Personal Library → **Allow library access**
    - Personal Library → **Allow notes access**
    - Deixe **Allow write access** desmarcado.
    - Default Group Permissions → **None**.
-4. Dê um nome (ex.: "Mesa de fichas"), clique em **Save Key** e copie a chave que aparece. Esse é o seu `ZOTERO_API_KEY`.
+4. Dê um nome (ex.: "Mesa de fichas"), clique em **Save Key** e copie a chave que aparece. Guarde-a num lugar seguro: o site do Zotero só a mostra uma vez.
 
 A chave só de leitura garante que, mesmo se ela vazar, ninguém consegue alterar sua biblioteca.
 
-## 4. Configurar o `.env.local`
+## 2. Instalar o botão no Zotero
 
-1. Na pasta do projeto, faça uma cópia do arquivo `.env.example` com o nome **`.env.local`**.
-2. Abra o `.env.local` com o Bloco de Notas (ou outro editor de texto) e preencha, sem espaços nem aspas:
+O plugin acrescenta **Abrir Mesa de fichas** ao menu **Ferramentas** do Zotero (e ao menu do botão direito dos itens). Ele só abre o site; não lê nem muda nada na biblioteca.
 
-   ```
-   ZOTERO_USER_ID=1234567
-   ZOTERO_API_KEY=suachaveaqui
-   ```
+1. Baixe o plugin: https://ghsantosalves.github.io/mesa-de-fichas/mesa-de-fichas.xpi (se o navegador perguntar, escolha salvar o arquivo).
+2. No Zotero, abra **Ferramentas → Plugins** (em inglês, *Tools → Plugins*).
+3. Clique na engrenagem ⚙ no alto da janela → **Instalar plugin a partir de arquivo…** (*Install Plugin From File…*) e escolha o `mesa-de-fichas.xpi` baixado.
+4. Feche a janela de plugins. Em **Ferramentas** deve aparecer **Abrir Mesa de fichas**.
 
-3. Salve.
+Sem o plugin, a Mesa funciona do mesmo jeito: basta abrir o site no navegador (vale a pena salvá-lo nos favoritos).
 
-O `.env.local` nunca vai para o git nem para o GitHub. A chave fica só no seu computador: o app a usa por dentro, e ela nem chega ao navegador.
+## 3. Abrir a mesa e conectar
 
-## 5. Abrir o app
+1. No Zotero, **Ferramentas → Abrir Mesa de fichas** (ou abra o site no navegador).
+2. Na primeira vez, aparece **Conectar ao seu Zotero**. Cole o número de usuário e a chave do passo 1 e clique em **Conectar**.
+3. O site confere a chave com o Zotero. Se estiver tudo certo, aparecem suas fichas, arrumadas sozinhas em colunas.
 
-Na pasta do projeto, rode:
+Nas próximas vezes, o site abre direto na mesa, como você deixou.
 
-```bash
-npm run dev
-```
+## 4. Instalar a skill de fichas no Claude
 
-Abra no navegador o endereço que aparecer, normalmente http://localhost:5173.
-
-- Se tudo estiver certo, a página mostra **"Tudo pronto"**, o seu nome de usuário do Zotero e as permissões da chave.
-- Se aparecer **"Falta configurar o Zotero"** ou uma mensagem de erro, veja [Problemas comuns](#problemas-comuns).
-
-Para fechar o app, volte ao terminal e aperte `Ctrl + C`. Sempre que mudar o `.env.local`, feche e rode `npm run dev` de novo.
-
-**Onde a mesa fica salva.** A arrumação da mesa (posições, zoom, coleção escolhida) é salva sozinha **no navegador**, um instante depois de cada mudança; o aviso no canto inferior esquerdo diz "Mesa salva neste navegador". Por isso:
-
-- use sempre o mesmo navegador e o mesmo endereço (http://localhost:5173). Em outro navegador, a mesa começa vazia;
-- limpar os dados de navegação do navegador apaga a mesa (as fichas continuam seguras no Zotero). Para não perder a arrumação, use de vez em quando **Salvar ou abrir → Salvar arquivo da mesa**;
-- o app sempre abre na porta 5173. Se aparecer um erro dizendo que a porta está em uso, é porque o app já está aberto em outro terminal: feche aquele (`Ctrl + C`) ou use o que já está rodando.
-
-## 6. Instalar a skill de fichas no Claude
-
-A pasta `skill/ficha-academica/` tem uma *skill* do Claude: instruções que ensinam o Claude a escrever fichas exatamente no formato que a Mesa lê.
+A pasta [`skill/ficha-academica/`](../skill/ficha-academica/) tem uma *skill* do Claude: instruções que ensinam o Claude a escrever fichas exatamente no formato que a Mesa lê.
 
 **No Claude (site ou app):**
-1. Compacte a pasta `skill/ficha-academica` num arquivo `.zip` (no Windows: botão direito na pasta → Compactar para arquivo ZIP). O `.zip` deve conter a pasta `ficha-academica` com o `SKILL.md` dentro.
-2. No Claude, abra **Configurações → Capacidades** (ou **Skills**) e envie o `.zip`.
+1. Baixe o projeto em https://github.com/ghsantosalves/mesa-de-fichas (**Code → Download ZIP**) e descompacte.
+2. Compacte a pasta `skill/ficha-academica` num arquivo `.zip` (no Windows: botão direito na pasta → Compactar para arquivo ZIP). O `.zip` deve conter a pasta `ficha-academica` com o `SKILL.md` dentro.
+3. No Claude, abra **Configurações → Capacidades** (ou **Skills**) e envie o `.zip`.
 
 **No Claude Code:** copie a pasta `skill/ficha-academica` para `~/.claude/skills/` (no Windows, `C:\Users\<seu usuário>\.claude\skills\`).
 
 Se o menu estiver com outro nome na sua versão, procure por "Skills" nas configurações do Claude.
 
-## 7. Criar fichas e colocá-las no Zotero
+## 5. Criar fichas e colocá-las no Zotero
 
 1. No Claude, envie o texto (PDF, capítulo) ou um fichamento que você já tenha e peça: **"faça a ficha deste texto"**.
 2. O Claude devolve um bloco começando com `FICHA ·`. Confira, principalmente as páginas: `[p. ?]` quer dizer página a conferir.
@@ -135,7 +85,7 @@ Se o menu estiver com outro nome na sua versão, procure por "Skills" nas config
 4. Cole a ficha na nota.
 5. Na nota, adicione a tag **`ficha`** (exatamente assim, minúsculo).
 6. Coloque o **item** (não a nota) nas coleções que quiser. Na Mesa, as coleções servem de filtro: por exemplo, uma coleção por disciplina ou por capítulo da tese.
-7. Espere o Zotero sincronizar (ícone de setas verde no canto superior direito).
+7. Espere o Zotero sincronizar (ícone de setas verde no canto superior direito). Ao voltar para a aba da Mesa, ela confere sozinha se há novidades.
 
 O formato completo, para quem quiser escrever fichas à mão:
 
@@ -156,43 +106,59 @@ Vídeo: link ou "—"
 Fichamento completo: link ou "—"
 ```
 
-Notas com a tag `ficha` que estiverem fora desse formato não somem: o app as mostrará numa lista "Fichas com problema", com o motivo.
+Notas com a tag `ficha` que estiverem fora desse formato não somem: aparecem no botão **Fichas com problema**, com o motivo.
 
 ## Usando a mesa
+
+A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Associar fichas**, **Anotações visíveis**) · zoom e **Menu**.
 
 - **Mover:** arraste uma ficha pelo cartão; arraste o fundo (ou role a roda do mouse) para andar pela mesa.
 - **Zoom:** Ctrl + roda do mouse, pinça no touchpad, ou os botões − e + da barra. **Ver tudo** enquadra as fichas.
 - **Coleção:** o menu da barra mostra só as fichas de uma coleção (e de suas subcoleções).
-- **Recolher uma ficha:** botão ▾ no canto da ficha, ou clique duplo nela. Recolhida, mostra só autor e obra. **Recolher todas / Expandir todas** na barra age sobre as fichas visíveis.
-- **Cor e campos de uma ficha:** botão **⋯** no rodapé da ficha. Ali você escolhe a cor da borda e, em "Campos visíveis nesta ficha", desmarca o que não quer ver naquela ficha (tese, conceitos, para lembrar, diálogos, uso, referência, coleções). O rodapé avisa quantos campos estão ocultos. Nada disso altera o Zotero.
+- **Busca:** o campo "Destacar conceito, autor…" apaga as fichas que não têm o texto digitado, em qualquer campo (inclusive uso e campos ocultos), sem diferenciar acentos nem maiúsculas.
+- **Lista:** mostra as fichas em texto, para conferir como cada nota foi lida.
+- **Recolher uma ficha:** botão ▾ no canto da ficha, ou clique duplo nela. Recolhida, mostra só autor e obra. **Recolher todas / Expandir todas** age sobre as fichas visíveis.
+- **Cor e campos de uma ficha:** botão **⋯** no rodapé da ficha. Ali você escolhe a cor da borda e, em "Campos visíveis nesta ficha", desmarca o que não quer ver naquela ficha. O rodapé avisa quantos campos estão ocultos.
 - **Áreas:** **Nova área** cria um retângulo no centro da tela, já com o título pronto para digitar. Arraste pelo título (ou pelo ⠿) para mover a área: as fichas de dentro vão junto. Puxe o canto inferior direito para mudar o tamanho. O × remove a área (pede um segundo clique) e as fichas continuam na mesa. Uma área criada com uma coleção escolhida aparece só nessa coleção.
-- **Associar fichas:** ligue **Associar fichas** na barra, clique na ficha de onde parte a relação e depois na outra. Aparece uma seta da primeira para a segunda, com uma caixa no meio, e abre o painel da associação. Esc sai do modo de associar. Clicar de novo no mesmo par abre a associação que já existe.
-- **Painel da associação:** mostra as duas fichas (autor, obra, tese). Escreva a **relação** (texto livre; os botões sugerem as já usadas) e a **anotação**. **Inverter direção** troca a ponta da seta; **Recentralizar caixa** devolve a caixa ao meio da seta; **Remover associação** pede um segundo clique. Fechar ou Esc fecha o painel.
-- **Caixa da associação:** clique para abrir o painel; arraste para tirá-la de cima de alguma coisa (um tracejado a liga à seta); puxe o canto para mudar o tamanho. **Anotações visíveis** na barra mostra ou esconde as anotações nas caixas.
-- **Busca:** o campo "Destacar conceito, autor…" na barra apaga as fichas que não têm o texto digitado, em qualquer campo (inclusive uso e campos ocultos), sem diferenciar acentos nem maiúsculas.
-- **Tema:** o botão **Tema** escolhe claro, escuro ou igual ao sistema, e deixa mudar cinco cores (fundo da mesa, fundo da ficha, texto, nomes dos campos, associações). As cores ficam guardadas separadamente para o claro e o escuro.
-- **Exportar:** **Baixar imagem** gera um PNG com o que está visível na coleção escolhida. O **resumo das associações** traz, para cada associação, a referência e a tese dos dois textos, a área, a relação e a anotação (opção de incluir as fichas completas); dá para copiar ou baixar como `.md`. Os arquivos vão para a pasta Downloads.
-- **Salvar ou abrir:** **Salvar arquivo da mesa** baixa um `.json` com toda a arrumação (posições, cores, áreas, associações, tema). Para usar em outro navegador ou computador, ou voltar a uma versão antiga, escolha o arquivo em "Abrir mesa de um arquivo" e clique em **Substituir a mesa atual**. A mesa anterior fica guardada como cópia de segurança no navegador.
+- **Associar fichas:** ligue **Associar fichas**, clique na ficha de onde parte a relação e depois na outra. Aparece uma seta da primeira para a segunda, com uma caixa no meio, e abre o painel da associação. Esc sai do modo de associar.
+- **Painel da associação:** mostra as duas fichas (autor, obra, tese). Escreva a **relação** (texto livre; os botões sugerem as já usadas) e a **anotação**. **Inverter direção**, **Recentralizar caixa** e **Remover associação** (pede um segundo clique). Fechar ou Esc fecha o painel.
+- **Caixa da associação:** clique para abrir o painel; arraste para tirá-la de cima de alguma coisa (um tracejado a liga à seta); puxe o canto para mudar o tamanho. **Anotações visíveis** mostra ou esconde as anotações nas caixas.
+- **Menu:**
+  - **Buscar novidades no Zotero** (a Mesa também faz isso sozinha ao voltar para a aba) e **Ler tudo do Zotero de novo** (se algo parecer desatualizado).
+  - **Tema:** claro, escuro ou igual ao sistema, com cinco cores editáveis, guardadas separadamente para o claro e o escuro.
+  - **Exportar:** imagem PNG do que está visível na coleção escolhida; **resumo das associações** em Markdown (copiar ou baixar `.md`).
+  - **Salvar ou abrir:** baixa um `.json` com toda a arrumação ou abre um salvo antes (a mesa anterior fica como cópia de segurança no navegador).
+  - **Desconectar do Zotero:** esquece o número e a chave neste navegador.
 
-## O que já funciona
+## Fichas novas e fichas removidas
 
-O app está sendo construído em etapas:
+- **Fichas novas:** fichas que chegam do Zotero depois da primeira vez aparecem na faixa **Novas fichas**, no canto inferior esquerdo, e um aviso diz quantas chegaram. Arraste cada uma para o lugar que quiser na mesa, clique em **Colocar** (ela vai para um espaço vazio da tela) ou em **Colocar todas**.
+- **Fichas removidas:** se uma ficha que estava na mesa some do Zotero (nota apagada, na lixeira ou sem a tag `ficha`), ela continua na mesa com a faixa **Removida do Zotero**, mostrando o último conteúdo conhecido. As associações dela **não são apagadas**. Se a nota voltar ao Zotero, a ficha volta ao normal. Para tirá-la de vez, clique em **Tirar da mesa** (pede um segundo clique e avisa quantas associações vão junto).
+- **Sincronização:** a Mesa guarda uma cópia do que já baixou e, nas próximas vezes, pede ao Zotero só o que mudou. Por isso abre rápido mesmo com muitas fichas.
 
-| Etapa | O que faz | Situação |
-| --- | --- | --- |
-| 1 | App abre e confere a conexão com o Zotero | ✅ pronta |
-| 2 | Lista coleções e fichas, com "Fichas com problema" | ✅ pronta |
-| 3 | Fichas na mesa: arrastar, zoom, "Ver tudo", filtro por coleção | ✅ pronta |
-| 4 | Salvar a mesa e reabrir de onde parou | ✅ pronta |
-| 5 | Áreas, cores, recolher fichas, ocultar campos de cada ficha | ✅ pronta |
-| 6 | Associações entre fichas, com relação e anotação | ✅ pronta |
-| 7 | Tema, busca, exportar imagem e resumo em Markdown, salvar/abrir arquivo | ✅ pronta |
-| 8 | Sincronização incremental, fichas novas e removidas | em breve |
+## Onde ficam os dados
+
+- **Fichas:** no Zotero. A Mesa só lê.
+- **Número e chave do Zotero:** só no seu navegador; são enviados só para o Zotero (api.zotero.org).
+- **Arrumação da mesa:** salva sozinha **no navegador**, um instante depois de cada mudança ("Mesa salva neste navegador", no canto). Por isso:
+  - em outro navegador ou computador, a mesa começa vazia. Para levar a arrumação, use **Menu → Salvar ou abrir**: salve o arquivo num e abra no outro;
+  - limpar os dados de navegação apaga a arrumação (as fichas continuam seguras no Zotero). De vez em quando, salve a mesa em arquivo.
 
 ## Problemas comuns
 
-- **"node" não é reconhecido como comando**: o Node.js não foi instalado, ou o terminal foi aberto antes da instalação. Feche e abra o terminal.
-- **"Falta configurar o Zotero"**: o `.env.local` não existe, está com outro nome (no Windows, cuidado com `.env.local.txt`) ou com campos vazios. Depois de corrigir, rode `npm run dev` de novo.
-- **"O Zotero não reconheceu a chave"**: a chave foi copiada errada ou apagada. Crie outra no passo 3.
-- **"A chave é do usuário X, mas ZOTERO_USER_ID está como Y"**: o número de usuário não bate com a chave; copie o userID da mesma página da chave.
-- **Ler notas: não**: edite a chave em zotero.org/settings/keys e marque *Allow notes access*.
+- **"O Zotero não reconheceu a chave"**: a chave foi copiada pela metade ou foi apagada. Crie outra (passo 1).
+- **"Esta chave é do usuário X, não do Y"**: o número de usuário não bate com a chave; copie o número da mesma página da chave.
+- **"A chave precisa de permissão…"**: edite a chave em zotero.org/settings/keys e marque *Allow library access* e *Allow notes access*.
+- **Uma ficha nova não aparece:** confira se o Zotero sincronizou, se a nota tem a tag `ficha` e se a coleção escolhida na barra é a do item. Depois use **Menu → Buscar novidades no Zotero**.
+- **"Abrir Mesa de fichas" não aparece no Zotero:** em Ferramentas → Plugins, confira se o plugin está ativado. Se o Zotero disser que ele é incompatível com a sua versão, use o site direto pelo navegador e avise no GitHub.
+
+## Para quem desenvolve
+
+Para rodar o código no seu computador (para modificar o app):
+
+1. Instale o [Node.js](https://nodejs.org) (versão LTS) e o [Git](https://git-scm.com). No Windows: `winget install OpenJS.NodeJS.LTS` e `winget install Git.Git`.
+2. `git clone https://github.com/ghsantosalves/mesa-de-fichas.git`, entre na pasta e rode `npm install` (evite pastas do OneDrive/Dropbox).
+3. Opcional: copie `.env.example` para `.env.local` e preencha `ZOTERO_USER_ID` e `ZOTERO_API_KEY`. Assim a chave fica só no servidor local e o app não pede conexão. Sem o `.env.local`, ele mostra a tela de conexão, como o site.
+4. `npm run dev` e abra http://localhost:5173 (porta fixa; a mesa fica salva por endereço).
+
+A cada envio para a branch `main`, o GitHub publica o site e o plugin (`zotero-plugin/`) sozinho (`.github/workflows/site.yml`).

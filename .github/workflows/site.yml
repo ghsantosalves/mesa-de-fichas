@@ -30,6 +30,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # Plugin do Zotero, baixável em .../mesa-de-fichas/mesa-de-fichas.xpi
+      - name: Empacotar o plugin do Zotero
+        run: cd zotero-plugin && zip -r -X ../dist/mesa-de-fichas.xpi manifest.json bootstrap.js locale
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -13,7 +13,9 @@ App para organizar visualmente fichas de leitura acadêmicas, como fichas físic
 
 ## Fonte dos dados: Zotero
 - Zotero Web API v3 (`https://api.zotero.org`), biblioteca pessoal: `/users/{userID}/...`.
-- Credenciais em `.env.local` (`ZOTERO_USER_ID`, `ZOTERO_API_KEY`, chave só de leitura). Nunca versionar esse arquivo; incluir no `.gitignore`.
+- O app é publicado como site no GitHub Pages (https://ghsantosalves.github.io/mesa-de-fichas/). No site, cada pessoa digita número de usuário e chave (só leitura) na tela "Conectar ao seu Zotero"; ficam só no navegador dela (`src/zotero/credenciais.ts`) e vão só para api.zotero.org.
+- Em `npm run dev`, as credenciais podem vir de `.env.local` (`ZOTERO_USER_ID`, `ZOTERO_API_KEY`); a chave fica no proxy do Vite e nunca vai para o navegador nem para o build. Nunca versionar esse arquivo; incluir no `.gitignore`.
+- `zotero-plugin/` é um plugin do Zotero que só abre o site (menu Ferramentas); é empacotado e publicado junto com o site.
 - Cabeçalhos: `Zotero-API-Key` e `Zotero-API-Version: 3`. Paginar com `limit=100` e `start`; respeitar `Backoff` e `Retry-After`.
 - O app NUNCA escreve no Zotero. O Zotero é a fonte de verdade do conteúdo das fichas.
 
