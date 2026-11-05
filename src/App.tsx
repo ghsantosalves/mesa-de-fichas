@@ -4,6 +4,7 @@ import { carregarBiblioteca, comSubcolecoes, type Biblioteca, type Colecao } fro
 import { Listagem } from './Listagem.tsx'
 import { Mesa } from './mesa/Mesa.tsx'
 import { BarraZoom } from './mesa/BarraZoom.tsx'
+import { BarraMesa } from './mesa/BarraMesa.tsx'
 import { alterarMesa, mesa, useSituacao } from './estado/mesa.ts'
 
 type Estado =
@@ -54,6 +55,7 @@ function App() {
           {bib && (
             <div className="grupo">
               <SeletorColecao bib={bib} valor={colecao} aoMudar={escolherColecao} />
+              {modo === 'mesa' && <BarraMesa colecao={colecao} />}
               <button className="btn" aria-pressed={modo === 'mesa'} onClick={() => setModo('mesa')}>
                 Mesa
               </button>

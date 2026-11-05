@@ -9,10 +9,18 @@ const ATRASO_MS = 700
 
 export type Posicao = { x: number; y: number }
 export type Vista = { x: number; y: number; zoom: number }
+export const LARGURA_MIN_AREA = 240
+export const ALTURA_MIN_AREA = 160
+export const CORES = ['amarelo', 'azul', 'verde', 'rosa', 'cinza'] as const
+export type Cor = (typeof CORES)[number]
+export type EstadoFicha = Posicao & { cor?: Cor; recolhida?: boolean }
+/** Área da mesa. `colecao` é a coleção em que foi criada ('*' = aparece em todas). */
+export type Area = { id: string; x: number; y: number; w: number; h: number; titulo: string; colecao: string }
 export type EstadoMesa = {
   versao: 1
   /** Por chave da nota no Zotero. Fichas que sumiram do Zotero continuam aqui. */
-  fichas: Record<string, Posicao>
+  fichas: Record<string, EstadoFicha>
+  areas: Area[]
   vista: Vista | null
   colecao: string
 }
@@ -27,7 +35,7 @@ export type Situacao =
 const numero = (v: unknown, padrao: number) => (typeof v === 'number' && Number.isFinite(v) ? v : padrao)
 
 function vazio(): EstadoMesa {
-  return { versao: 1, fichas: {}, vista: null, colecao: '*' }
+  return { versao: 1, fichas: {}, areas: [], vista: null, colecao: '*' }
 }
 
 /** Confere o que veio do armazenamento, aproveitando o que estiver certo. */
@@ -38,7 +46,25 @@ function validar(d: unknown): EstadoMesa {
   if (o.fichas && typeof o.fichas === 'object') {
     for (const [k, p] of Object.entries(o.fichas as Record<string, unknown>)) {
       const q = p as Record<string, unknown> | null
-      if (q && typeof q === 'object') e.fichas[k] = { x: numero(q.x, 0), y: numero(q.y, 0) }
+      if (!q || typeof q !== 'object') continue
+      const f: EstadoFicha = { x: numero(q.x, 0), y: numero(q.y, 0) }
+      if (CORES.includes(q.cor as Cor)) f.cor = q.cor as Cor
+      if (q.recolhida === true) f.recolhida = true
+      e.fichas[k] = f
+    }
+  }
+  if (Array.isArray(o.areas)) {
+    for (const a of o.areas as Record<string, unknown>[]) {
+      if (!a || typeof a !== 'object' || typeof a.id !== 'string') continue
+      e.areas.push({
+        id: a.id,
+        x: numero(a.x, 0),
+        y: numero(a.y, 0),
+        w: Math.max(LARGURA_MIN_AREA, numero(a.w, 600)),
+        h: Math.max(ALTURA_MIN_AREA, numero(a.h, 400)),
+        titulo: typeof a.titulo === 'string' ? a.titulo : 'Área',
+        colecao: typeof a.colecao === 'string' ? a.colecao : '*',
+      })
     }
   }
   const v = o.vista as Record<string, unknown> | null
@@ -116,3 +142,8 @@ export function useSituacao(): Situacao {
 }
 
 export const arredondar = (p: Posicao): Posicao => ({ x: Math.round(p.x), y: Math.round(p.y) })
+
+/** Muda a posição de uma ficha sem perder a cor e o recolhimento. */
+export function posicionarFicha(e: EstadoMesa, chave: string, p: Posicao) {
+  e.fichas[chave] = { ...e.fichas[chave], ...arredondar(p) }
+}

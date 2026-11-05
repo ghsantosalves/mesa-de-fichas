@@ -13,6 +13,13 @@
   --erro: #c4473d;
   --sombra: 0 1px 2px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.06);
   --sombra-alta: 0 6px 24px rgba(0, 0, 0, 0.18);
+  --zona-fundo: rgba(31, 42, 51, 0.035);
+  --zona-borda: rgba(31, 42, 51, 0.28);
+  --c-amarelo: #d9a21f;
+  --c-azul: #3f78b0;
+  --c-verde: #4a9563;
+  --c-rosa: #c25a85;
+  --c-cinza: #878d93;
   --serifa: 'Spectral', Georgia, 'Times New Roman', serif;
   --sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
@@ -29,6 +36,8 @@
     --barra: rgba(24, 27, 29, 0.95);
     --barra-borda: rgba(255, 255, 255, 0.1);
     --linha: #79a7dc;
+    --zona-fundo: rgba(255, 255, 255, 0.03);
+    --zona-borda: rgba(255, 255, 255, 0.25);
     color-scheme: dark;
   }
 }
@@ -193,6 +202,165 @@ input {
   color: var(--tinta-2);
   margin-top: 2px;
 }
+.ficha-mesa {
+  position: relative;
+}
+.ficha-mesa .autor,
+.ficha-mesa .obra {
+  padding-right: 24px;
+}
+.ficha-mesa.recolhida {
+  padding-bottom: 12px;
+}
+.recolher {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--tinta-2);
+  cursor: pointer;
+  font: 600 14px/24px var(--sans);
+  padding: 0;
+  text-align: center;
+}
+.recolher:hover {
+  background: var(--borda);
+}
+.mais-btn {
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  border-radius: 5px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font: 600 13px/1 var(--sans);
+}
+.opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--borda);
+  cursor: default;
+}
+.cores {
+  display: flex;
+  gap: 6px;
+}
+.ponto {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.ponto.ativo {
+  border-color: var(--tinta);
+}
+.c-nenhuma {
+  background: var(--cartao);
+  border: 1.5px dashed var(--tinta-2) !important;
+}
+.c-nenhuma.ativo {
+  border-style: solid !important;
+  border-color: var(--tinta) !important;
+}
+.c-amarelo {
+  background: var(--c-amarelo);
+}
+.c-azul {
+  background: var(--c-azul);
+}
+.c-verde {
+  background: var(--c-verde);
+}
+.c-rosa {
+  background: var(--c-rosa);
+}
+.c-cinza {
+  background: var(--c-cinza);
+}
+
+/* Áreas: o corpo deixa passar o clique (para arrastar a mesa); só o cabeçalho e o canto respondem. */
+/* O React Flow põe pointer-events no próprio elemento; por isso o !important. */
+.mesa .react-flow__node.react-flow__node-area {
+  pointer-events: none !important;
+  cursor: default;
+}
+.area {
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed var(--zona-borda);
+  background: var(--zona-fundo);
+  border-radius: 10px;
+  position: relative;
+}
+.area-cab {
+  position: absolute;
+  top: -34px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px 6px 4px 2px;
+  cursor: grab;
+  pointer-events: all;
+}
+.pega {
+  font-size: 14px;
+  line-height: 1;
+  color: var(--tinta-2);
+  padding: 0 3px;
+}
+.area-titulo {
+  font: 600 15px/1.2 var(--sans);
+  color: var(--tinta);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  padding: 2px 4px;
+  min-width: 0;
+  max-width: 100%;
+  cursor: text;
+}
+.area-titulo:focus {
+  outline: none;
+  background: var(--cartao);
+  box-shadow: 0 0 0 1px var(--borda);
+}
+.area-x {
+  border: 0;
+  background: none;
+  color: var(--tinta-2);
+  cursor: pointer;
+  font-size: 17px;
+  line-height: 1;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.area-x.confirmar {
+  font: 500 12.5px/1 var(--sans);
+  color: var(--erro);
+}
+.mesa .area-alca.react-flow__resize-control {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 0 0 10px 0;
+  background: linear-gradient(135deg, transparent 55%, var(--zona-borda) 55%);
+  transform: translate(-100%, -100%);
+  pointer-events: all;
+  cursor: nwse-resize;
+}
+
 .ficha-mesa .ref {
   font: 400 12px/1.4 var(--sans);
   color: var(--tinta-2);
