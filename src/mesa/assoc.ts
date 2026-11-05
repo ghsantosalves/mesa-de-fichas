@@ -44,6 +44,20 @@ export function mudarAssociacao(rf: Mesa, id: string, m: Mudanca, tirar: Caixa[]
   })
 }
 
+/**
+ * Cria várias associações de uma vez (importadas). A seta só é desenhada quando as
+ * duas fichas estão na mesa; se uma estiver na faixa "Novas fichas", a associação
+ * fica guardada e aparece quando a ficha for colocada.
+ */
+export function importarAssociacoes(rf: Mesa, lista: { a: string; b: string; rel: string; nota: string }[]) {
+  const novas: Associacao[] = lista.map((x) => ({ id: crypto.randomUUID().slice(0, 8), ...x }))
+  const naMesa = (k: string) => !!rf.getNode(k)
+  rf.setEdges((es) => [...es, ...novas.filter((a) => naMesa(a.a) && naMesa(a.b)).map(arestaDe)])
+  alterarMesa((e) => {
+    e.associacoes.push(...novas)
+  })
+}
+
 export function inverterAssociacao(rf: Mesa, assoc: Associacao) {
   mudarAssociacao(rf, assoc.id, { a: assoc.b, b: assoc.a })
 }

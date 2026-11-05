@@ -33,6 +33,9 @@ jobs:
       # Plugin do Zotero, baixável em .../mesa-de-fichas/mesa-de-fichas.xpi
       - name: Empacotar o plugin do Zotero
         run: cd zotero-plugin && zip -r -X ../dist/mesa-de-fichas.xpi manifest.json bootstrap.js locale
+      # Skills do Claude, baixáveis em .../mesa-de-fichas/<nome>.zip
+      - name: Empacotar as skills do Claude
+        run: cd skill && for s in */; do zip -r -X "../dist/${s%/}.zip" "$s"; done
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

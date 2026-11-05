@@ -920,6 +920,64 @@ input {
   margin-top: 14px;
   align-items: center;
 }
+.d-area.baixa {
+  height: 120px;
+  margin-top: 8px;
+}
+.sem-margem {
+  margin: 0 !important;
+}
+.sugestoes {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 40vh;
+  overflow: auto;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+.sugestoes li {
+  border-bottom: 1px solid var(--borda);
+  padding: 8px 10px;
+}
+.sugestoes li:last-child {
+  border-bottom: 0;
+}
+.sugestoes label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font: 400 13.5px/1.45 var(--sans);
+  cursor: pointer;
+}
+.sugestoes input {
+  margin-top: 4px;
+}
+.sugestoes .invalida {
+  opacity: 0.6;
+}
+.confianca {
+  color: var(--tinta-2);
+  font-size: 12.5px;
+}
+.sug-nota {
+  display: block;
+  font: 400 13.5px/1.45 var(--serifa);
+  color: var(--tinta-2);
+  margin-top: 2px;
+}
+.sug-aviso {
+  display: block;
+  font-size: 12.5px;
+  color: var(--erro);
+}
+.d-acoes.esquerda {
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+.dialogo {
+  max-height: 90vh;
+}
 .d-msg {
   font: 500 13px/1.3 var(--sans);
   color: var(--linha);

@@ -120,6 +120,48 @@ function areaDe(f: Ficha, colecao: string): string {
   return a?.titulo.trim() ?? ''
 }
 
+/**
+ * Pacote para o Claude (skill "relacoes-entre-textos"): as fichas visíveis com seus
+ * identificadores (chaves do Zotero) e as associações que já existem entre elas.
+ */
+export function pacoteParaClaude(bib: Biblioteca, colecao: string): string {
+  const fichas = fichasVisiveis(bib, colecao)
+  const porChave = new Map(fichas.map((f) => [f.chave, f]))
+  const nomeCol = new Map(bib.colecoes.map((c) => [c.chave, c.nome]))
+  const nomeColecao = colecao === '*' ? 'todas as coleções' : nomeCol.get(colecao)
+  const data = new Date().toLocaleDateString('pt-BR')
+
+  let t = `# Fichas para o Claude — Mesa de fichas\n\n`
+  t += `Coleção: ${nomeColecao} · ${fichas.length} fichas · exportado em ${data}\n\n`
+  t +=
+    'Use com a skill "relacoes-entre-textos". Cada ficha tem um identificador entre colchetes, ' +
+    'como [ABCD1234]; as associações sugeridas devem usar esses identificadores para que a Mesa ' +
+    'as coloque nas fichas certas.\n\n## Fichas\n'
+
+  for (const f of fichas) {
+    t += `\n### [${f.chave}] ${f.titulo}\n`
+    if (f.ref) t += `- Referência: ${f.ref}\n`
+    t += `- Tese: ${f.tese || '—'}\n`
+    if (f.conceitos.length) t += `- Conceitos: ${f.conceitos.join('; ')}\n`
+    if (f.lembrar) t += `- Para lembrar: ${f.lembrar}\n`
+    if (f.dialogos.length) t += `- Diálogos: ${f.dialogos.join('; ')}\n`
+    if (f.usos.length) t += `- Uso no projeto: ${f.usos.join(', ')}\n`
+    const cols = f.colecoes.map((k) => nomeCol.get(k)).filter(Boolean)
+    if (cols.length) t += `- Coleções: ${cols.join('; ')}\n`
+    const area = areaDe(f, colecao)
+    if (area) t += `- Área na mesa: ${area}\n`
+  }
+
+  const existentes = mesa.associacoes.filter((a) => porChave.has(a.a) && porChave.has(a.b))
+  t += '\n## Associações que já existem\n\n'
+  if (!existentes.length) t += 'Nenhuma ainda.\n'
+  for (const a of existentes) {
+    const nota = a.nota.trim() ? `: ${a.nota.trim().replace(/\s+/g, ' ')}` : ''
+    t += `- [${a.a}] ${porChave.get(a.a)!.autorAno} → ${a.rel.trim() || '(relação a definir)'} → [${a.b}] ${porChave.get(a.b)!.autorAno}${nota}\n`
+  }
+  return t
+}
+
 /** Resumo das associações visíveis, em Markdown. */
 export function resumoAssociacoes(bib: Biblioteca, colecao: string, completa: boolean): string {
   const visiveis = new Map(fichasVisiveis(bib, colecao).map((f) => [f.chave, f]))

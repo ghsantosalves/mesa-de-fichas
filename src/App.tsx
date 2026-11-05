@@ -23,6 +23,7 @@ import { aoMudarSistema, aplicarTema } from './tema.ts'
 import { DialogoTema } from './dialogos/DialogoTema.tsx'
 import { DialogoExportar } from './dialogos/DialogoExportar.tsx'
 import { DialogoArquivo } from './dialogos/DialogoArquivo.tsx'
+import { DialogoImportar } from './dialogos/DialogoImportar.tsx'
 
 // Aplica o tema salvo antes de desenhar qualquer coisa.
 aplicarTema(mesa.tema)
@@ -133,7 +134,7 @@ function Interior() {
   // --- Tema, busca e janelas ---
   const [tema, setTema] = useState<Tema>(mesa.tema)
   const [busca, setBusca] = useState('')
-  const [janela, setJanela] = useState<'tema' | 'exportar' | 'arquivo' | null>(null)
+  const [janela, setJanela] = useState<'tema' | 'exportar' | 'arquivo' | 'importar' | null>(null)
   const mudarTema = (t: Tema) => {
     setTema(t)
     aplicarTema(t)
@@ -275,6 +276,7 @@ function Interior() {
                     ['Ler tudo do Zotero de novo', () => recarregar(true)],
                     ['Tema…', () => setJanela('tema')],
                     ['Exportar…', () => setJanela('exportar')],
+                    ['Importar associações…', () => setJanela('importar')],
                     ['Salvar ou abrir…', () => setJanela('arquivo')],
                     ...(MODO_LOCAL ? [] : [['Desconectar do Zotero…', desconectar] as [string, () => void]]),
                   ]}
@@ -340,6 +342,9 @@ function Interior() {
           <DialogoExportar bib={bib} colecao={colecao} aoFechar={() => setJanela(null)} />
         )}
         {janela === 'arquivo' && <DialogoArquivo aoFechar={() => setJanela(null)} />}
+        {janela === 'importar' && bib && (
+          <DialogoImportar bib={bib} aoFechar={() => setJanela(null)} avisar={avisar} />
+        )}
         {aviso && (
           <div className="aviso" role="status">
             {aviso}
