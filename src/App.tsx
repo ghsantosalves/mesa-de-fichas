@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ReactFlowProvider, useReactFlow, useStore } from '@xyflow/react'
-import { carregarBiblioteca, comSubcolecoes, type Biblioteca, type Colecao } from './zotero/biblioteca.ts'
+import {
+  carregarBiblioteca,
+  comSubcolecoes,
+  esquecerCopiaZotero,
+  type Biblioteca,
+  type Colecao,
+} from './zotero/biblioteca.ts'
+import { ErroAcesso } from './zotero/api.ts'
+import { esquecerCredenciais, lerCredenciais, MODO_LOCAL } from './zotero/credenciais.ts'
+import { Conectar } from './Conectar.tsx'
 import { Listagem } from './Listagem.tsx'
 import { Mesa } from './mesa/Mesa.tsx'
 import { BarraZoom } from './mesa/BarraZoom.tsx'
@@ -23,11 +32,8 @@ type Estado =
   | { tipo: 'erro'; motivo: string }
   | { tipo: 'pronto'; bib: Biblioteca }
 
-/** Campos do .env.local que estão vazios. */
-const FALTA_CONFIG = [
-  ...(__ZOTERO_USER_ID__ ? [] : ['ZOTERO_USER_ID']),
-  ...(__ZOTERO_CHAVE_CONFIGURADA__ ? [] : ['ZOTERO_API_KEY']),
-]
+/** Depois de quanto tempo, ao voltar para a aba, o app confere de novo o Zotero. */
+const INTERVALO_SINCRONIA_MS = 20_000
 
 function App() {
   return (
@@ -40,12 +46,16 @@ function App() {
 function Interior() {
   const rf = useReactFlow<NoMesa, ArestaAssoc>()
   const [estado, setEstado] = useState<Estado>({ tipo: 'carregando' })
-  const [pedido, setPedido] = useState(0)
+  const [conectado, setConectado] = useState(() => !!lerCredenciais())
+  const [motivoConexao, setMotivoConexao] = useState<string | null>(null)
+  const [pedido, setPedido] = useState({ n: 0, completa: false })
   const [modo, setModo] = useState<'mesa' | 'lista'>('mesa')
   const [colecao, setColecao] = useState(mesa.colecao)
   /** Associação aberta no painel. */
   const [ativa, setAtiva] = useState<string | null>(null)
-  const recarregar = useCallback(() => setPedido((n) => n + 1), [])
+  const ultimaLeitura = useRef(0)
+  const anunciadas = useRef(new Set<string>())
+  const recarregar = useCallback((completa = false) => setPedido((p) => ({ n: p.n + 1, completa })), [])
   const escolherColecao = useCallback((c: string) => {
     setColecao(c)
     // Trocar de coleção fecha o painel da associação.
@@ -53,21 +63,70 @@ function Interior() {
     if (mesa.colecao !== c) alterarMesa((e) => (e.colecao = c))
   }, [])
 
+  const [aviso, setAviso] = useState<string | null>(null)
+  const tempoAviso = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const avisar = useCallback((texto: string, ms = 2600) => {
+    setAviso(texto)
+    clearTimeout(tempoAviso.current)
+    tempoAviso.current = setTimeout(() => setAviso(null), ms)
+  }, [])
+
   useEffect(() => {
-    if (FALTA_CONFIG.length) return
-    let valido = true
-    carregarBiblioteca()
+    if (!conectado) return
+    // Se outra leitura começar antes desta acabar, o resultado desta é ignorado.
+    const leitura = { valida: true }
+    carregarBiblioteca(pedido.completa)
       .then((bib) => {
-        if (!valido) return
+        if (!leitura.valida) return
+        ultimaLeitura.current = Date.now()
+        const mudancas = registrarMudancas(bib)
+        // Avisa cada ficha nova uma vez só (a conferência se repete ao voltar para a aba).
+        const novas = mudancas.novas.filter((k) => !anunciadas.current.has(k)).length
+        mudancas.novas.forEach((k) => anunciadas.current.add(k))
+        const sumiram = mudancas.sumiram
         setEstado({ tipo: 'pronto', bib })
         // Se a coleção escolhida sumiu do Zotero, volta para "todas".
         if (mesa.colecao !== '*' && !bib.colecoes.some((x) => x.chave === mesa.colecao)) escolherColecao('*')
+        const partes = []
+        if (novas) partes.push(novas === 1 ? '1 ficha nova chegou do Zotero' : `${novas} fichas novas chegaram do Zotero`)
+        if (sumiram) partes.push(sumiram === 1 ? '1 ficha sumiu do Zotero' : `${sumiram} fichas sumiram do Zotero`)
+        if (partes.length) avisar(partes.join(' · '), 5000)
       })
-      .catch((e: unknown) => valido && setEstado({ tipo: 'erro', motivo: e instanceof Error ? e.message : String(e) }))
+      .catch((e: unknown) => {
+        if (!leitura.valida) return
+        const motivo = e instanceof Error ? e.message : String(e)
+        if (e instanceof ErroAcesso && !MODO_LOCAL) {
+          setMotivoConexao(motivo)
+          setConectado(false)
+        } else setEstado({ tipo: 'erro', motivo })
+      })
     return () => {
-      valido = false
+      leitura.valida = false
     }
-  }, [pedido, escolherColecao])
+  }, [pedido, conectado, escolherColecao, avisar])
+
+  // Ao voltar para esta aba (por exemplo, depois de criar fichas no Zotero),
+  // confere se há novidades. Só baixa o que mudou.
+  useEffect(() => {
+    const conferir = () => {
+      if (document.visibilityState !== 'visible' || !conectado) return
+      if (Date.now() - ultimaLeitura.current > INTERVALO_SINCRONIA_MS) recarregar()
+    }
+    addEventListener('focus', conferir)
+    document.addEventListener('visibilitychange', conferir)
+    return () => {
+      removeEventListener('focus', conferir)
+      document.removeEventListener('visibilitychange', conferir)
+    }
+  }, [conectado, recarregar])
+
+  const desconectar = () => {
+    if (!confirm('Desconectar do Zotero neste navegador? O número e a chave serão esquecidos aqui. A mesa continua salva.')) return
+    esquecerCredenciais()
+    esquecerCopiaZotero()
+    setMotivoConexao(null)
+    setConectado(false)
+  }
 
   const bib = estado.tipo === 'pronto' ? estado.bib : null
 
@@ -88,13 +147,6 @@ function Interior() {
   const [escolhida, setEscolhida] = useState<string | null>(null)
   const [focarRelacao, setFocarRelacao] = useState(false)
   const [notas, setNotas] = useState(mesa.notas)
-  const [aviso, setAviso] = useState<string | null>(null)
-  const tempoAviso = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const avisar = useCallback((texto: string) => {
-    setAviso(texto)
-    clearTimeout(tempoAviso.current)
-    tempoAviso.current = setTimeout(() => setAviso(null), 2600)
-  }, [])
   const abrirAssoc = useCallback((id: string, focar = false) => {
     setAtiva(id)
     setFocarRelacao(focar)
@@ -161,73 +213,91 @@ function Interior() {
         <header className="barra">
           <div className="marca">Mesa de fichas</div>
           {bib && (
-            <div className="grupo">
-              <SeletorColecao bib={bib} valor={colecao} aoMudar={escolherColecao} />
+            <>
+              {/* O que ver: coleção e busca. */}
+              <div className="grupo">
+                <SeletorColecao bib={bib} valor={colecao} aoMudar={escolherColecao} />
+                {modo === 'mesa' && (
+                  <input
+                    className="busca"
+                    type="search"
+                    placeholder="Destacar conceito, autor…"
+                    aria-label="Destacar fichas"
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                  />
+                )}
+              </div>
+              <span className="divisor" aria-hidden="true" />
+              {/* Como ver: mesa ou lista. */}
+              <div className="grupo">
+                <div className="segmentado" role="group" aria-label="Modo de ver">
+                  <button className="btn" aria-pressed={modo === 'mesa'} onClick={() => setModo('mesa')}>
+                    Mesa
+                  </button>
+                  <button className="btn" aria-pressed={modo === 'lista'} onClick={() => setModo('lista')}>
+                    Lista
+                  </button>
+                </div>
+                {bib.problemas.length > 0 && (
+                  <button className="btn alerta" onClick={() => setModo('lista')}>
+                    Fichas com problema ({bib.problemas.length})
+                  </button>
+                )}
+              </div>
               {modo === 'mesa' && (
                 <>
-                  <BarraMesa colecao={colecao} />
-                  <button className="btn" aria-pressed={ligando} onClick={() => alternarLigando(!ligando)}>
-                    Associar fichas
-                  </button>
-                  <button
-                    className="btn"
-                    aria-pressed={notas}
-                    onClick={() => {
-                      setNotas(!notas)
-                      alterarMesa((e) => (e.notas = !notas))
-                    }}
-                  >
-                    Anotações visíveis
-                  </button>
+                  <span className="divisor" aria-hidden="true" />
+                  {/* Ferramentas da mesa. */}
+                  <div className="grupo">
+                    <BarraMesa colecao={colecao} />
+                    <button className="btn" aria-pressed={ligando} onClick={() => alternarLigando(!ligando)}>
+                      Associar fichas
+                    </button>
+                    <button
+                      className="btn"
+                      aria-pressed={notas}
+                      onClick={() => {
+                        setNotas(!notas)
+                        alterarMesa((e) => (e.notas = !notas))
+                      }}
+                    >
+                      Anotações visíveis
+                    </button>
+                  </div>
                 </>
               )}
-              <button className="btn" aria-pressed={modo === 'mesa'} onClick={() => setModo('mesa')}>
-                Mesa
-              </button>
-              <button className="btn" aria-pressed={modo === 'lista'} onClick={() => setModo('lista')}>
-                Lista
-              </button>
-              {bib.problemas.length > 0 && (
-                <button className="btn alerta" onClick={() => setModo('lista')}>
-                  Fichas com problema ({bib.problemas.length})
-                </button>
-              )}
-              <button className="btn" onClick={recarregar}>
-                Recarregar do Zotero
-              </button>
-              <button className="btn" onClick={() => setJanela('tema')}>
-                Tema
-              </button>
-              <button className="btn" onClick={() => setJanela('exportar')}>
-                Exportar
-              </button>
-              <button className="btn" onClick={() => setJanela('arquivo')}>
-                Salvar ou abrir
-              </button>
-              {modo === 'mesa' && (
-                <input
-                  className="busca"
-                  type="search"
-                  placeholder="Destacar conceito, autor…"
-                  aria-label="Destacar fichas"
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
+              <div className="grupo direita">
+                {modo === 'mesa' && <BarraZoom />}
+                <MenuMais
+                  itens={[
+                    ['Buscar novidades no Zotero', () => recarregar()],
+                    ['Ler tudo do Zotero de novo', () => recarregar(true)],
+                    ['Tema…', () => setJanela('tema')],
+                    ['Exportar…', () => setJanela('exportar')],
+                    ['Salvar ou abrir…', () => setJanela('arquivo')],
+                    ...(MODO_LOCAL ? [] : [['Desconectar do Zotero…', desconectar] as [string, () => void]]),
+                  ]}
                 />
-              )}
-            </div>
+              </div>
+            </>
           )}
-          {bib && modo === 'mesa' && <BarraZoom />}
         </header>
 
-        {FALTA_CONFIG.length > 0 ? (
-          <Aviso titulo="Falta configurar o Zotero" problema>
-            Abra o arquivo <code>.env.local</code> na pasta do projeto e preencha: {FALTA_CONFIG.join(' e ')}.
-            Depois feche e rode de novo <code>npm run dev</code>.
-          </Aviso>
+        {!conectado ? (
+          <Conectar
+            motivo={motivoConexao}
+            aoConectar={() => {
+              setMotivoConexao(null)
+              setEstado({ tipo: 'carregando' })
+              setConectado(true)
+              recarregar(true)
+            }}
+          />
         ) : estado.tipo === 'erro' ? (
           <Aviso titulo="Não deu certo ler o Zotero" problema>
             {estado.motivo}{' '}
-            <button className="btn" onClick={recarregar}>
+            <button className="btn" onClick={() => recarregar()}>
               Tentar de novo
             </button>
           </Aviso>
@@ -264,7 +334,7 @@ function Interior() {
             )}
           </div>
         )}
-        <SituacaoSalvamento />
+        {conectado && bib && <SituacaoSalvamento />}
         {janela === 'tema' && <DialogoTema tema={tema} aoMudar={mudarTema} aoFechar={() => setJanela(null)} />}
         {janela === 'exportar' && bib && (
           <DialogoExportar bib={bib} colecao={colecao} aoFechar={() => setJanela(null)} />
@@ -290,6 +360,70 @@ function Aviso({ titulo, problema, children }: { titulo: string; problema?: bool
         </div>
       </div>
     </main>
+  )
+}
+
+/**
+ * Anota na mesa as fichas que sumiram do Zotero (se estavam na mesa) e esquece as
+ * que voltaram. Devolve quantas fichas novas e quantas sumidas há, para avisar.
+ */
+function registrarMudancas(bib: Biblioteca): { novas: string[]; sumiram: number } {
+  const naMesa = (k: string) => !!mesa.fichas[k] || mesa.associacoes.some((a) => a.a === k || a.b === k)
+  const sumiram = bib.sumiram.filter((f) => naMesa(f.chave))
+  const voltaram = bib.fichas.filter((f) => mesa.removidas[f.chave])
+  if (sumiram.length || voltaram.length) {
+    const em = new Date().toISOString()
+    alterarMesa((e) => {
+      for (const f of sumiram) {
+        e.removidas[f.chave] = { autorAno: f.autorAno, obra: f.obra, tese: f.tese, ref: f.ref, colecoes: f.colecoes, em }
+      }
+      for (const f of voltaram) delete e.removidas[f.chave]
+    })
+  }
+  const jaTemMesa = Object.keys(mesa.fichas).length > 0
+  const novas = jaTemMesa ? bib.fichas.filter((f) => !mesa.fichas[f.chave]).map((f) => f.chave) : []
+  return { novas, sumiram: sumiram.length }
+}
+
+/** Botão "Menu" com as ações menos usadas. Fecha ao escolher, ao clicar fora ou com Esc. */
+function MenuMais({ itens }: { itens: [string, () => void][] }) {
+  const [aberto, setAberto] = useState(false)
+  const caixa = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!aberto) return
+    const fora = (e: PointerEvent) => {
+      if (!caixa.current?.contains(e.target as Node)) setAberto(false)
+    }
+    const tecla = (e: KeyboardEvent) => e.key === 'Escape' && setAberto(false)
+    addEventListener('pointerdown', fora)
+    addEventListener('keydown', tecla)
+    return () => {
+      removeEventListener('pointerdown', fora)
+      removeEventListener('keydown', tecla)
+    }
+  }, [aberto])
+  return (
+    <div className="menu-mais" ref={caixa}>
+      <button className="btn" aria-haspopup="menu" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>
+        Menu ▾
+      </button>
+      {aberto && (
+        <div className="menu-lista" role="menu">
+          {itens.map(([nome, acao]) => (
+            <button
+              key={nome}
+              role="menuitem"
+              onClick={() => {
+                setAberto(false)
+                acao()
+              }}
+            >
+              {nome}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

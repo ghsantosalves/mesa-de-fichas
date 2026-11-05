@@ -1,6 +1,6 @@
 // A mesa infinita: fichas e áreas arrastáveis, zoom e "Ver tudo", com filtro por coleção.
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import {
   Background,
   BackgroundVariant,
@@ -15,11 +15,12 @@ import { ArestaAssocMemo } from './ArestaAssoc.tsx'
 import { arestaDe, type ArestaAssoc } from './assoc.ts'
 import '@xyflow/react/dist/style.css'
 import { comSubcolecoes, type Biblioteca, type Ficha } from '../zotero/biblioteca.ts'
-import { alterarMesa, mesa, posicionarFicha, type Area, type Posicao } from '../estado/mesa.ts'
-import { LARGURA_FICHA, NoFichaMemo } from './NoFicha.tsx'
+import { alterarMesa, mesa, posicionarFicha, type Area, type FichaRemovida, type Posicao } from '../estado/mesa.ts'
+import { LARGURA_FICHA, NoFichaMemo, type DadosFicha } from './NoFicha.tsx'
 import { NoAreaMemo } from './NoArea.tsx'
 import { noDeArea, type NoMesa } from './operacoes.ts'
 import { VER_TUDO } from './opcoes.ts'
+import { FaixaNovas, TIPO_ARRASTE } from './FaixaNovas.tsx'
 
 const tiposDeNo = { ficha: NoFichaMemo, area: NoAreaMemo }
 const tiposDeAresta = { assoc: ArestaAssocMemo }
@@ -28,6 +29,28 @@ const ALTURA_ESTIMADA = 420
 
 const passa = (f: Ficha, filtro: Set<string> | null) => !filtro || f.colecoes.some((k) => filtro.has(k))
 const areaPassa = (a: Area, colecao: string) => colecao === '*' || a.colecao === '*' || a.colecao === colecao
+
+/** Ficha "de mentira" com o último conteúdo conhecido de uma ficha que sumiu do Zotero. */
+function fichaRemovida(chave: string, r: FichaRemovida | undefined): Ficha {
+  return {
+    chave,
+    versao: 0,
+    chavePai: null,
+    colecoes: r?.colecoes ?? [],
+    titulo: r ? `${r.autorAno}${r.obra ? `, ${r.obra}` : ''}` : '',
+    autorAno: r?.autorAno || 'Ficha sem dados',
+    obra: r?.obra ?? '',
+    ref: r?.ref ?? '',
+    tese: r?.tese ?? '',
+    conceitos: [],
+    lembrar: '',
+    dialogos: [],
+    usos: [],
+    video: '',
+    fichamento: '',
+    avisos: [],
+  }
+}
 
 type Props = {
   bib: Biblioteca
@@ -47,44 +70,81 @@ export function Mesa({ bib, colecao, ligando, notas, aoClicarFicha, aoClicarFund
   const semLugar = useRef(new Set<string>())
   /** Fichas que estão sendo levadas junto com a área arrastada (e sua distância até ela). */
   const levadas = useRef(new Map<string, Posicao>())
+  /** Onde começar a arrumar as fichas colocadas pela faixa (null = abaixo de tudo). */
+  const origemNovas = useRef<Posicao | null>(null)
+  /** Fichas para onde levar a vista depois de arrumadas (quando não couberam na tela). */
+  const enquadrarDepois = useRef<string[] | null>(null)
+  /** Fichas do Zotero que ainda não estão na mesa (aparecem na faixa "Novas fichas"). */
+  const [novas, setNovas] = useState<Ficha[]>([])
+  const { screenToFlowPosition } = useReactFlow()
 
   const nomeColecao = useMemo(() => new Map(bib.colecoes.map((c) => [c.chave, c.nome])), [bib])
   const filtro = useMemo(() => (colecao === '*' ? null : comSubcolecoes(colecao, bib.colecoes)), [colecao, bib])
   const visiveis = bib.fichas.filter((f) => passa(f, filtro)).length
 
-  // Fichas vindas do Zotero: mantém a posição das que já estão na mesa (nesta
-  // sessão ou salvas antes); só as que nunca tiveram lugar serão arrumadas.
-  useEffect(() => {
-    const atuais = new Map(getNodes().map((n) => [n.id, n]))
-    const areas = mesa.areas.map((a) => noDeArea(a, !areaPassa(a, colecao)))
-    const fichas = bib.fichas.map((f): NoMesa => {
+  const noDeFicha = useCallback(
+    (f: Ficha, posicao: Posicao, extra?: Partial<DadosFicha>): NoMesa => {
       const salvo = mesa.fichas[f.chave]
-      const posicao = atuais.get(f.chave)?.position ?? salvo
-      if (!posicao) semLugar.current.add(f.chave)
       return {
         id: f.chave,
         type: 'ficha',
-        position: posicao ?? { x: 0, y: 0 },
+        position: posicao,
         data: {
           ficha: f,
           colecoes: f.colecoes.map((k) => nomeColecao.get(k) ?? '?'),
           cor: salvo?.cor,
           recolhida: !!salvo?.recolhida,
           ocultos: salvo?.ocultos ?? [],
+          ...extra,
         },
         hidden: !passa(f, filtro),
       }
-    })
+    },
+    [nomeColecao, filtro],
+  )
+
+  /** Desenha as associações cujas duas fichas estão na mesa. As outras continuam guardadas. */
+  const atualizarArestas = useCallback(() => {
+    const naMesa = new Set(getNodes().map((n) => n.id))
+    setArestas(mesa.associacoes.filter((a) => naMesa.has(a.a) && naMesa.has(a.b)).map(arestaDe))
+  }, [getNodes, setArestas])
+
+  // Fichas vindas do Zotero. Ficam na mesa as que já tinham lugar (nesta sessão ou
+  // salvas antes). Na primeira vez, todas são arrumadas sozinhas; depois disso, as
+  // novas esperam na faixa "Novas fichas". As que sumiram do Zotero aparecem como
+  // "removidas" até o usuário decidir tirá-las.
+  useEffect(() => {
+    const atuais = new Map(getNodes().map((n) => [n.id, n]))
+    const primeiraVez = Object.keys(mesa.fichas).length === 0 && atuais.size === 0
+    const areas = mesa.areas.map((a) => noDeArea(a, !areaPassa(a, colecao)))
+    const naMesa: NoMesa[] = []
+    const foraDaMesa: Ficha[] = []
+    for (const f of bib.fichas) {
+      const posicao = atuais.get(f.chave)?.position ?? mesa.fichas[f.chave]
+      if (posicao) naMesa.push(noDeFicha(f, posicao))
+      else if (primeiraVez) {
+        semLugar.current.add(f.chave)
+        naMesa.push(noDeFicha(f, { x: 0, y: 0 }))
+      } else foraDaMesa.push(f)
+    }
+    // Fichas com lugar na mesa que não existem mais no Zotero (nem como "com problema").
+    const noZotero = new Set([...bib.fichas, ...bib.problemas].map((f) => f.chave))
+    for (const [chave, p] of Object.entries(mesa.fichas)) {
+      if (noZotero.has(chave)) continue
+      const r = mesa.removidas[chave]
+      const associacoes = mesa.associacoes.filter((a) => a.a === chave || a.b === chave).length
+      naMesa.push(noDeFicha(fichaRemovida(chave, r), p, { removida: { em: r?.em ?? '', associacoes } }))
+    }
     // Áreas primeiro: são desenhadas antes, ficando atrás das fichas.
-    setNos([...areas, ...fichas])
-    // Associações cujas duas fichas estão no Zotero. As outras continuam guardadas.
-    const existem = new Set(bib.fichas.map((f) => f.chave))
-    setArestas(mesa.associacoes.filter((a) => existem.has(a.a) && existem.has(a.b)).map(arestaDe))
+    setNos([...areas, ...naMesa])
+    setNovas(foraDaMesa)
+    requestAnimationFrame(atualizarArestas)
     // O filtro é tratado no efeito abaixo; aqui só reagimos a uma nova leitura do Zotero.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bib])
 
-  // Depois de medir as fichas novas, arruma-as em colunas abaixo do que já existe.
+  // Depois de medir as fichas sem lugar, arruma-as em colunas (abaixo do que já
+  // existe, ou a partir do ponto escolhido ao colocá-las pela faixa).
   useEffect(() => {
     if (!medidos || semLugar.current.size === 0) return
     const todos = getNodes()
@@ -97,21 +157,89 @@ export function Mesa({ bib, colecao, ligando, notas, aoClicarFicha, aoClicarFund
           : 0,
       )
     const altura = (n: NoMesa) => n.measured?.height ?? n.height ?? ALTURA_ESTIMADA
-    const topo = fixos.length ? Math.max(...fixos.map((n) => n.position.y + altura(n))) + ESPACO * 2 : 0
+    const origem = origemNovas.current ?? {
+      x: 0,
+      y: fixos.length ? Math.max(...fixos.map((n) => n.position.y + altura(n))) + ESPACO * 2 : 0,
+    }
     const colunas = Math.max(1, Math.min(6, Math.ceil(Math.sqrt(novos.length * 1.3))))
-    const base = Array<number>(colunas).fill(topo)
+    const base = Array<number>(colunas).fill(origem.y)
     const lugar = new Map<string, Posicao>()
     for (const n of novos) {
       const c = base.indexOf(Math.min(...base))
-      lugar.set(n.id, { x: c * (LARGURA_FICHA + ESPACO), y: base[c] })
+      lugar.set(n.id, { x: origem.x + c * (LARGURA_FICHA + ESPACO), y: base[c] })
       base[c] += altura(n) + ESPACO
     }
+    const primeiraArrumacao = !origemNovas.current
     semLugar.current.clear()
+    origemNovas.current = null
     setNos((ns) => ns.map((n) => (lugar.has(n.id) ? { ...n, position: lugar.get(n.id)! } : n)))
     alterarMesa((e) => lugar.forEach((p, id) => posicionarFicha(e, id, p)))
     // Na primeira vez (sem vista salva), enquadra tudo; depois, respeita a vista guardada.
-    if (!mesa.vista) requestAnimationFrame(() => fitView(VER_TUDO))
+    const ir = enquadrarDepois.current
+    enquadrarDepois.current = null
+    if (ir) requestAnimationFrame(() => fitView({ nodes: ir.map((id) => ({ id })), padding: 0.3, maxZoom: 1, duration: 300 }))
+    else if (primeiraArrumacao && !mesa.vista) requestAnimationFrame(() => fitView(VER_TUDO))
   }, [medidos, getNodes, setNos, fitView])
+
+  /**
+   * Procura, na parte visível da mesa, um espaço vazio para `n` fichas (em colunas).
+   * Se não houver, devolve null: elas vão para baixo de tudo.
+   */
+  const lugarLivre = (n: number): Posicao | null => {
+    const tela = document.querySelector('.mesa .react-flow')?.getBoundingClientRect()
+    if (!tela) return null
+    const a = screenToFlowPosition({ x: tela.left, y: tela.top })
+    const b = screenToFlowPosition({ x: tela.right, y: tela.bottom })
+    const colunas = Math.max(1, Math.min(6, Math.ceil(Math.sqrt(n * 1.3))))
+    const larg = colunas * (LARGURA_FICHA + ESPACO)
+    const alt = Math.min(ALTURA_ESTIMADA * Math.ceil(n / colunas), Math.max(ALTURA_ESTIMADA, b.y - a.y - 80))
+    const ocupados = getNodes()
+      .filter((no) => !no.hidden && no.type === 'ficha')
+      .map((no) => ({
+        x: no.position.x,
+        y: no.position.y,
+        w: no.measured?.width ?? LARGURA_FICHA,
+        h: no.measured?.height ?? ALTURA_ESTIMADA,
+      }))
+    const livre = (x: number, y: number) =>
+      ocupados.every((r) => x + larg <= r.x - 10 || x >= r.x + r.w + 10 || y + alt <= r.y - 10 || y >= r.y + r.h + 10)
+    const passo = (LARGURA_FICHA + ESPACO) / 2
+    for (let y = a.y + 40; y + 120 <= b.y; y += passo) {
+      for (let x = a.x + 40; x + larg <= b.x + 1; x += passo) {
+        if (livre(x, y)) return { x: Math.round(x), y: Math.round(y) }
+      }
+    }
+    return null
+  }
+
+  /** Põe fichas da faixa na mesa: num ponto (ao soltar) ou num espaço vazio da parte visível. */
+  const colocar = (fichas: Ficha[], ponto?: Posicao) => {
+    if (!fichas.length) return
+    const chaves = new Set(fichas.map((f) => f.chave))
+    if (ponto) {
+      setNos((ns) => [...ns, ...fichas.map((f) => noDeFicha(f, ponto))])
+      alterarMesa((e) => fichas.forEach((f) => posicionarFicha(e, f.chave, ponto)))
+    } else {
+      origemNovas.current = lugarLivre(fichas.length)
+      // Sem espaço visível: vão para baixo de tudo, e a vista vai até elas.
+      if (!origemNovas.current) enquadrarDepois.current = [...chaves]
+      fichas.forEach((f) => semLugar.current.add(f.chave))
+      setNos((ns) => [...ns, ...fichas.map((f) => noDeFicha(f, { x: 0, y: 0 }))])
+    }
+    setNovas((ns) => ns.filter((f) => !chaves.has(f.chave)))
+    requestAnimationFrame(atualizarArestas)
+  }
+  const aoPassarArrastando = (e: DragEvent) => {
+    if (e.dataTransfer.types.includes(TIPO_ARRASTE)) e.preventDefault()
+  }
+  const aoSoltarDaFaixa = (e: DragEvent) => {
+    const chave = e.dataTransfer.getData(TIPO_ARRASTE)
+    const f = novas.find((x) => x.chave === chave)
+    if (!f) return
+    e.preventDefault()
+    const p = screenToFlowPosition({ x: e.clientX, y: e.clientY })
+    colocar([f], { x: Math.round(p.x - LARGURA_FICHA / 2), y: Math.round(p.y - 20) })
+  }
 
   // Trocar a coleção: esconde fichas e áreas de fora e enquadra o que ficou.
   // Ao abrir a mesa, não enquadra: a vista salva é que vale.
@@ -181,7 +309,11 @@ export function Mesa({ bib, colecao, ligando, notas, aoClicarFicha, aoClicarFund
   }
 
   return (
-    <div className={`mesa${ligando ? ' ligando' : ''}${notas ? '' : ' sem-notas'}`}>
+    <div
+      className={`mesa${ligando ? ' ligando' : ''}${notas ? '' : ' sem-notas'}`}
+      onDragOver={aoPassarArrastando}
+      onDrop={aoSoltarDaFaixa}
+    >
       <ReactFlow
         nodes={nos}
         edges={arestas}
@@ -220,6 +352,13 @@ export function Mesa({ bib, colecao, ligando, notas, aoClicarFicha, aoClicarFund
         <div className="mesa-vazia">
           {bib.fichas.length === 0 ? 'Ainda não há fichas no Zotero.' : 'Nenhuma ficha nesta coleção.'}
         </div>
+      )}
+      {novas.length > 0 && (
+        <FaixaNovas
+          novas={novas.filter((f) => passa(f, filtro))}
+          emOutrasColecoes={novas.filter((f) => !passa(f, filtro)).length}
+          aoColocar={colocar}
+        />
       )}
     </div>
   )

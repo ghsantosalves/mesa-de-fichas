@@ -48,6 +48,20 @@ export function inverterAssociacao(rf: Mesa, assoc: Associacao) {
   mudarAssociacao(rf, assoc.id, { a: assoc.b, b: assoc.a })
 }
 
+/**
+ * Tira da mesa uma ficha que sumiu do Zotero, junto com as associações dela.
+ * Só é chamada quando o usuário decide (com confirmação).
+ */
+export function tirarFichaDaMesa(rf: Mesa, chave: string) {
+  rf.setNodes((ns) => ns.filter((n) => n.id !== chave))
+  rf.setEdges((es) => es.filter((e) => e.source !== chave && e.target !== chave))
+  alterarMesa((e) => {
+    delete e.fichas[chave]
+    delete e.removidas[chave]
+    e.associacoes = e.associacoes.filter((x) => x.a !== chave && x.b !== chave)
+  })
+}
+
 export function removerAssociacao(rf: Mesa, id: string) {
   rf.setEdges((es) => es.filter((e) => e.id !== id))
   alterarMesa((e) => {

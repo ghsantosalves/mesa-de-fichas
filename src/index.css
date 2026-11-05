@@ -124,8 +124,59 @@ input {
   align-items: center;
   flex-wrap: wrap;
 }
-.zoom {
+.grupo.direita {
   margin-left: auto;
+}
+.divisor {
+  width: 1px;
+  align-self: stretch;
+  background: var(--barra-borda);
+  margin: 2px 2px;
+}
+/* Mesa | Lista como um botão de duas partes. */
+.segmentado {
+  display: inline-flex;
+}
+.segmentado .btn {
+  border-radius: 0;
+}
+.segmentado .btn:first-child {
+  border-radius: 6px 0 0 6px;
+}
+.segmentado .btn:last-child {
+  border-radius: 0 6px 6px 0;
+  margin-left: -1px;
+}
+.menu-mais {
+  position: relative;
+}
+.menu-lista {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  min-width: 210px;
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  box-shadow: var(--sombra-alta);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+.menu-lista button {
+  text-align: left;
+  font: 500 13.5px/1.2 var(--sans);
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--tinta);
+  cursor: pointer;
+}
+.menu-lista button:hover,
+.menu-lista button:focus-visible {
+  background: var(--mesa);
 }
 .nivel {
   font: 500 12.5px/1 var(--sans);
@@ -655,6 +706,132 @@ input {
     border-left: 0;
     border-top: 1px solid var(--borda);
   }
+}
+
+/* Faixa "Novas fichas" */
+.faixa-novas {
+  position: absolute;
+  left: 14px;
+  bottom: 48px;
+  z-index: 3;
+  width: 290px;
+  max-height: 55%;
+  display: flex;
+  flex-direction: column;
+  background: var(--cartao);
+  color: var(--tinta);
+  border: 1px solid var(--borda);
+  border-left: 4px solid var(--linha);
+  border-radius: 8px;
+  box-shadow: var(--sombra-alta);
+  padding: 10px 12px;
+}
+.fn-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fn-titulo {
+  border: 0;
+  background: none;
+  color: var(--tinta);
+  font: 600 14px/1.2 var(--sans);
+  cursor: pointer;
+  padding: 2px 0;
+}
+.fn-dica {
+  font: 400 12.5px/1.4 var(--sans);
+  color: var(--tinta-2);
+  margin: 6px 0;
+}
+.fn-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fn-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 7px 9px;
+  cursor: grab;
+  background: var(--cartao);
+}
+.fn-autor {
+  font: 600 13.5px/1.25 var(--serifa);
+}
+.fn-obra {
+  font: italic 400 12px/1.3 var(--serifa);
+  color: var(--tinta-2);
+}
+.fn-item .btn {
+  padding: 5px 8px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Ficha que sumiu do Zotero */
+.ficha-mesa.removida {
+  border: 1.5px dashed var(--erro);
+  border-left: 5px solid var(--erro);
+  opacity: 0.92;
+}
+.faixa-removida {
+  font: 600 11.5px/1.2 var(--sans);
+  color: var(--erro);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.tese-removida {
+  font: 400 13.5px/1.45 var(--serifa);
+  margin: 8px 0 0;
+  color: var(--tinta-2);
+}
+.explica-removida {
+  font: 400 12.5px/1.4 var(--sans);
+  color: var(--tinta-2);
+  margin: 8px 0;
+}
+
+/* Tela de conexão */
+.conectar ol {
+  font: 400 14px/1.5 var(--serifa);
+  padding-left: 20px;
+}
+.conectar a {
+  color: var(--linha);
+}
+.campo {
+  display: block;
+  margin-top: 12px;
+}
+.campo span {
+  display: block;
+  font: 600 12.5px/1.2 var(--sans);
+  color: var(--rotulo);
+  margin-bottom: 5px;
+}
+.campo input {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--tinta);
+  padding: 9px 10px;
+  font: 400 14px/1.2 var(--sans);
+}
+.erro-texto {
+  color: var(--erro) !important;
+  font: 500 13.5px/1.4 var(--sans) !important;
 }
 
 /* Busca */

@@ -54,9 +54,13 @@ export const VARS_TEMA: [string, string][] = [
   ['--rotulo', 'Nomes dos campos'],
   ['--linha', 'Associações'],
 ]
+/** Última versão conhecida de uma ficha que sumiu do Zotero (para mostrar e decidir o que fazer). */
+export type FichaRemovida = { autorAno: string; obra: string; tese: string; ref: string; colecoes: string[]; em: string }
 export type EstadoMesa = {
   versao: 1
   tema: Tema
+  /** Fichas que estavam na mesa e sumiram do Zotero, por chave da nota. */
+  removidas: Record<string, FichaRemovida>
   /** Por chave da nota no Zotero. Fichas que sumiram do Zotero continuam aqui. */
   fichas: Record<string, EstadoFicha>
   areas: Area[]
@@ -80,6 +84,7 @@ function vazio(): EstadoMesa {
   return {
     versao: 1,
     tema: { modo: 'sistema', cores: { claro: {}, escuro: {} } },
+    removidas: {},
     fichas: {},
     areas: [],
     associacoes: [],
@@ -140,6 +145,20 @@ function validar(d: unknown): EstadoMesa {
     }
   }
   if (o.notas === false) e.notas = false
+  if (o.removidas && typeof o.removidas === 'object') {
+    const texto = (v: unknown) => (typeof v === 'string' ? v : '')
+    for (const [k, r] of Object.entries(o.removidas as Record<string, Record<string, unknown>>)) {
+      if (!r || typeof r !== 'object') continue
+      e.removidas[k] = {
+        autorAno: texto(r.autorAno),
+        obra: texto(r.obra),
+        tese: texto(r.tese),
+        ref: texto(r.ref),
+        colecoes: Array.isArray(r.colecoes) ? r.colecoes.filter((c): c is string => typeof c === 'string') : [],
+        em: texto(r.em),
+      }
+    }
+  }
   const t = o.tema as Record<string, unknown> | null
   if (t && typeof t === 'object') {
     if (t.modo === 'claro' || t.modo === 'escuro' || t.modo === 'sistema') e.tema.modo = t.modo

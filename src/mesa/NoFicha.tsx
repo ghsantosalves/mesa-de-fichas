@@ -6,8 +6,17 @@ import { Contexto, normalizar } from './contexto.ts'
 import { linkZotero, type Ficha } from '../zotero/biblioteca.ts'
 import { CAMPOS, CORES, NOMES_CAMPOS, type Campo, type Cor } from '../estado/mesa.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
+import { tirarFichaDaMesa, type ArestaAssoc } from './assoc.ts'
 
-export type DadosFicha = { ficha: Ficha; colecoes: string[]; cor?: Cor; recolhida: boolean; ocultos: Campo[] }
+export type DadosFicha = {
+  ficha: Ficha
+  colecoes: string[]
+  cor?: Cor
+  recolhida: boolean
+  ocultos: Campo[]
+  /** A ficha sumiu do Zotero: mostra o último conteúdo conhecido e a opção de tirar da mesa. */
+  removida?: { em: string; associacoes: number }
+}
 export type NoFicha = Node<DadosFicha, 'ficha'>
 
 export const LARGURA_FICHA = 300
@@ -22,7 +31,48 @@ function link(url: string, texto: string) {
   )
 }
 
-function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
+/** Cartão de uma ficha que sumiu do Zotero. */
+function CartaoRemovida({ id, data }: NodeProps<NoFicha>) {
+  const rf = useReactFlow<NoMesa, ArestaAssoc>()
+  const [confirmar, setConfirmar] = useState(false)
+  const r = data.removida!
+  const f = data.ficha
+  const n = r.associacoes
+  return (
+    <article className="ficha-mesa removida" style={{ width: LARGURA_FICHA }}>
+      <Handle type="target" position={Position.Top} isConnectable={false} className="ponto-ligacao" />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} className="ponto-ligacao" />
+      <div className="faixa-removida">Removida do Zotero</div>
+      <div className="autor">{f.autorAno}</div>
+      {f.obra && <div className="obra">{f.obra}</div>}
+      {f.tese && <p className="tese-removida">{f.tese}</p>}
+      <p className="explica-removida">
+        A nota foi apagada, foi para a lixeira ou perdeu a tag “ficha”
+        {r.em ? ` (notado em ${new Date(r.em).toLocaleDateString('pt-BR')})` : ''}. Se ela voltar ao Zotero, a ficha
+        volta ao normal aqui.{' '}
+        {n === 1 ? 'A associação dela continua guardada.' : n > 1 ? `As ${n} associações dela continuam guardadas.` : ''}
+      </p>
+      <button
+        className={`btn nodrag${confirmar ? ' perigo' : ''}`}
+        onClick={() => (confirmar ? tirarFichaDaMesa(rf, id) : setConfirmar(true))}
+        onBlur={() => setConfirmar(false)}
+      >
+        {confirmar
+          ? n > 0
+            ? `Clique de novo: tira a ficha e ${n === 1 ? 'a associação' : `as ${n} associações`}`
+            : 'Clique de novo para tirar'
+          : 'Tirar da mesa'}
+      </button>
+    </article>
+  )
+}
+
+function CartaoNaMesa(props: NodeProps<NoFicha>) {
+  if (props.data.removida) return <CartaoRemovida {...props} />
+  return <CartaoNormal {...props} />
+}
+
+function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   const rf = useReactFlow<NoMesa>()
   const { escolhida, pontas, busca } = useContext(Contexto)
   const [menu, setMenu] = useState(false)
