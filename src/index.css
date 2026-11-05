@@ -96,3 +96,131 @@ body {
   color: var(--rotulo);
   margin-top: 10px;
 }
+
+/* Etapa 2: listagem */
+.inicio {
+  max-width: 640px;
+}
+.inicio h2 {
+  font: 600 17px/1.2 var(--serifa);
+  margin: 28px 0 8px;
+}
+.explica {
+  font: 400 13.5px/1.45 var(--sans);
+  color: var(--tinta-2);
+  margin: 0 0 10px;
+}
+.resumo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font: 400 14px/1.4 var(--sans);
+}
+.resumo p {
+  margin: 0;
+}
+.btn {
+  font: 500 13.5px/1 var(--sans);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--tinta);
+  cursor: pointer;
+}
+.cartao + .cartao {
+  margin-top: 12px;
+}
+.ficha .autor,
+.problema .autor {
+  font: 600 16px/1.25 var(--serifa);
+}
+.ficha .obra {
+  font: italic 400 13.5px/1.35 var(--serifa);
+  color: var(--tinta-2);
+  margin-top: 2px;
+}
+.campos {
+  margin: 10px 0 0;
+}
+.campos dt {
+  font: 600 11.5px/1.2 var(--sans);
+  color: var(--rotulo);
+  margin-top: 8px;
+}
+.campos dd {
+  margin: 2px 0 0;
+  font: 400 14px/1.45 var(--serifa);
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+.tag {
+  font: 500 11.5px/1 var(--sans);
+  padding: 4px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--borda);
+}
+.cartao .ref {
+  font: 400 12px/1.4 var(--sans);
+  color: var(--tinta-2);
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--borda);
+}
+.pe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+.bibs {
+  font: 500 11.5px/1.3 var(--sans);
+  color: var(--tinta-2);
+  flex: 1;
+}
+.pe a {
+  font: 500 12px/1 var(--sans);
+  color: var(--linha);
+}
+.avisos,
+.motivos {
+  font: 400 13px/1.4 var(--sans);
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+.avisos {
+  color: var(--tinta-2);
+}
+.motivos {
+  color: var(--erro);
+}
+.problema details {
+  margin-top: 8px;
+  font: 400 13px/1.4 var(--sans);
+}
+.problema pre {
+  white-space: pre-wrap;
+  font: 400 12.5px/1.5 ui-monospace, Consolas, monospace;
+  background: var(--mesa);
+  padding: 8px;
+  border-radius: 6px;
+}
+.arvore {
+  list-style: none;
+  margin: 0;
+  padding-left: 18px;
+  font: 400 14px/1.7 var(--sans);
+}
+section > .arvore {
+  padding-left: 0;
+}
+.arvore .vazia {
+  color: var(--tinta-2);
+}
