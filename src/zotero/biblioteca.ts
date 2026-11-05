@@ -8,6 +8,7 @@ import { buscarJson, buscarTexto, buscarTodos, caminhoUsuario } from './api.ts'
 import { lerCredenciais } from './credenciais.ts'
 import { htmlParaTexto } from '../fichas/texto.ts'
 import { interpretarFicha, type CamposFicha } from '../fichas/interpretar.ts'
+import { comparar, t } from '../i18n.ts'
 
 const CHAVE_COPIA = 'mesa-de-fichas:copia-zotero'
 
@@ -168,7 +169,7 @@ export async function carregarBiblioteca(completa = false): Promise<Biblioteca> 
 
   const colecoes = cols.itens
     .map((c) => ({ chave: c.key, nome: c.data.name, pai: c.data.parentCollection || null }))
-    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    .sort((a, b) => comparar(a.nome, b.nome))
 
   return { versao, colecoes, fichas, problemas, sumiram, baixadas }
 }
@@ -186,8 +187,8 @@ function interpretarNota(nota: NotaApi, pais: Record<string, ItemApi>): Ficha | 
   const r = interpretarFicha(texto)
   if (!r.ok) return { ...origem, titulo: r.titulo, motivos: r.motivos, texto }
   const avisos = [...r.avisos]
-  if (!chavePai) avisos.push('É uma nota avulsa, não presa a um item do Zotero.')
-  else if (!pai) avisos.push('Não encontrei o item pai desta nota (talvez esteja na lixeira).')
+  if (!chavePai) avisos.push(t('int.avulsa'))
+  else if (!pai) avisos.push(t('int.semPai'))
   return { ...origem, ...r.campos, avisos }
 }
 

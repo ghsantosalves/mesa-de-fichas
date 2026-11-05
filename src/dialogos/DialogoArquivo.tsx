@@ -4,14 +4,15 @@ import { useState } from 'react'
 import { arquivoDaMesa, lerArquivoDaMesa, substituirMesa, type EstadoMesa } from '../estado/mesa.ts'
 import { baixar } from '../exportar.ts'
 import { Dialogo } from './Dialogo.tsx'
+import { t } from '../i18n.ts'
 
 export function DialogoArquivo({ aoFechar }: { aoFechar: () => void }) {
   const [lida, setLida] = useState<EstadoMesa | null>(null)
   const [msg, setMsg] = useState<{ texto: string; erro?: boolean } | null>(null)
 
   const salvar = () => {
-    baixar(`mesa-de-fichas-${new Date().toISOString().slice(0, 10)}.json`, arquivoDaMesa(), 'application/json')
-    setMsg({ texto: 'Arquivo baixado (veja a pasta Downloads).' })
+    baixar(`marginalia-${new Date().toISOString().slice(0, 10)}.json`, arquivoDaMesa(), 'application/json')
+    setMsg({ texto: t('jan.baixado') })
   }
   const escolher = async (arquivo: File | undefined) => {
     setLida(null)
@@ -20,10 +21,10 @@ export function DialogoArquivo({ aoFechar }: { aoFechar: () => void }) {
       const m = lerArquivoDaMesa(await arquivo.text())
       setLida(m)
       setMsg({
-        texto: `Arquivo lido: ${Object.keys(m.fichas).length} fichas posicionadas, ${m.areas.length} áreas, ${m.associacoes.length} associações.`,
+        texto: t('arq.lido', { f: Object.keys(m.fichas).length, a: m.areas.length, s: m.associacoes.length }),
       })
     } catch {
-      setMsg({ texto: 'Este arquivo não é uma mesa salva por este app.', erro: true })
+      setMsg({ texto: t('arq.invalido'), erro: true })
     }
   }
   const substituir = () => {
@@ -33,35 +34,28 @@ export function DialogoArquivo({ aoFechar }: { aoFechar: () => void }) {
   }
 
   return (
-    <Dialogo titulo="Salvar ou abrir mesa" aoFechar={aoFechar}>
-      <p className="d-texto">
-        A mesa já é salva sozinha neste navegador a cada mudança. O arquivo serve para guardar uma cópia, manter
-        versões diferentes ou levar a mesa para outro navegador ou computador. O conteúdo das fichas continua no
-        Zotero; o arquivo guarda a arrumação: posições, cores, áreas, associações com anotações e tema.
-      </p>
+    <Dialogo titulo={t('arq.titulo')} aoFechar={aoFechar}>
+      <p className="d-texto">{t('arq.explica')}</p>
       <div className="d-bloco">
-        <p className="d-rot">Salvar mesa em arquivo</p>
+        <p className="d-rot">{t('arq.salvar')}</p>
         <button className="btn primario" onClick={salvar}>
-          Salvar arquivo da mesa
+          {t('arq.salvarBotao')}
         </button>
       </div>
       <div className="d-bloco">
-        <p className="d-rot">Abrir mesa de um arquivo</p>
-        <p className="d-texto">
-          Abrir um arquivo substitui a mesa atual. Por segurança, uma cópia da mesa atual fica guardada no navegador,
-          mas se quiser mantê-la à mão, salve-a em arquivo antes.
-        </p>
+        <p className="d-rot">{t('arq.abrir')}</p>
+        <p className="d-texto">{t('arq.abrirExplica')}</p>
         <input type="file" accept=".json,application/json" onChange={(e) => escolher(e.target.files?.[0])} />
         {lida && (
           <button className="btn perigo" onClick={substituir}>
-            Substituir a mesa atual
+            {t('arq.substituir')}
           </button>
         )}
       </div>
       <div className="d-acoes">
         {msg && <span className={`d-msg${msg.erro ? ' erro' : ''}`}>{msg.texto}</span>}
         <button className="btn primario" onClick={aoFechar}>
-          Fechar
+          {t('jan.fechar')}
         </button>
       </div>
     </Dialogo>

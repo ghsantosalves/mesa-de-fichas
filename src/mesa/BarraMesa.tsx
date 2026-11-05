@@ -2,6 +2,7 @@
 
 import { useReactFlow, useStore } from '@xyflow/react'
 import { mudarFichas, novaArea, type NoMesa } from './operacoes.ts'
+import { t } from '../i18n.ts'
 
 export function BarraMesa({ colecao }: { colecao: string }) {
   const rf = useReactFlow<NoMesa>()
@@ -23,10 +24,10 @@ export function BarraMesa({ colecao }: { colecao: string }) {
   return (
     <>
       <button className="btn" onClick={() => novaArea(rf, colecao)}>
-        Nova área
+        {t('barra.novaArea')}
       </button>
       <button className="btn" onClick={alternarTodas}>
-        {todasRecolhidas ? 'Expandir todas' : 'Recolher todas'}
+        {todasRecolhidas ? t('barra.expandirTodas') : t('barra.recolherTodas')}
       </button>
     </>
   )

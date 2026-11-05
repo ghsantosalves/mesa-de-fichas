@@ -7,6 +7,7 @@ import { mesa, type Associacao } from './estado/mesa.ts'
 import { comSubcolecoes, type Biblioteca, type Ficha } from './zotero/biblioteca.ts'
 import type { NoMesa } from './mesa/operacoes.ts'
 import { normalizar } from './mesa/contexto.ts'
+import { NOME_APP, data as dataNoIdioma, t as tr } from './i18n.ts'
 
 export function baixar(nome: string, conteudo: Blob | string, tipo = 'text/plain;charset=utf-8') {
   const blob = typeof conteudo === 'string' ? new Blob([conteudo], { type: tipo }) : conteudo
@@ -22,9 +23,9 @@ export function baixar(nome: string, conteudo: Blob | string, tipo = 'text/plain
 
 const hoje = () => new Date().toISOString().slice(0, 10)
 
-/** Nome de arquivo com a coleção e a data, ex.: mesa-de-fichas-prova-ppgh-2026-11-05.png */
-export function nomeArquivo(bib: Biblioteca, colecao: string, ext: string, prefixo = 'mesa-de-fichas') {
-  const nome = colecao === '*' ? 'todas' : (bib.colecoes.find((c) => c.chave === colecao)?.nome ?? 'colecao')
+/** Nome de arquivo com a coleção e a data, ex.: marginalia-leituras-2026-11-05.png */
+export function nomeArquivo(bib: Biblioteca, colecao: string, ext: string, prefixo = 'marginalia') {
+  const nome = colecao === '*' ? tr('md.todas') : (bib.colecoes.find((c) => c.chave === colecao)?.nome ?? 'colecao')
   const slug = normalizar(nome).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
   return `${prefixo}-${slug}-${hoje()}.${ext}`
 }
@@ -32,7 +33,7 @@ export function nomeArquivo(bib: Biblioteca, colecao: string, ext: string, prefi
 /** Gera o PNG com tudo o que está visível na coleção atual (fichas, áreas, associações). */
 export async function imagemDaMesa(rf: ReactFlowInstance<NoMesa>): Promise<Blob> {
   const visiveis = rf.getNodes().filter((n) => !n.hidden)
-  if (!visiveis.length) throw new Error('Não há nada visível para exportar.')
+  if (!visiveis.length) throw new Error(tr('exp.nadaVisivel'))
   const limites = getNodesBounds(visiveis)
   // Margem para os títulos das áreas e as caixas das associações.
   const margem = 80
@@ -128,36 +129,33 @@ export function pacoteParaClaude(bib: Biblioteca, colecao: string): string {
   const fichas = fichasVisiveis(bib, colecao)
   const porChave = new Map(fichas.map((f) => [f.chave, f]))
   const nomeCol = new Map(bib.colecoes.map((c) => [c.chave, c.nome]))
-  const nomeColecao = colecao === '*' ? 'todas as coleções' : nomeCol.get(colecao)
-  const data = new Date().toLocaleDateString('pt-BR')
+  const nomeColecao = colecao === '*' ? tr('md.todas') : nomeCol.get(colecao)
+  const data = dataNoIdioma(new Date())
 
-  let t = `# Fichas para o Claude — Mesa de fichas\n\n`
-  t += `Coleção: ${nomeColecao} · ${fichas.length} fichas · exportado em ${data}\n\n`
-  t +=
-    'Use com a skill "relacoes-entre-textos". Cada ficha tem um identificador entre colchetes, ' +
-    'como [ABCD1234]; as associações sugeridas devem usar esses identificadores para que a Mesa ' +
-    'as coloque nas fichas certas.\n\n## Fichas\n'
+  let t = `${tr('md.claudeTitulo', { app: NOME_APP })}\n\n`
+  t += `${tr('md.claudeLinha', { col: nomeColecao ?? '', n: fichas.length, data })}\n\n`
+  t += `${tr('md.claudeIntro')}\n\n${tr('md.fichas')}\n`
 
   for (const f of fichas) {
     t += `\n### [${f.chave}] ${f.titulo}\n`
-    if (f.ref) t += `- Referência: ${f.ref}\n`
-    t += `- Tese: ${f.tese || '—'}\n`
-    if (f.conceitos.length) t += `- Conceitos: ${f.conceitos.join('; ')}\n`
-    if (f.lembrar) t += `- Para lembrar: ${f.lembrar}\n`
-    if (f.dialogos.length) t += `- Diálogos: ${f.dialogos.join('; ')}\n`
-    if (f.usos.length) t += `- Uso no projeto: ${f.usos.join(', ')}\n`
+    if (f.ref) t += `- ${tr('md.referencia')}: ${f.ref}\n`
+    t += `- ${tr('md.tese')}: ${f.tese || '—'}\n`
+    if (f.conceitos.length) t += `- ${tr('md.conceitos')}: ${f.conceitos.join('; ')}\n`
+    if (f.lembrar) t += `- ${tr('md.lembrar')}: ${f.lembrar}\n`
+    if (f.dialogos.length) t += `- ${tr('md.dialogos')}: ${f.dialogos.join('; ')}\n`
+    if (f.usos.length) t += `- ${tr('md.usos')}: ${f.usos.join(', ')}\n`
     const cols = f.colecoes.map((k) => nomeCol.get(k)).filter(Boolean)
-    if (cols.length) t += `- Coleções: ${cols.join('; ')}\n`
+    if (cols.length) t += `- ${tr('md.colecoes')}: ${cols.join('; ')}\n`
     const area = areaDe(f, colecao)
-    if (area) t += `- Área na mesa: ${area}\n`
+    if (area) t += `- ${tr('md.area')}: ${area}\n`
   }
 
   const existentes = mesa.associacoes.filter((a) => porChave.has(a.a) && porChave.has(a.b))
-  t += '\n## Associações que já existem\n\n'
-  if (!existentes.length) t += 'Nenhuma ainda.\n'
+  t += `\n${tr('md.existentes')}\n\n`
+  if (!existentes.length) t += `${tr('md.nenhumaAinda')}\n`
   for (const a of existentes) {
     const nota = a.nota.trim() ? `: ${a.nota.trim().replace(/\s+/g, ' ')}` : ''
-    t += `- [${a.a}] ${porChave.get(a.a)!.autorAno} → ${a.rel.trim() || '(relação a definir)'} → [${a.b}] ${porChave.get(a.b)!.autorAno}${nota}\n`
+    t += `- [${a.a}] ${porChave.get(a.a)!.autorAno} → ${a.rel.trim() || tr('md.aDefinir')} → [${a.b}] ${porChave.get(a.b)!.autorAno}${nota}\n`
   }
   return t
 }
@@ -166,36 +164,33 @@ export function pacoteParaClaude(bib: Biblioteca, colecao: string): string {
 export function resumoAssociacoes(bib: Biblioteca, colecao: string, completa: boolean): string {
   const visiveis = new Map(fichasVisiveis(bib, colecao).map((f) => [f.chave, f]))
   const lista = mesa.associacoes.filter((a) => visiveis.has(a.a) && visiveis.has(a.b))
-  const nomeColecao = colecao === '*' ? 'todas as coleções' : bib.colecoes.find((c) => c.chave === colecao)?.nome
-  const data = new Date().toLocaleDateString('pt-BR')
+  const nomeColecao = colecao === '*' ? tr('md.todas') : bib.colecoes.find((c) => c.chave === colecao)?.nome
+  const data = dataNoIdioma(new Date())
 
-  let t = `# Associações entre textos (${nomeColecao})\n\n`
-  t +=
-    `Exportado da Mesa de fichas em ${data}. Cada item liga dois textos: a relação e a anotação foram ` +
-    `escritas pelo pesquisador; os resumos vêm das fichas de leitura, com páginas entre colchetes ` +
-    `([p. ?] = página a conferir).\n`
+  let t = `${tr('md.resumoTitulo', { col: nomeColecao ?? '' })}\n\n`
+  t += `${tr('md.resumoIntro', { app: NOME_APP, data })}\n`
 
   const ficha = (f: Ficha) => {
-    let s = `- Referência: ${f.ref || f.titulo}\n- Tese: ${f.tese || '—'}\n`
+    let s = `- ${tr('md.referencia')}: ${f.ref || f.titulo}\n- ${tr('md.tese')}: ${f.tese || '—'}\n`
     if (completa) {
-      if (f.conceitos.length) s += `- Conceitos: ${f.conceitos.join('; ')}\n`
-      if (f.lembrar) s += `- Para lembrar: ${f.lembrar}\n`
-      if (f.dialogos.length) s += `- Diálogos: ${f.dialogos.join('; ')}\n`
-      if (f.usos.length) s += `- Uso no projeto: ${f.usos.join(', ')}\n`
+      if (f.conceitos.length) s += `- ${tr('md.conceitos')}: ${f.conceitos.join('; ')}\n`
+      if (f.lembrar) s += `- ${tr('md.lembrar')}: ${f.lembrar}\n`
+      if (f.dialogos.length) s += `- ${tr('md.dialogos')}: ${f.dialogos.join('; ')}\n`
+      if (f.usos.length) s += `- ${tr('md.usos')}: ${f.usos.join(', ')}\n`
     }
     const area = areaDe(f, colecao)
-    if (area) s += `- Área na mesa: ${area}\n`
+    if (area) s += `- ${tr('md.area')}: ${area}\n`
     return s
   }
 
   lista.forEach((a: Associacao, i) => {
     const A = visiveis.get(a.a)!
     const B = visiveis.get(a.b)!
-    const rel = a.rel.trim() || '(relação a definir)'
+    const rel = a.rel.trim() || tr('md.aDefinir')
     t += `\n## ${i + 1}. ${A.autorAno} → ${rel} → ${B.autorAno}\n\n`
-    t += `**Texto A:** ${A.titulo}\n${ficha(A)}\n**Texto B:** ${B.titulo}\n${ficha(B)}\n`
-    t += `**Relação:** A ${rel} B\n\n**Anotação:** ${a.nota.trim() || '(sem anotação)'}\n`
+    t += `**${tr('md.textoA')}:** ${A.titulo}\n${ficha(A)}\n**${tr('md.textoB')}:** ${B.titulo}\n${ficha(B)}\n`
+    t += `**${tr('md.relacao')}:** A ${rel} B\n\n**${tr('md.anotacao')}:** ${a.nota.trim() || tr('md.semAnotacao')}\n`
   })
-  if (!lista.length) t += '\nNenhuma associação nesta coleção.\n'
+  if (!lista.length) t += `\n${tr('md.nenhuma')}\n`
   return t
 }

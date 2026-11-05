@@ -9,10 +9,12 @@ import {
   type Ficha,
   type FichaComProblema,
 } from './zotero/biblioteca.ts'
+import { t } from './i18n.ts'
+import { nomeCampo } from './estado/mesa.ts'
 
 export function Listagem({ bib, colecao }: { bib: Biblioteca; colecao: string }) {
   const nomeColecao = new Map(bib.colecoes.map((c) => [c.chave, c.nome]))
-  const nomes = (chaves: string[]) => chaves.map((k) => nomeColecao.get(k) ?? '(coleção desconhecida)')
+  const nomes = (chaves: string[]) => chaves.map((k) => nomeColecao.get(k) ?? t('lista.desconhecida'))
   const filtro = colecao === '*' ? null : comSubcolecoes(colecao, bib.colecoes)
   const fichas = filtro ? bib.fichas.filter((f) => f.colecoes.some((k) => filtro.has(k))) : bib.fichas
 
@@ -20,19 +22,16 @@ export function Listagem({ bib, colecao }: { bib: Biblioteca; colecao: string })
     <>
       <section className="resumo">
         <p>
-          <strong>{fichas.length}</strong> {fichas.length === 1 ? 'ficha' : 'fichas'}
-          {filtro && ` em “${nomeColecao.get(colecao)}”`} · <strong>{bib.problemas.length}</strong> com
-          problema · {bib.colecoes.length} coleções · versão da biblioteca {bib.versao}
+          <strong>{fichas.length}</strong> {fichas.length === 1 ? t('lista.ficha.1') : t('lista.ficha.n')}
+          {filtro && t('lista.em', { nome: nomeColecao.get(colecao) ?? '' })}
+          {t('lista.resumo', { p: bib.problemas.length, c: bib.colecoes.length, v: bib.versao })}
         </p>
       </section>
 
       {bib.problemas.length > 0 && (
         <section>
-          <h2>Fichas com problema</h2>
-          <p className="explica">
-            Estas notas têm a tag <code>ficha</code>, mas não estão no formato. Corrija no Zotero e clique
-            em “Recarregar do Zotero”.
-          </p>
+          <h2>{t('lista.problemas')}</h2>
+          <p className="explica">{t('lista.problemasExplica')}</p>
           {bib.problemas.map((p) => (
             <CartaoProblema key={p.chave} p={p} colecoes={nomes(p.colecoes)} />
           ))}
@@ -40,16 +39,16 @@ export function Listagem({ bib, colecao }: { bib: Biblioteca; colecao: string })
       )}
 
       <section>
-        <h2>Fichas</h2>
-        {fichas.length === 0 && <p className="explica">Nenhuma ficha no formato certo aqui.</p>}
+        <h2>{t('lista.fichas')}</h2>
+        {fichas.length === 0 && <p className="explica">{t('lista.nenhuma')}</p>}
         {fichas.map((f) => (
           <CartaoFicha key={f.chave} f={f} colecoes={nomes(f.colecoes)} />
         ))}
       </section>
 
       <section>
-        <h2>Coleções</h2>
-        <p className="explica">Entre parênteses, quantas fichas há em cada coleção, contando as subcoleções.</p>
+        <h2>{t('lista.colecoes')}</h2>
+        <p className="explica">{t('lista.colecoesExplica')}</p>
         <ArvoreColecoes bib={bib} pai={null} />
       </section>
     </>
@@ -69,13 +68,13 @@ function CartaoFicha({ f, colecoes }: { f: Ficha; colecoes: string[] }) {
       <div className="autor">{f.autorAno}</div>
       {f.obra && <div className="obra">{f.obra}</div>}
       <dl className="campos">
-        {campo('Tese', f.tese)}
-        {campo('Conceitos', f.conceitos.join(' · '))}
-        {campo('Para lembrar', f.lembrar)}
-        {campo('Diálogos', f.dialogos.join(' · '))}
+        {campo(nomeCampo('tese'), f.tese)}
+        {campo(nomeCampo('conceitos'), f.conceitos.join(' · '))}
+        {campo(nomeCampo('lembrar'), f.lembrar)}
+        {campo(nomeCampo('dialogos'), f.dialogos.join(' · '))}
         {f.usos.length > 0 && (
           <div>
-            <dt>Uso no projeto</dt>
+            <dt>{nomeCampo('usos')}</dt>
             <dd className="tags">
               {f.usos.map((u) => (
                 <span className="tag" key={u}>
@@ -88,10 +87,10 @@ function CartaoFicha({ f, colecoes }: { f: Ficha; colecoes: string[] }) {
       </dl>
       {f.ref && <p className="ref">{f.ref}</p>}
       <div className="pe">
-        <span className="bibs">{colecoes.length ? colecoes.join(' · ') : 'Sem coleção'}</span>
-        <Link url={f.video} texto="Vídeo da aula" />
-        <Link url={f.fichamento} texto="Fichamento completo" />
-        <a href={linkZotero(f)}>Abrir no Zotero</a>
+        <span className="bibs">{colecoes.length ? colecoes.join(' · ') : t('ficha.semColecao')}</span>
+        <Link url={f.video} texto={t('ficha.video')} />
+        <Link url={f.fichamento} texto={t('ficha.fichamento')} />
+        <a href={linkZotero(f)}>{t('ficha.abrirZotero')}</a>
       </div>
       {f.avisos.length > 0 && (
         <ul className="avisos">
@@ -116,19 +115,19 @@ function Link({ url, texto }: { url: string; texto: string }) {
 function CartaoProblema({ p, colecoes }: { p: FichaComProblema; colecoes: string[] }) {
   return (
     <article className="cartao problema">
-      <div className="autor">{p.titulo || '(sem título)'}</div>
+      <div className="autor">{p.titulo || t('lista.semTitulo')}</div>
       <ul className="motivos">
         {p.motivos.map((m) => (
           <li key={m}>{m}</li>
         ))}
       </ul>
       <details>
-        <summary>Ver o texto da nota</summary>
+        <summary>{t('lista.verTexto')}</summary>
         <pre>{p.texto}</pre>
       </details>
       <div className="pe">
-        <span className="bibs">{colecoes.length ? colecoes.join(' · ') : 'Sem coleção'}</span>
-        <a href={linkZotero(p)}>Abrir no Zotero</a>
+        <span className="bibs">{colecoes.length ? colecoes.join(' · ') : t('ficha.semColecao')}</span>
+        <a href={linkZotero(p)}>{t('ficha.abrirZotero')}</a>
       </div>
     </article>
   )

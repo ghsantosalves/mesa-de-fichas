@@ -1,5 +1,8 @@
 // Interpreta o texto de uma ficha no formato da skill ficha-academica.
 // Problemas impedem a ficha de ir para a mesa; avisos não.
+// Aceita os rótulos em português e em inglês (CARD ·, Thesis:, Concepts: …).
+
+import { t as tr, type Chave as ChaveTexto } from '../i18n.ts'
 
 export type CamposFicha = {
   titulo: string
@@ -21,19 +24,21 @@ export type Interpretacao =
 
 type Chave = 'ref' | 'tese' | 'conceitos' | 'lembrar' | 'dialogos' | 'uso' | 'video' | 'fichamento'
 
-/** Rótulos na ordem fixa do formato. */
-const ROTULOS: { chave: Chave; nome: string; padrao: string }[] = [
-  { chave: 'ref', nome: 'Ref.', padrao: 'Ref\\.?' },
-  { chave: 'tese', nome: 'Tese', padrao: 'Tese' },
-  { chave: 'conceitos', nome: 'Conceitos', padrao: 'Conceitos' },
-  { chave: 'lembrar', nome: 'Para lembrar', padrao: 'Para lembrar' },
-  { chave: 'dialogos', nome: 'Diálogos', padrao: 'Di[aá]logos' },
-  { chave: 'uso', nome: 'Uso', padrao: 'Usos?' },
-  { chave: 'video', nome: 'Vídeo', padrao: 'V[ií]deo' },
-  { chave: 'fichamento', nome: 'Fichamento completo', padrao: 'Fichamento completo' },
+/** Rótulos na ordem fixa do formato (português | inglês). */
+const ROTULOS: { chave: Chave; padrao: string }[] = [
+  { chave: 'ref', padrao: 'Ref\\.?|Reference' },
+  { chave: 'tese', padrao: 'Tese|Thesis' },
+  { chave: 'conceitos', padrao: 'Conceitos|Concepts' },
+  { chave: 'lembrar', padrao: 'Para lembrar|To remember' },
+  { chave: 'dialogos', padrao: 'Di[aá]logos|Dialogues' },
+  { chave: 'uso', padrao: 'Usos?|Uses?' },
+  { chave: 'video', padrao: 'V[ií]deo' },
+  { chave: 'fichamento', padrao: 'Fichamento completo|Full notes' },
 ]
+/** Nome do campo, no idioma da interface, para as mensagens. */
+const nome = (c: Chave) => tr(`rotulo.${c}` as ChaveTexto)
 const LINHA_ROTULO = new RegExp(`^(${ROTULOS.map((r) => r.padrao).join('|')})\\s*:\\s*(.*)$`, 'i')
-const LINHA_TITULO = /^FICHA\b\s*[·•:\-–—]?\s*(.*)$/i
+const LINHA_TITULO = /^(?:FICHA|CARD)\b\s*[·•:\-–—]?\s*(.*)$/i
 const VAZIO = /^[—–-]?$/
 
 const lista = (v: string) =>
@@ -45,7 +50,7 @@ const lista = (v: string) =>
 const valor = (v: string) => (VAZIO.test(v.trim()) ? '' : v.trim())
 
 function qualRotulo(nome: string): Chave {
-  return ROTULOS.find((r) => new RegExp(`^${r.padrao}$`, 'i').test(nome))!.chave
+  return ROTULOS.find((r) => new RegExp(`^(?:${r.padrao})$`, 'i').test(nome))!.chave
 }
 
 export function interpretarFicha(textoBruto: string): Interpretacao {
@@ -61,7 +66,7 @@ export function interpretarFicha(textoBruto: string): Interpretacao {
     return {
       ok: false,
       titulo: primeira.slice(0, 120),
-      motivos: [primeira ? 'Não começa com “FICHA ·”.' : 'A nota está vazia.'],
+      motivos: [primeira ? tr('int.semFicha') : tr('int.vazia')],
     }
   }
   const titulo = m[1].trim()
@@ -74,7 +79,7 @@ export function interpretarFicha(textoBruto: string): Interpretacao {
     autorAno = titulo.slice(0, fecha + 1).trim()
     obra = titulo.slice(fecha + 1).replace(/^\s*[,.:;–—-]\s*/, '').trim()
   } else {
-    motivos.push('O título não tem “Autor (ano)”.')
+    motivos.push(tr('int.semAutorAno'))
   }
 
   // 3. Campos: cada rótulo começa um campo, que continua até o próximo rótulo.
@@ -88,7 +93,7 @@ export function interpretarFicha(textoBruto: string): Interpretacao {
     if (r) {
       atual = qualRotulo(r[1])
       if (brutos.has(atual)) {
-        avisos.push(`O campo “${ROTULOS.find((x) => x.chave === atual)!.nome}” aparece mais de uma vez; usei a primeira.`)
+        avisos.push(tr('int.repetido', { campo: nome(atual) }))
         atual = null
         continue
       }
@@ -100,14 +105,14 @@ export function interpretarFicha(textoBruto: string): Interpretacao {
     }
   }
 
-  if (soltas.length) avisos.push(`Texto fora de qualquer campo: “${soltas.join(' ').slice(0, 80)}”.`)
+  if (soltas.length) avisos.push(tr('int.solto', { texto: soltas.join(' ').slice(0, 80) }))
   const ordemCerta = ROTULOS.map((r) => r.chave).filter((c) => ordemVista.includes(c))
-  if (ordemCerta.join() !== ordemVista.join()) avisos.push('Os campos estão fora da ordem do formato.')
+  if (ordemCerta.join() !== ordemVista.join()) avisos.push(tr('int.ordem'))
 
   const tese = valor(brutos.get('tese') ?? '')
-  if (!tese) motivos.push('Falta o campo “Tese” (ou está vazio).')
+  if (!tese) motivos.push(tr('int.semTese'))
   for (const r of ROTULOS) {
-    if (r.chave !== 'tese' && !brutos.has(r.chave)) avisos.push(`Falta o campo “${r.nome}”.`)
+    if (r.chave !== 'tese' && !brutos.has(r.chave)) avisos.push(tr('int.falta', { campo: nome(r.chave) }))
   }
 
   if (motivos.length) return { ok: false, titulo, motivos }

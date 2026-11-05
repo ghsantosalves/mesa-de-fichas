@@ -8,6 +8,7 @@ import { importarAssociacoes, type ArestaAssoc } from '../mesa/assoc.ts'
 import type { NoMesa } from '../mesa/operacoes.ts'
 import type { Biblioteca } from '../zotero/biblioteca.ts'
 import { Dialogo } from './Dialogo.tsx'
+import { t, tn } from '../i18n.ts'
 
 type Sugestao = {
   a: string
@@ -59,25 +60,25 @@ export function DialogoImportar({ bib, aoFechar, avisar }: { bib: Biblioteca; ao
         const repetida = mesa.associacoes.some((x) => (x.a === s.a && x.b === s.b) || (x.a === s.b && x.b === s.a))
         return {
           ...s,
-          problema: faltam.length ? `Ficha não encontrada: ${faltam.join(', ')}` : null,
+          problema: faltam.length ? t('imp.naoEncontrada', { k: faltam.join(', ') }) : null,
           repetida,
         }
       })
-      if (!lista.length) return { sugestoes: [], erro: 'O texto não traz nenhuma associação.' }
+      if (!lista.length) return { sugestoes: [], erro: t('imp.semAssoc') }
       return { sugestoes: lista, erro: null }
     } catch {
       return {
         sugestoes: [],
-        erro: 'Não achei as associações no texto. Cole a resposta inteira do Claude (com o bloco que começa com {"formato": "mesa-de-fichas-associacoes" …}).',
+        erro: t('imp.naoAchei'),
       }
     }
   }, [texto, fichas])
 
-  const ler = (t: string) => {
-    setTexto(t)
+  const ler = (conteudo: string) => {
+    setTexto(conteudo)
     // Começa marcando as que podem entrar e ainda não existem.
     try {
-      const lista = lerSugestoes(t)
+      const lista = lerSugestoes(conteudo)
       const ok = new Set<number>()
       lista.forEach((s, i) => {
         const existe = mesa.associacoes.some((x) => (x.a === s.a && x.b === s.b) || (x.a === s.b && x.b === s.a))
@@ -102,16 +103,13 @@ export function DialogoImportar({ bib, aoFechar, avisar }: { bib: Biblioteca; ao
       rf,
       escolhidas.map((s) => ({ a: s.a, b: s.b, rel: s.rel, nota: s.nota })),
     )
-    avisar(escolhidas.length === 1 ? '1 associação colocada na mesa' : `${escolhidas.length} associações colocadas na mesa`)
+    avisar(tn('aviso.importadas', escolhidas.length))
     aoFechar()
   }
 
   return (
-    <Dialogo titulo="Importar associações" aoFechar={aoFechar}>
-      <p className="d-texto">
-        Cole aqui a resposta do Claude (skill <em>relacoes-entre-textos</em>) ou escolha o arquivo que ele gerou. Você
-        escolhe quais associações colocar na mesa; dá para mudar tudo depois.
-      </p>
+    <Dialogo titulo={t('imp.titulo')} aoFechar={aoFechar}>
+      <p className="d-texto">{t('imp.explica')}</p>
       <input
         type="file"
         accept=".json,.md,.txt,application/json,text/plain,text/markdown"
@@ -122,7 +120,7 @@ export function DialogoImportar({ bib, aoFechar, avisar }: { bib: Biblioteca; ao
       />
       <textarea
         className="d-area baixa"
-        placeholder="…ou cole a resposta do Claude aqui"
+        placeholder={t('imp.colar')}
         value={texto}
         onChange={(e) => ler(e.target.value)}
       />
@@ -132,16 +130,16 @@ export function DialogoImportar({ bib, aoFechar, avisar }: { bib: Biblioteca; ao
         <>
           <div className="d-acoes esquerda">
             <span className="d-texto sem-margem">
-              {sugestoes.length} sugestões · {escolhidas.length} marcadas
+              {t('imp.contagem', { s: sugestoes.length, m: escolhidas.length })}
             </span>
             <button
               className="btn"
               onClick={() => setMarcadas(new Set(sugestoes.map((s, i) => (s.problema ? -1 : i)).filter((i) => i >= 0)))}
             >
-              Marcar todas
+              {t('imp.marcarTodas')}
             </button>
             <button className="btn" onClick={() => setMarcadas(new Set())}>
-              Desmarcar todas
+              {t('imp.desmarcarTodas')}
             </button>
           </div>
           <ul className="sugestoes">
@@ -155,13 +153,13 @@ export function DialogoImportar({ bib, aoFechar, avisar }: { bib: Biblioteca; ao
                     onChange={() => alternar(i)}
                   />
                   <span>
-                    <strong>{fichas.get(s.a)?.autorAno ?? s.a}</strong> → <em>{s.rel || 'relação a definir'}</em> →{' '}
+                    <strong>{fichas.get(s.a)?.autorAno ?? s.a}</strong> → <em>{s.rel || t('assoc.aDefinir')}</em> →{' '}
                     <strong>{fichas.get(s.b)?.autorAno ?? s.b}</strong>
-                    {s.confianca && <span className="confianca"> · confiança {s.confianca}</span>}
+                    {s.confianca && <span className="confianca">{t('imp.confianca', { c: s.confianca })}</span>}
                     {s.nota && <span className="sug-nota">{s.nota}</span>}
                     {s.problema && <span className="sug-aviso">{s.problema}</span>}
                     {s.repetida && !s.problema && (
-                      <span className="sug-aviso">Já existe uma associação entre essas fichas.</span>
+                      <span className="sug-aviso">{t('imp.repetida')}</span>
                     )}
                   </span>
                 </label>
@@ -173,10 +171,10 @@ export function DialogoImportar({ bib, aoFechar, avisar }: { bib: Biblioteca; ao
 
       <div className="d-acoes">
         <button className="btn" onClick={aoFechar}>
-          Cancelar
+          {t('jan.cancelar')}
         </button>
         <button className="btn primario" disabled={!escolhidas.length} onClick={importar}>
-          {escolhidas.length ? `Colocar ${escolhidas.length} na mesa` : 'Colocar na mesa'}
+          {escolhidas.length ? t('imp.colocarN', { n: escolhidas.length }) : t('imp.colocar')}
         </button>
       </div>
     </Dialogo>

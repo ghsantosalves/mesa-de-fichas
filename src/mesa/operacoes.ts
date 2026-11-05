@@ -4,6 +4,7 @@
 import type { ReactFlowInstance } from '@xyflow/react'
 import { alterarMesa, arredondar, type Area, type Campo, type Cor, type Grifo } from '../estado/mesa.ts'
 import type { NoFicha } from './NoFicha.tsx'
+import { t } from '../i18n.ts'
 import type { NoArea } from './NoArea.tsx'
 
 export type NoMesa = NoFicha | NoArea
@@ -114,7 +115,7 @@ export function novaArea(rf: Mesa, colecao: string) {
     y: Math.round(centro.y - 200),
     w: 600,
     h: 400,
-    titulo: 'Nova área',
+    titulo: t('area.nova'),
     colecao,
   }
   // Áreas ficam no começo da lista, para serem desenhadas antes (atrás) das fichas.

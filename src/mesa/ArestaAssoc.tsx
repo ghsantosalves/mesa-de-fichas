@@ -8,6 +8,7 @@ import type { Associacao } from '../estado/mesa.ts'
 import { ALTURA_MIN_CAIXA, LARGURA_MIN_CAIXA, mudarAssociacao, type ArestaAssoc } from './assoc.ts'
 import { Contexto } from './contexto.ts'
 import type { NoMesa } from './operacoes.ts'
+import { t } from '../i18n.ts'
 
 type Retangulo = { w: number; h: number; cx: number; cy: number }
 
@@ -147,7 +148,7 @@ function Caixa({
         className={`assoc nodrag nopan${ativa ? ' ativo' : ''}${v.h ? ' fixa' : ''}`}
         role="button"
         tabIndex={0}
-        aria-label={`Associação: ${v.rel.trim() || 'relação a definir'}`}
+        aria-label={t('assoc.rotulo', { rel: v.rel.trim() || t('assoc.aDefinir') })}
         style={{
           transform: `translate(-50%, -50%) translate(${mx + dx}px, ${my + dy}px)`,
           width: v.w,
@@ -165,8 +166,8 @@ function Caixa({
           }
         }}
       >
-        <span className="rel">{v.rel.trim() || 'relação a definir'}</span>
-        {notas && <span className={`nota${v.nota ? '' : ' vazia'}`}>{v.nota || 'Sem anotação'}</span>}
+        <span className="rel">{v.rel.trim() || t('assoc.aDefinir')}</span>
+        {notas && <span className={`nota${v.nota ? '' : ' vazia'}`}>{v.nota || t('assoc.semAnotacao')}</span>}
         <span className="assoc-alca" aria-hidden="true" />
       </div>
     </>

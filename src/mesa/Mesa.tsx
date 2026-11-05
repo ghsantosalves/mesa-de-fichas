@@ -23,6 +23,7 @@ import { VER_TUDO } from './opcoes.ts'
 import { FaixaNovas, TIPO_ARRASTE } from './FaixaNovas.tsx'
 import { Desenhos } from './Desenhos.tsx'
 import type { Ferramenta } from './contexto.ts'
+import { comparar, t } from '../i18n.ts'
 
 const tiposDeNo = { ficha: NoFichaMemo, area: NoAreaMemo }
 const tiposDeAresta = { assoc: ArestaAssocMemo }
@@ -40,7 +41,7 @@ function fichaRemovida(chave: string, r: FichaRemovida | undefined): Ficha {
     chavePai: null,
     colecoes: r?.colecoes ?? [],
     titulo: r ? `${r.autorAno}${r.obra ? `, ${r.obra}` : ''}` : '',
-    autorAno: r?.autorAno || 'Ficha sem dados',
+    autorAno: r?.autorAno || t('ficha.semDados'),
     obra: r?.obra ?? '',
     ref: r?.ref ?? '',
     tese: r?.tese ?? '',
@@ -158,7 +159,7 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
       .filter((n) => semLugar.current.has(n.id) && n.type === 'ficha')
       .sort((a, b) =>
         a.type === 'ficha' && b.type === 'ficha'
-          ? a.data.ficha.autorAno.localeCompare(b.data.ficha.autorAno, 'pt-BR')
+          ? comparar(a.data.ficha.autorAno, b.data.ficha.autorAno)
           : 0,
       )
     const altura = (n: NoMesa) => n.measured?.height ?? n.height ?? ALTURA_ESTIMADA
@@ -358,7 +359,7 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
       </ReactFlow>
       {visiveis === 0 && (
         <div className="mesa-vazia">
-          {bib.fichas.length === 0 ? 'Ainda não há fichas no Zotero.' : 'Nenhuma ficha nesta coleção.'}
+          {bib.fichas.length === 0 ? t('mesa.semFichas') : t('mesa.semFichasColecao')}
         </div>
       )}
       {novas.length > 0 && (

@@ -5,6 +5,8 @@
 // - No site (GitHub Pages): a pessoa digita número e chave uma vez; eles ficam guardados
 //   só no navegador dela e vão só para api.zotero.org.
 
+import { t } from '../i18n.ts'
+
 const CHAVE = 'mesa-de-fichas:zotero'
 
 /** true quando o app roda no computador com o .env.local configurado. */
@@ -41,24 +43,24 @@ export function destino(c: Credenciais): { base: string; cabecalhos: Record<stri
 
 /** Confere número e chave perguntando ao Zotero de quem é a chave. Devolve o motivo do erro, ou null. */
 export async function testarCredenciais(c: Credenciais): Promise<string | null> {
-  if (!/^\d+$/.test(c.userId.trim())) return 'O número de usuário deve ter só algarismos.'
-  if (!c.apiKey.trim()) return 'Falta a chave.'
+  if (!/^\d+$/.test(c.userId.trim())) return t('con.erroDigitos')
+  if (!c.apiKey.trim()) return t('con.erroFaltaChave')
   let r: Response
   try {
     r = await fetch('https://api.zotero.org/keys/current', {
       headers: { 'Zotero-API-Key': c.apiKey.trim(), 'Zotero-API-Version': '3' },
     })
   } catch {
-    return 'Não consegui falar com o Zotero. Confira a internet.'
+    return t('con.erroRede')
   }
-  if (r.status === 403 || r.status === 404) return 'O Zotero não reconheceu a chave. Confira se copiou a chave inteira.'
-  if (!r.ok) return `O Zotero respondeu com erro ${r.status}.`
+  if (r.status === 403 || r.status === 404) return t('con.erroChave')
+  if (!r.ok) return t('con.erroStatus', { n: r.status })
   const info = (await r.json()) as { userID: number; access?: { user?: { library?: boolean; notes?: boolean } } }
   if (String(info.userID) !== c.userId.trim()) {
-    return `Esta chave é do usuário ${info.userID}, não do ${c.userId.trim()}. Confira o número.`
+    return t('con.erroUsuario', { chave: info.userID, digitado: c.userId.trim() })
   }
   if (!info.access?.user?.library || !info.access?.user?.notes) {
-    return 'A chave precisa de permissão para ler a biblioteca e as notas (Allow library access e Allow notes access).'
+    return t('con.erroPermissao')
   }
   return null
 }

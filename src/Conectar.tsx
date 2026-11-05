@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { salvarCredenciais, testarCredenciais } from './zotero/credenciais.ts'
+import { NOME_APP, idioma, t } from './i18n.ts'
 
 export function Conectar({ motivo, aoConectar }: { motivo: string | null; aoConectar: () => void }) {
   const [userId, setUserId] = useState('')
@@ -26,60 +27,84 @@ export function Conectar({ motivo, aoConectar }: { motivo: string | null; aoCone
     <main className="rolagem">
       <div className="inicio">
         <form className="cartao conectar" onSubmit={conectar}>
-          <h1>Conectar ao seu Zotero</h1>
+          <h1>{t('con.titulo')}</h1>
           {motivo && <p className="erro-texto">{motivo}</p>}
-          <p>
-            A Mesa de fichas lê as notas com a tag <code>ficha</code> da sua biblioteca do Zotero. Ela só lê: nunca
-            muda nada no Zotero.
-          </p>
-          <ol>
-            <li>
-              Abra{' '}
-              <a href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener noreferrer">
-                zotero.org/settings/keys
-              </a>{' '}
-              (entre com sua conta do Zotero).
-            </li>
-            <li>
-              Copie o número que aparece em <em>“Your user ID for use in API calls is …”</em>.
-            </li>
-            <li>
-              Clique em <em>Create new private key</em>, marque só <em>Allow library access</em> e{' '}
-              <em>Allow notes access</em> (deixe <em>Allow write access</em> desmarcado), salve e copie a chave.
-            </li>
-          </ol>
+          {idioma === 'en' ? (
+            <>
+              <p>
+                {NOME_APP} reads the notes tagged <code>ficha</code> in your Zotero library. It only reads: it never
+                changes anything in Zotero.
+              </p>
+              <ol>
+                <li>
+                  Open{' '}
+                  <a href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener noreferrer">
+                    zotero.org/settings/keys
+                  </a>{' '}
+                  (sign in with your Zotero account).
+                </li>
+                <li>
+                  Copy the number shown in <em>“Your user ID for use in API calls is …”</em>.
+                </li>
+                <li>
+                  Click <em>Create new private key</em>, check only <em>Allow library access</em> and{' '}
+                  <em>Allow notes access</em> (leave <em>Allow write access</em> unchecked), save and copy the key.
+                </li>
+              </ol>
+            </>
+          ) : (
+            <>
+              <p>
+                A {NOME_APP} lê as notas com a tag <code>ficha</code> da sua biblioteca do Zotero. Ela só lê: nunca
+                muda nada no Zotero.
+              </p>
+              <ol>
+                <li>
+                  Abra{' '}
+                  <a href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener noreferrer">
+                    zotero.org/settings/keys
+                  </a>{' '}
+                  (entre com sua conta do Zotero).
+                </li>
+                <li>
+                  Copie o número que aparece em <em>“Your user ID for use in API calls is …”</em>.
+                </li>
+                <li>
+                  Clique em <em>Create new private key</em>, marque só <em>Allow library access</em> e{' '}
+                  <em>Allow notes access</em> (deixe <em>Allow write access</em> desmarcado), salve e copie a chave.
+                </li>
+              </ol>
+            </>
+          )}
           <label className="campo">
-            <span>Número de usuário (user ID)</span>
+            <span>{t('con.userId')}</span>
             <input
               inputMode="numeric"
               autoComplete="off"
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
-              placeholder="ex.: 1234567"
+              placeholder={t('con.userIdEx')}
               required
             />
           </label>
           <label className="campo">
-            <span>Chave (key)</span>
+            <span>{t('con.chave')}</span>
             <input
               type="password"
               autoComplete="off"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="cole aqui a chave"
+              placeholder={t('con.chaveEx')}
               required
             />
           </label>
           {erro && <p className="erro-texto">{erro}</p>}
           <div className="d-acoes">
             <button className="btn primario" type="submit" disabled={testando}>
-              {testando ? 'Conferindo…' : 'Conectar'}
+              {testando ? t('con.conferindo') : t('con.conectar')}
             </button>
           </div>
-          <p className="d-dica">
-            O número e a chave ficam guardados só neste navegador e são enviados só para o Zotero (api.zotero.org).
-            Para tirar, use Menu → Desconectar do Zotero.
-          </p>
+          <p className="d-dica">{t('con.dica')}</p>
         </form>
       </div>
     </main>

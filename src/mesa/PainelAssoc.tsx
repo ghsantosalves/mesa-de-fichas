@@ -14,6 +14,7 @@ import {
   type DadosAresta,
 } from './assoc.ts'
 import type { NoMesa } from './operacoes.ts'
+import { t } from '../i18n.ts'
 
 type Props = {
   bib: Biblioteca
@@ -56,26 +57,26 @@ export function PainelAssoc({ bib, id, focarRelacao, aoFechar, avisar }: Props) 
   const rel = assoc.rel.trim()
 
   return (
-    <aside className="painel" aria-label="Associação entre fichas">
+    <aside className="painel" aria-label={t('assoc.painel')}>
       <div className="p-topo">
-        <h2>Associação</h2>
+        <h2>{t('assoc.titulo')}</h2>
         <button className="btn" onClick={aoFechar}>
-          Fechar
+          {t('assoc.fechar')}
         </button>
       </div>
       <MiniFicha f={fa} />
-      <div className="p-dir">↓ {rel || 'relação a definir'}</div>
+      <div className="p-dir">↓ {rel || t('assoc.aDefinir')}</div>
       <MiniFicha f={fb} />
 
       <label className="p-rot" htmlFor="p-rel">
-        Relação
+        {t('assoc.relacao')}
       </label>
       <input
         id="p-rel"
         ref={campoRel}
         className="rel-input"
         list="lista-rels"
-        placeholder="Escreva a relação, ex.: retoma o conceito de"
+        placeholder={t('assoc.relacaoEx')}
         value={assoc.rel}
         onChange={(e) => mudarAssociacao(rf, id, { rel: e.target.value })}
       />
@@ -93,21 +94,21 @@ export function PainelAssoc({ bib, id, focarRelacao, aoFechar, avisar }: Props) 
       </div>
 
       <label className="p-rot" htmlFor="p-nota">
-        Anotação
+        {t('assoc.anotacao')}
       </label>
       <textarea
         id="p-nota"
-        placeholder="O que liga estes dois textos? Ponto de contato, contraste, hipótese de leitura…"
+        placeholder={t('assoc.anotacaoEx')}
         value={assoc.nota}
         onChange={(e) => mudarAssociacao(rf, id, { nota: e.target.value })}
       />
 
       <div className="p-acoes">
         <button className="btn" onClick={() => inverterAssociacao(rf, assoc)}>
-          Inverter direção
+          {t('assoc.inverter')}
         </button>
         <button className="btn" onClick={() => mudarAssociacao(rf, id, {}, ['dx', 'dy', 'w', 'h'])}>
-          Recentralizar caixa
+          {t('assoc.recentralizar')}
         </button>
         <button
           className="remover"
@@ -115,10 +116,10 @@ export function PainelAssoc({ bib, id, focarRelacao, aoFechar, avisar }: Props) 
             if (!confirmar) return setConfirmar(true)
             removerAssociacao(rf, id)
             aoFechar()
-            avisar('Associação removida')
+            avisar(t('aviso.assocRemovida'))
           }}
         >
-          {confirmar ? 'Clique de novo para remover' : 'Remover associação'}
+          {confirmar ? t('assoc.confirma') : t('assoc.remover')}
         </button>
       </div>
     </aside>
@@ -126,7 +127,7 @@ export function PainelAssoc({ bib, id, focarRelacao, aoFechar, avisar }: Props) 
 }
 
 function MiniFicha({ f }: { f: Ficha | undefined }) {
-  if (!f) return <div className="p-f">Ficha não encontrada no Zotero.</div>
+  if (!f) return <div className="p-f">{t('assoc.fichaNaoEncontrada')}</div>
   const cor = mesa.fichas[f.chave]?.cor
   return (
     <div className="p-f" style={{ borderLeftColor: cor ? `var(--c-${cor})` : undefined }}>

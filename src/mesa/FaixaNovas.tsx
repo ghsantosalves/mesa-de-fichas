@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import type { Ficha } from '../zotero/biblioteca.ts'
 import type { Posicao } from '../estado/mesa.ts'
+import { t } from '../i18n.ts'
 
 /** Tipo de dado usado ao arrastar uma ficha da faixa para a mesa. */
 export const TIPO_ARRASTE = 'application/x-mesa-ficha'
@@ -17,24 +18,22 @@ type Props = {
 export function FaixaNovas({ novas, emOutrasColecoes, aoColocar }: Props) {
   const [aberta, setAberta] = useState(true)
   return (
-    <aside className="faixa-novas" aria-label="Novas fichas">
+    <aside className="faixa-novas" aria-label={t('novas.rotulo')}>
       <div className="fn-topo">
         <button className="fn-titulo" aria-expanded={aberta} onClick={() => setAberta(!aberta)}>
-          {aberta ? '▾' : '▸'} Novas fichas ({novas.length})
+          {aberta ? '▾' : '▸'} {t('novas.titulo', { n: novas.length })}
         </button>
         {novas.length > 1 && aberta && (
           <button className="btn" onClick={() => aoColocar(novas)}>
-            Colocar todas
+            {t('novas.colocarTodas')}
           </button>
         )}
       </div>
       {aberta && (
         <>
           <p className="fn-dica">
-            {novas.length
-              ? 'Chegaram do Zotero. Arraste para a mesa ou clique em Colocar.'
-              : 'Nenhuma nova nesta coleção.'}
-            {emOutrasColecoes > 0 && ` Há mais ${emOutrasColecoes} em outras coleções.`}
+            {novas.length ? t('novas.dica') : t('novas.nenhuma')}
+            {emOutrasColecoes > 0 && t('novas.outras', { n: emOutrasColecoes })}
           </p>
           <ul className="fn-lista">
             {novas.map((f) => (
@@ -46,14 +45,14 @@ export function FaixaNovas({ novas, emOutrasColecoes, aoColocar }: Props) {
                   e.dataTransfer.setData(TIPO_ARRASTE, f.chave)
                   e.dataTransfer.effectAllowed = 'move'
                 }}
-                title="Arraste para a mesa"
+                title={t('novas.arraste')}
               >
                 <div>
                   <div className="fn-autor">{f.autorAno}</div>
                   {f.obra && <div className="fn-obra">{f.obra}</div>}
                 </div>
                 <button className="btn" onClick={() => aoColocar([f])}>
-                  Colocar
+                  {t('novas.colocar')}
                 </button>
               </li>
             ))}

@@ -4,7 +4,8 @@ import { memo, useContext, useMemo, useState } from 'react'
 import { Handle, Position, useReactFlow, type Node, type NodeProps } from '@xyflow/react'
 import { Contexto, normalizar } from './contexto.ts'
 import { linkZotero, type Ficha } from '../zotero/biblioteca.ts'
-import { CAMPOS, CORES, NOMES_CAMPOS, type Campo, type CampoGrifo, type Cor, type Grifo } from '../estado/mesa.ts'
+import { CAMPOS, CORES, nomeCampo, type Campo, type CampoGrifo, type Cor, type Grifo } from '../estado/mesa.ts'
+import { data as dataNoIdioma, t, tn, type Chave } from '../i18n.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
 import { tirarFichaDaMesa, type ArestaAssoc } from './assoc.ts'
 
@@ -66,7 +67,7 @@ function TextoGrifado({
         key={`${i}-${f}`}
         className={`grifo${grifando ? ' removivel' : ''}`}
         style={{ backgroundColor: `color-mix(in srgb, ${g.cor} 60%, transparent)` }}
-        title={grifando ? 'Clique para tirar o grifo' : undefined}
+        title={grifando ? t('ficha.tirarGrifo') : undefined}
         onClick={(e) => {
           if (!grifando) return
           e.stopPropagation()
@@ -93,15 +94,13 @@ function CartaoRemovida({ id, data }: NodeProps<NoFicha>) {
     <article className="ficha-mesa removida" style={{ width: LARGURA_FICHA }}>
       <Handle type="target" position={Position.Top} isConnectable={false} className="ponto-ligacao" />
       <Handle type="source" position={Position.Bottom} isConnectable={false} className="ponto-ligacao" />
-      <div className="faixa-removida">Removida do Zotero</div>
+      <div className="faixa-removida">{t('rem.faixa')}</div>
       <div className="autor">{f.autorAno}</div>
       {f.obra && <div className="obra">{f.obra}</div>}
       {f.tese && <p className="tese-removida">{f.tese}</p>}
       <p className="explica-removida">
-        A nota foi apagada, foi para a lixeira ou perdeu a tag “ficha”
-        {r.em ? ` (notado em ${new Date(r.em).toLocaleDateString('pt-BR')})` : ''}. Se ela voltar ao Zotero, a ficha
-        volta ao normal aqui.{' '}
-        {n === 1 ? 'A associação dela continua guardada.' : n > 1 ? `As ${n} associações dela continuam guardadas.` : ''}
+        {t('rem.explica', { quando: r.em ? t('rem.quando', { data: dataNoIdioma(new Date(r.em)) }) : '' })}{' '}
+        {n > 0 ? tn('rem.assoc', n) : ''}
       </p>
       <button
         className={`btn nodrag${confirmar ? ' perigo' : ''}`}
@@ -110,9 +109,9 @@ function CartaoRemovida({ id, data }: NodeProps<NoFicha>) {
       >
         {confirmar
           ? n > 0
-            ? `Clique de novo: tira a ficha e ${n === 1 ? 'a associação' : `as ${n} associações`}`
-            : 'Clique de novo para tirar'
-          : 'Tirar da mesa'}
+            ? tn('rem.confirma', n)
+            : t('rem.confirma')
+          : t('rem.tirar')}
       </button>
     </article>
   )
@@ -153,7 +152,7 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
     v &&
     ve(c) && (
       <div>
-        <dt>{NOMES_CAMPOS[c]}</dt>
+        <dt>{nomeCampo(c)}</dt>
         <dd data-campo={c} className={classeTexto}>
           {comGrifos(c, v)}
         </dd>
@@ -177,9 +176,9 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
       <button
         className="recolher nodrag"
         onClick={alternar}
-        aria-label={data.recolhida ? 'Expandir ficha' : 'Recolher ficha'}
+        aria-label={data.recolhida ? t('ficha.expandirFicha') : t('ficha.recolherFicha')}
         aria-expanded={!data.recolhida}
-        title={data.recolhida ? 'Expandir' : 'Recolher'}
+        title={data.recolhida ? t('ficha.expandir') : t('ficha.recolher')}
       >
         {data.recolhida ? '▸' : '▾'}
       </button>
@@ -194,7 +193,7 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
             {campo('dialogos', f.dialogos.join(' · '))}
             {f.usos.length > 0 && ve('usos') && (
               <div>
-                <dt>Uso no projeto</dt>
+                <dt>{nomeCampo('usos')}</dt>
                 <dd className="tags">
                   {f.usos.map((u) => (
                     <span className="tag" key={u}>
@@ -216,18 +215,18 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
               {data.ocultos.length > 0 && (
                 <span className="ocultos-aviso">
                   {ve('colecoes') && ' · '}
-                  {data.ocultos.length === 1 ? '1 campo oculto' : `${data.ocultos.length} campos ocultos`}
+                  {tn('ficha.ocultos', data.ocultos.length)}
                 </span>
               )}
             </span>
-            {link(f.video, 'Vídeo da aula')}
-            {link(f.fichamento, 'Fichamento completo')}
+            {link(f.video, t('ficha.video'))}
+            {link(f.fichamento, t('ficha.fichamento'))}
             <a className="nodrag" href={linkZotero(f)}>
-              Abrir no Zotero
+              {t('ficha.abrirZotero')}
             </a>
             <button
               className="mais-btn nodrag"
-              aria-label="Opções da ficha"
+              aria-label={t('ficha.opcoes')}
               aria-expanded={menu}
               onClick={() => setMenu(!menu)}
             >
@@ -236,23 +235,23 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
           </div>
           {menu && (
             <div className="opcoes nodrag">
-              <div className="cores" role="group" aria-label="Cor da ficha">
+              <div className="cores" role="group" aria-label={t('ficha.corFicha')}>
                 {([null, ...CORES] as (Cor | null)[]).map((c) => (
                   <button
                     key={c ?? 'nenhuma'}
                     className={`ponto ${c ? `c-${c}` : 'c-nenhuma'}${(data.cor ?? null) === c ? ' ativo' : ''}`}
-                    aria-label={c ?? 'sem cor'}
-                    title={c ?? 'sem cor'}
+                    aria-label={c ? t(`cor.${c}` as Chave) : t('ficha.semCor')}
+                    title={c ? t(`cor.${c}` as Chave) : t('ficha.semCor')}
                     onClick={() => mudarFichas(rf, [id], { cor: c })}
                   />
                 ))}
               </div>
               <fieldset className="campos-visiveis">
-                <legend>Campos visíveis nesta ficha</legend>
+                <legend>{t('ficha.camposVisiveis')}</legend>
                 {CAMPOS.map((c) => (
                   <label key={c}>
                     <input type="checkbox" checked={ve(c)} onChange={() => alternarCampo(c)} />
-                    {NOMES_CAMPOS[c]}
+                    {nomeCampo(c)}
                   </label>
                 ))}
               </fieldset>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ReactFlowProvider, useReactFlow, useStore } from '@xyflow/react'
 import { Pencil } from 'lucide-react'
+import { NOME_APP, idioma, mudarIdioma, t, tn } from './i18n.ts'
 import {
   carregarBiblioteca,
   comSubcolecoes,
@@ -90,8 +91,8 @@ function Interior() {
         // Se a coleção escolhida sumiu do Zotero, volta para "todas".
         if (mesa.colecao !== '*' && !bib.colecoes.some((x) => x.chave === mesa.colecao)) escolherColecao('*')
         const partes = []
-        if (novas) partes.push(novas === 1 ? '1 ficha nova chegou do Zotero' : `${novas} fichas novas chegaram do Zotero`)
-        if (sumiram) partes.push(sumiram === 1 ? '1 ficha sumiu do Zotero' : `${sumiram} fichas sumiram do Zotero`)
+        if (novas) partes.push(tn('aviso.novas', novas))
+        if (sumiram) partes.push(tn('aviso.sumiram', sumiram))
         if (partes.length) avisar(partes.join(' · '), 5000)
       })
       .catch((e: unknown) => {
@@ -123,7 +124,7 @@ function Interior() {
   }, [conectado, recarregar])
 
   const desconectar = () => {
-    if (!confirm('Desconectar do Zotero neste navegador? O número e a chave serão esquecidos aqui. A mesa continua salva.')) return
+    if (!confirm(t('menu.confirmaDesconectar'))) return
     esquecerCredenciais()
     esquecerCopiaZotero()
     setMotivoConexao(null)
@@ -174,14 +175,14 @@ function Interior() {
     setEscolhida(null)
     if (on) {
       setFerramenta(null)
-      avisar('Clique em duas fichas para associá-las. Esc para sair.')
+      avisar(t('aviso.associar'))
     }
   }
   const aoClicarFicha = (chave: string) => {
     if (!ligando) return
     if (!escolhida) {
       setEscolhida(chave)
-      avisar('Agora clique na segunda ficha')
+      avisar(t('aviso.segunda'))
       return
     }
     setEscolhida(null)
@@ -228,7 +229,11 @@ function Interior() {
     <Contexto.Provider value={contexto}>
       <div className="app">
         <header className="barra">
-          <div className="marca">Mesa de fichas</div>
+          <div className="marca">
+            <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="24" height="24" />
+            {NOME_APP}
+            <span className="subtitulo">{t('app.subtitulo')}</span>
+          </div>
           {bib && (
             <>
               {/* O que ver: coleção e busca. */}
@@ -238,8 +243,8 @@ function Interior() {
                   <input
                     className="busca"
                     type="search"
-                    placeholder="Destacar conceito, autor…"
-                    aria-label="Destacar fichas"
+                    placeholder={t('barra.busca')}
+                    aria-label={t('barra.buscaRotulo')}
                     value={busca}
                     onChange={(e) => setBusca(e.target.value)}
                   />
@@ -248,17 +253,17 @@ function Interior() {
               <span className="divisor" aria-hidden="true" />
               {/* Como ver: mesa ou lista. */}
               <div className="grupo">
-                <div className="segmentado" role="group" aria-label="Modo de ver">
+                <div className="segmentado" role="group" aria-label={t('barra.modoVer')}>
                   <button className="btn" aria-pressed={modo === 'mesa'} onClick={() => setModo('mesa')}>
-                    Mesa
+                    {t('barra.mesa')}
                   </button>
                   <button className="btn" aria-pressed={modo === 'lista'} onClick={() => setModo('lista')}>
-                    Lista
+                    {t('barra.lista')}
                   </button>
                 </div>
                 {bib.problemas.length > 0 && (
                   <button className="btn alerta" onClick={() => setModo('lista')}>
-                    Fichas com problema ({bib.problemas.length})
+                    {t('barra.problemas', { n: bib.problemas.length })}
                   </button>
                 )}
               </div>
@@ -269,13 +274,13 @@ function Interior() {
                   <div className="grupo">
                     <BarraMesa colecao={colecao} />
                     <button className="btn" aria-pressed={ligando} onClick={() => alternarLigando(!ligando)}>
-                      Associar fichas
+                      {t('barra.associar')}
                     </button>
                     <button
                       className="btn icone"
                       aria-pressed={!!ferramenta}
-                      aria-label="Desenhar"
-                      title="Desenhar: caneta, marcador e grifo (Esc para sair)"
+                      aria-label={t('barra.desenhar')}
+                      title={t('barra.desenharDica')}
                       onClick={() => mudarFerramenta(ferramenta ? null : 'caneta')}
                     >
                       <Pencil size={17} strokeWidth={2} aria-hidden="true" />
@@ -288,7 +293,7 @@ function Interior() {
                         alterarMesa((e) => (e.notas = !notas))
                       }}
                     >
-                      Anotações visíveis
+                      {t('barra.anotacoes')}
                     </button>
                   </div>
                 </>
@@ -297,13 +302,14 @@ function Interior() {
                 {modo === 'mesa' && <BarraZoom />}
                 <MenuMais
                   itens={[
-                    ['Buscar novidades no Zotero', () => recarregar()],
-                    ['Ler tudo do Zotero de novo', () => recarregar(true)],
-                    ['Tema…', () => setJanela('tema')],
-                    ['Exportar…', () => setJanela('exportar')],
-                    ['Importar associações…', () => setJanela('importar')],
-                    ['Salvar ou abrir…', () => setJanela('arquivo')],
-                    ...(MODO_LOCAL ? [] : [['Desconectar do Zotero…', desconectar] as [string, () => void]]),
+                    [t('menu.novidades'), () => recarregar()],
+                    [t('menu.lerTudo'), () => recarregar(true)],
+                    [t('menu.tema'), () => setJanela('tema')],
+                    [t('menu.exportar'), () => setJanela('exportar')],
+                    [t('menu.importar'), () => setJanela('importar')],
+                    [t('menu.arquivo'), () => setJanela('arquivo')],
+                    [t('menu.idioma'), () => mudarIdioma(idioma === 'en' ? 'pt-BR' : 'en')],
+                    ...(MODO_LOCAL ? [] : [[t('menu.desconectar'), desconectar] as [string, () => void]]),
                   ]}
                 />
               </div>
@@ -322,14 +328,14 @@ function Interior() {
             }}
           />
         ) : estado.tipo === 'erro' ? (
-          <Aviso titulo="Não deu certo ler o Zotero" problema>
+          <Aviso titulo={t('aviso.erroLer')} problema>
             {estado.motivo}{' '}
             <button className="btn" onClick={() => recarregar()}>
-              Tentar de novo
+              {t('aviso.tentarDeNovo')}
             </button>
           </Aviso>
         ) : !bib ? (
-          <Aviso titulo="Lendo o Zotero…" />
+          <Aviso titulo={t('aviso.lendo')} />
         ) : (
           // A mesa fica sempre montada (para não perder as posições); a lista abre por cima.
           <div className="conteudo">
@@ -437,7 +443,7 @@ function MenuMais({ itens }: { itens: [string, () => void][] }) {
   return (
     <div className="menu-mais" ref={caixa}>
       <button className="btn" aria-haspopup="menu" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>
-        Menu ▾
+        {t('menu.botao')}
       </button>
       {aberto && (
         <div className="menu-lista" role="menu">
@@ -464,14 +470,14 @@ function SituacaoSalvamento() {
   const s = useSituacao()
   const texto =
     s.tipo === 'salvo'
-      ? 'Mesa salva neste navegador'
+      ? t('salvo.ok')
       : s.tipo === 'pendente'
-        ? 'Salvando…'
+        ? t('salvo.pendente')
         : s.tipo === 'nova'
-          ? 'Mesa nova: as mudanças serão salvas neste navegador'
+          ? t('salvo.nova')
           : s.tipo === 'erro'
             ? s.motivo
-            : 'A mesa salva estava ilegível e começou de novo. Uma cópia do conteúdo antigo foi guardada no navegador.'
+            : t('salvo.recuperado')
   return (
     <div className={`situacao${s.tipo === 'erro' || s.tipo === 'recuperado' ? ' ruim' : ''}`} role="status">
       {texto}
@@ -492,8 +498,8 @@ function SeletorColecao({ bib, valor, aoMudar }: { bib: Biblioteca; valor: strin
   }
   percorrer(null, 0)
   return (
-    <select className="sel-bib" value={valor} onChange={(e) => aoMudar(e.target.value)} aria-label="Coleção">
-      <option value="*">Todas as coleções ({bib.fichas.length})</option>
+    <select className="sel-bib" value={valor} onChange={(e) => aoMudar(e.target.value)} aria-label={t('barra.colecao')}>
+      <option value="*">{t('barra.todasColecoes', { n: bib.fichas.length })}</option>
       {opcoes.map(({ c, nivel, n }) => (
         <option key={c.chave} value={c.chave}>
           {'   '.repeat(nivel)}

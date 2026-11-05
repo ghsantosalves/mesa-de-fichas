@@ -6,6 +6,7 @@ import { baixar, imagemDaMesa, nomeArquivo, pacoteParaClaude, resumoAssociacoes 
 import type { Biblioteca } from '../zotero/biblioteca.ts'
 import type { NoMesa } from '../mesa/operacoes.ts'
 import { Dialogo } from './Dialogo.tsx'
+import { t } from '../i18n.ts'
 
 export function DialogoExportar({ bib, colecao, aoFechar }: { bib: Biblioteca; colecao: string; aoFechar: () => void }) {
   const rf = useReactFlow<NoMesa>()
@@ -14,78 +15,70 @@ export function DialogoExportar({ bib, colecao, aoFechar }: { bib: Biblioteca; c
   const texto = resumoAssociacoes(bib, colecao, completa)
 
   const gerarImagem = async () => {
-    setMsg({ texto: 'Gerando imagem…' })
+    setMsg({ texto: t('exp.gerando') })
     try {
       baixar(nomeArquivo(bib, colecao, 'png'), await imagemDaMesa(rf))
-      setMsg({ texto: 'Imagem baixada (veja a pasta Downloads).' })
+      setMsg({ texto: t('exp.imagemBaixada') })
     } catch (e) {
-      setMsg({ texto: `Não foi possível gerar a imagem. ${e instanceof Error ? e.message : ''}`, erro: true })
+      setMsg({ texto: t('exp.erroImagem', { e: e instanceof Error ? e.message : '' }), erro: true })
     }
   }
   const copiar = async (conteudo = texto) => {
     try {
       await navigator.clipboard.writeText(conteudo)
-      setMsg({ texto: 'Texto copiado.' })
+      setMsg({ texto: t('jan.copiado') })
     } catch {
-      setMsg({ texto: 'Não consegui copiar; selecione o texto e use Ctrl+C.', erro: true })
+      setMsg({ texto: t('jan.naoCopiou'), erro: true })
     }
   }
 
   return (
-    <Dialogo titulo="Exportar" aoFechar={aoFechar}>
-      <p className="d-rot">Imagem da mesa</p>
-      <p className="d-texto">Gera um PNG com o que está visível na coleção atual: fichas, áreas e associações.</p>
+    <Dialogo titulo={t('exp.titulo')} aoFechar={aoFechar}>
+      <p className="d-rot">{t('exp.imagem')}</p>
+      <p className="d-texto">{t('exp.imagemExplica')}</p>
       <button className="btn primario" onClick={gerarImagem}>
-        Baixar imagem
+        {t('exp.baixarImagem')}
       </button>
 
-      <p className="d-rot">Resumo das associações</p>
-      <p className="d-texto">
-        Para cada associação: a referência e a tese dos dois textos, a área, a relação e a sua anotação. Serve para
-        revisar, guardar ou colar onde quiser.
-      </p>
+      <p className="d-rot">{t('exp.resumo')}</p>
+      <p className="d-texto">{t('exp.resumoExplica')}</p>
       <label className="d-check">
-        <input type="checkbox" checked={completa} onChange={(e) => setCompleta(e.target.checked)} /> Incluir as fichas
-        completas
+        <input type="checkbox" checked={completa} onChange={(e) => setCompleta(e.target.checked)} /> {t('exp.completas')}
       </label>
       <textarea className="d-area" readOnly value={texto} />
       <div className="d-acoes esquerda">
         <button className="btn" onClick={() => copiar()}>
-          Copiar texto
+          {t('exp.copiar')}
         </button>
         <button
           className="btn"
           onClick={() => baixar(nomeArquivo(bib, colecao, 'md', 'resumo-associacoes'), texto, 'text/markdown;charset=utf-8')}
         >
-          Baixar .md
+          {t('exp.baixarMd')}
         </button>
       </div>
 
-      <p className="d-rot">Fichas para o Claude</p>
-      <p className="d-texto">
-        Um arquivo com as fichas visíveis e as associações que já existem, para enviar ao Claude junto com o contexto
-        do seu projeto. Com a skill <em>relacoes-entre-textos</em>, ele sugere relações entre os textos; depois, use{' '}
-        <strong>Menu → Importar associações</strong> para escolher quais colocar na mesa.
-      </p>
+      <p className="d-rot">{t('exp.claude')}</p>
+      <p className="d-texto">{t('exp.claudeExplica')}</p>
       <div className="d-acoes esquerda">
         <button
           className="btn primario"
           onClick={() => {
             baixar(nomeArquivo(bib, colecao, 'md', 'fichas-para-o-claude'), pacoteParaClaude(bib, colecao), 'text/markdown;charset=utf-8')
-            setMsg({ texto: 'Arquivo baixado (veja a pasta Downloads).' })
+            setMsg({ texto: t('jan.baixado') })
           }}
         >
-          Baixar fichas para o Claude
+          {t('exp.baixarClaude')}
         </button>
         <button className="btn" onClick={() => copiar(pacoteParaClaude(bib, colecao))}>
-          Copiar
+          {t('exp.copiarCurto')}
         </button>
       </div>
 
       <div className="d-acoes">
         {msg && <span className={`d-msg${msg.erro ? ' erro' : ''}`}>{msg.texto}</span>}
         <button className="btn primario" onClick={aoFechar}>
-          Fechar
+          {t('jan.fechar')}
         </button>
       </div>
     </Dialogo>

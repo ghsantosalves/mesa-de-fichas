@@ -10,12 +10,13 @@ import { Eraser, Highlighter, PenLine, TextSelect, Undo2, X } from 'lucide-react
 import { alterarMesa, mesa, type CampoGrifo, type Grifo, type Traco } from '../estado/mesa.ts'
 import { CORES_CANETA, CORES_MARCADOR, type Ferramenta } from './contexto.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
+import { t, type Chave } from '../i18n.ts'
 
 /** Espessuras para escolher (fina, média, grossa); a do meio é a padrão. */
 const ESPESSURAS = { caneta: [1.5, 3, 6], marcador: [10, 18, 30] }
 const LARGURA = { caneta: ESPESSURAS.caneta[1], marcador: ESPESSURAS.marcador[1] }
 const OPACIDADE = { caneta: 1, marcador: 0.4 }
-const NOMES_ESPESSURA = ['fina', 'média', 'grossa']
+const NOMES_ESPESSURA: Chave[] = ['des.fina', 'des.media', 'des.grossa']
 const larguraDe = (t: Traco) => t.largura ?? LARGURA[t.tipo]
 
 const caminho = (p: number[]) => {
@@ -254,41 +255,41 @@ export function Desenhos({ ferramenta, aoMudarFerramenta, colecao }: Props) {
       )}
 
       {ferramenta && (
-        <div className="barra-desenho" role="toolbar" aria-label="Desenhar">
+        <div className="barra-desenho" role="toolbar" aria-label={t('des.barra')}>
           {(
             [
-              ['caneta', 'Caneta', PenLine],
-              ['marcador', 'Marcador', Highlighter],
-              ['grifar', 'Grifar texto', TextSelect],
-              ['borracha', 'Borracha', Eraser],
-            ] as [Ferramenta, string, typeof PenLine][]
+              ['caneta', 'des.caneta', PenLine],
+              ['marcador', 'des.marcador', Highlighter],
+              ['grifar', 'des.grifar', TextSelect],
+              ['borracha', 'des.borracha', Eraser],
+            ] as [Ferramenta, Chave, typeof PenLine][]
           ).map(([f, nome, Icone]) => (
             <button key={f} className="btn com-icone" aria-pressed={ferramenta === f} onClick={() => aoMudarFerramenta(f)}>
               <Icone size={16} aria-hidden="true" />
-              {nome}
+              {t(nome)}
             </button>
           ))}
           {ferramenta !== 'borracha' && (
-            <span className="bd-cores" role="group" aria-label="Cor">
+            <span className="bd-cores" role="group" aria-label={t('des.cor')}>
               {cores.map((c) => (
                 <button
                   key={c}
                   className={`bd-cor${c === corAtiva ? ' ativa' : ''}`}
                   style={{ background: c }}
-                  aria-label={`Cor ${c}`}
+                  aria-label={t('des.corN', { c })}
                   onClick={() => (ferramenta === 'caneta' ? setCorCaneta(c) : setCorMarcador(c))}
                 />
               ))}
             </span>
           )}
           {tipoAtual && (
-            <span className="bd-espessuras" role="group" aria-label="Espessura">
+            <span className="bd-espessuras" role="group" aria-label={t('des.espessura')}>
               {ESPESSURAS[tipoAtual].map((w, i) => (
                 <button
                   key={w}
                   className={`bd-espessura${espessura[tipoAtual] === w ? ' ativa' : ''}`}
-                  aria-label={`Espessura ${NOMES_ESPESSURA[i]}`}
-                  title={`Espessura ${NOMES_ESPESSURA[i]}`}
+                  aria-label={t('des.espessuraN', { e: t(NOMES_ESPESSURA[i]) })}
+                  title={t('des.espessuraN', { e: t(NOMES_ESPESSURA[i]) })}
                   onClick={() => setEspessura({ ...espessura, [tipoAtual]: w })}
                 >
                   {/* Amostra do traço, do tamanho relativo da espessura. */}
@@ -303,14 +304,14 @@ export function Desenhos({ ferramenta, aoMudarFerramenta, colecao }: Props) {
               ))}
             </span>
           )}
-          <button className="btn com-icone" onClick={desfazer} title="Desfazer (Ctrl+Z)">
+          <button className="btn com-icone" onClick={desfazer} title={t('des.desfazerDica')}>
             <Undo2 size={16} aria-hidden="true" />
-            Desfazer
+            {t('des.desfazer')}
           </button>
-          <button className="btn icone" onClick={() => aoMudarFerramenta(null)} aria-label="Parar de desenhar" title="Parar (Esc)">
+          <button className="btn icone" onClick={() => aoMudarFerramenta(null)} aria-label={t('des.parar')} title={t('des.pararDica')}>
             <X size={16} aria-hidden="true" />
           </button>
-          {ferramenta === 'grifar' && <span className="bd-dica">Selecione um trecho de uma ficha. Clique num grifo para tirá-lo.</span>}
+          {ferramenta === 'grifar' && <span className="bd-dica">{t('des.dicaGrifar')}</span>}
         </div>
       )}
     </>

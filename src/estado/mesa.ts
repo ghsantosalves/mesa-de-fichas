@@ -3,6 +3,7 @@
 // gravado sozinho pouco depois de cada mudança.
 
 import { useSyncExternalStore } from 'react'
+import { t as tr, type Chave } from '../i18n.ts'
 
 const CHAVE = 'mesa-de-fichas:mesa'
 const ATRASO_MS = 700
@@ -17,15 +18,8 @@ export type Cor = (typeof CORES)[number]
 /** Campos que podem ser ocultados em cada ficha (o título sempre aparece). */
 export const CAMPOS = ['tese', 'conceitos', 'lembrar', 'dialogos', 'usos', 'ref', 'colecoes'] as const
 export type Campo = (typeof CAMPOS)[number]
-export const NOMES_CAMPOS: Record<Campo, string> = {
-  tese: 'Tese',
-  conceitos: 'Conceitos',
-  lembrar: 'Para lembrar',
-  dialogos: 'Diálogos',
-  usos: 'Uso no projeto',
-  ref: 'Referência',
-  colecoes: 'Coleções',
-}
+/** Nome do campo no idioma da interface. */
+export const nomeCampo = (c: Campo) => tr(`campo.${c}` as Chave)
 /** Campos da ficha onde dá para grifar texto. */
 export const CAMPOS_GRIFO = ['tese', 'conceitos', 'lembrar', 'dialogos', 'ref'] as const
 export type CampoGrifo = (typeof CAMPOS_GRIFO)[number]
@@ -63,12 +57,13 @@ export type Associacao = {
 export type ModoTema = 'sistema' | 'claro' | 'escuro'
 /** Cores editadas pelo usuário, por tema (nome da variável CSS → cor #rrggbb). */
 export type Tema = { modo: ModoTema; cores: { claro: Record<string, string>; escuro: Record<string, string> } }
-export const VARS_TEMA: [string, string][] = [
-  ['--mesa', 'Fundo da mesa'],
-  ['--cartao', 'Fundo da ficha'],
-  ['--tinta', 'Texto'],
-  ['--rotulo', 'Nomes dos campos'],
-  ['--linha', 'Associações'],
+/** Cores editáveis do tema: variável CSS e o nome mostrado (chave de tradução). */
+export const VARS_TEMA: [string, Chave][] = [
+  ['--mesa', 'tema.fundoMesa'],
+  ['--cartao', 'tema.fundoFicha'],
+  ['--tinta', 'tema.texto'],
+  ['--rotulo', 'tema.rotulos'],
+  ['--linha', 'tema.associacoes'],
 ]
 /** Última versão conhecida de uma ficha que sumiu do Zotero (para mostrar e decidir o que fazer). */
 export type FichaRemovida = { autorAno: string; obra: string; tese: string; ref: string; colecoes: string[]; em: string }
@@ -153,7 +148,7 @@ function validar(d: unknown): EstadoMesa {
         y: numero(a.y, 0),
         w: Math.max(LARGURA_MIN_AREA, numero(a.w, 600)),
         h: Math.max(ALTURA_MIN_AREA, numero(a.h, 400)),
-        titulo: typeof a.titulo === 'string' ? a.titulo : 'Área',
+        titulo: typeof a.titulo === 'string' ? a.titulo : tr('area.padrao'),
         colecao: typeof a.colecao === 'string' ? a.colecao : '*',
       })
     }
@@ -225,7 +220,7 @@ function ler(): { estado: EstadoMesa; situacao: Situacao } {
   try {
     texto = localStorage.getItem(CHAVE)
   } catch {
-    return { estado: vazio(), situacao: { tipo: 'erro', motivo: 'O navegador não deixa salvar a mesa.' } }
+    return { estado: vazio(), situacao: { tipo: 'erro', motivo: tr('salvo.semAcesso') } }
   }
   if (texto === null) return { estado: vazio(), situacao: { tipo: 'nova' } }
   try {
@@ -261,7 +256,7 @@ function gravar() {
     localStorage.setItem(CHAVE, JSON.stringify(mesa))
     avisar({ tipo: 'salvo' })
   } catch {
-    avisar({ tipo: 'erro', motivo: 'Não foi possível salvar a mesa neste navegador.' })
+    avisar({ tipo: 'erro', motivo: tr('salvo.erro') })
   }
 }
 

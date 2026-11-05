@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Marginália</title>
+  <!-- Fundo -->
+  <rect width="64" height="64" rx="14" fill="#1f2a33"/>
+  <!-- Ficha da esquerda (borda âmbar) -->
+  <g transform="rotate(-7 19 38)">
+    <rect x="7" y="22" width="24" height="31" rx="3" fill="#f6f1e6"/>
+    <rect x="7" y="22" width="4" height="31" rx="1.5" fill="#d9a21f"/>
+    <rect x="14" y="28" width="13" height="2.4" rx="1.2" fill="#3a4651"/>
+    <rect x="14" y="34" width="13" height="1.8" rx="0.9" fill="#b3a993"/>
+    <rect x="14" y="38.5" width="10" height="1.8" rx="0.9" fill="#b3a993"/>
+    <rect x="14" y="43" width="12" height="1.8" rx="0.9" fill="#b3a993"/>
+  </g>
+  <!-- Ficha da direita (borda azul) -->
+  <g transform="rotate(6 45 40)">
+    <rect x="33" y="24" width="24" height="31" rx="3" fill="#ffffff"/>
+    <rect x="33" y="24" width="4" height="31" rx="1.5" fill="#3f78b0"/>
+    <rect x="40" y="30" width="13" height="2.4" rx="1.2" fill="#3a4651"/>
+    <rect x="40" y="36" width="12" height="1.8" rx="0.9" fill="#b3a993"/>
+    <rect x="40" y="40.5" width="13" height="1.8" rx="0.9" fill="#b3a993"/>
+    <rect x="40" y="45" width="9" height="1.8" rx="0.9" fill="#b3a993"/>
+  </g>
+  <!-- Associação entre as duas fichas -->
+  <path d="M18 19 C 24 6, 40 6, 46 20" fill="none" stroke="#79a7dc" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="18" cy="19" r="3" fill="#79a7dc"/>
+  <circle cx="46" cy="20" r="3" fill="#79a7dc"/>
+</svg>

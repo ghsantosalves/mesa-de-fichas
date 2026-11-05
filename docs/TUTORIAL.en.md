@@ -1,0 +1,195 @@
+# Marginalia tutorial
+
+[Português](TUTORIAL.md) · **English**
+
+This guide is for non-programmers. Follow it in order; each step says what you should see. You don't need to install anything besides Zotero: Marginalia is a website.
+
+**Website:** https://ghsantosalves.github.io/mesa-de-fichas/
+
+To see the interface in English, open **Menu → English (idioma)**. It switches back with **Menu → Português (language)**. On the first visit it follows your browser's language.
+
+1. [How it works](#how-it-works)
+2. [Create the Zotero key](#1-create-the-zotero-key)
+3. [Install the button in Zotero](#2-install-the-button-in-zotero)
+4. [Open the table and connect](#3-open-the-table-and-connect)
+5. [Install the Claude skills](#4-install-the-claude-skills)
+6. [Create cards and put them in Zotero](#5-create-cards-and-put-them-in-zotero)
+7. [Using the table](#using-the-table)
+8. [Suggest relations with Claude](#suggest-relations-with-claude)
+9. [New and removed cards](#new-and-removed-cards)
+10. [Where your data lives](#where-your-data-lives)
+11. [Common problems](#common-problems)
+12. [For developers](#for-developers)
+
+## How it works
+
+```
+text you read ──► Claude (ficha-academica skill) ──► Zotero note tagged "ficha" ──► Marginalia
+```
+
+1. You read a text and ask Claude for a short card, using the skill included in this project.
+2. You paste the card as a **child note** of the item in Zotero and add the tag `ficha`.
+3. Marginalia fetches those notes from Zotero and shows each one as a card on a table where you drag, group into areas and link texts to each other.
+
+Card contents live in Zotero (to fix a card, edit the note there). The table layout (positions, colors, areas, links, notes, drawings) lives in your browser. Marginalia **only reads** Zotero: it never changes anything there.
+
+You need a **Zotero** account with your library synced to the cloud (in Zotero: Edit → Settings → Sync).
+
+## 1. Create the Zotero key
+
+The key is what lets Marginalia read your notes.
+
+1. Go to https://www.zotero.org/settings/keys (signed in).
+2. Write down the number in **"Your user ID for use in API calls is …"**.
+3. Click **Create new private key** and check **only**:
+   - Personal Library → **Allow library access**
+   - Personal Library → **Allow notes access**
+   - Leave **Allow write access** unchecked.
+   - Default Group Permissions → **None**.
+4. Give it a name (e.g. "Marginalia"), click **Save Key** and copy the key shown. Keep it somewhere safe: Zotero shows it only once.
+
+A read-only key means that even if it leaks, nobody can change your library.
+
+## 2. Install the button in Zotero
+
+The plugin adds **Open Marginalia** to Zotero's **Tools** menu (and to the right-click menu of items). It only opens the website; it does not read or change anything in your library.
+
+1. Download the plugin: https://ghsantosalves.github.io/mesa-de-fichas/mesa-de-fichas.xpi (if the browser asks, choose to save the file).
+2. In Zotero, open **Tools → Plugins**.
+3. Click the gear ⚙ at the top of the window → **Install Plugin From File…** and choose the downloaded `mesa-de-fichas.xpi`.
+4. Close the plugins window. **Tools** should now show **Open Marginalia**.
+
+Without the plugin, Marginalia works the same: just open the website in your browser (worth bookmarking).
+
+## 3. Open the table and connect
+
+1. In Zotero, **Tools → Open Marginalia** (or open the website in your browser).
+2. The first time, you see **Connect to your Zotero**. Paste the user ID and the key from step 1 and click **Connect**.
+3. The website checks the key with Zotero. If all is well, your cards appear, arranged in columns.
+
+Next time, the website opens straight on the table, just as you left it.
+
+## 4. Install the Claude skills
+
+The project includes two Claude *skills* (instructions that teach Claude to do a task the same way every time):
+
+| Skill | What it does | Download |
+| --- | --- | --- |
+| `ficha-academica` | Writes cards exactly in the format Marginalia reads. | https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip |
+| `relacoes-entre-textos` | Suggests relations between the texts of your project, to import into Marginalia (see [Suggest relations with Claude](#suggest-relations-with-claude)). | https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip |
+
+The skills are written in Portuguese and produce Portuguese labels; Claude still understands requests in English.
+
+**In Claude (website or app):** download the `.zip`, open **Settings → Capabilities** (or **Skills**) and upload the file. Don't unzip it.
+
+**In Claude Code:** unzip it and copy the folder (e.g. `relacoes-entre-textos`) to `~/.claude/skills/` (on Windows, `C:\Users\<your user>\.claude\skills\`).
+
+## 5. Create cards and put them in Zotero
+
+1. In Claude, send the text (PDF, chapter) or reading notes you already have and ask: **"make the card (ficha) for this text"**.
+2. Claude returns a block starting with `FICHA ·`. Check it, especially the pages: `[p. ?]` means a page to check.
+3. In Zotero, right-click the text's item → **Add Note** (child note, attached to the item).
+4. Paste the card into the note.
+5. Add the tag **`ficha`** to the note (exactly like that, lowercase).
+6. Put the **item** (not the note) in any collections you want. In Marginalia, collections work as filters: e.g. one collection per course or per thesis chapter.
+7. Wait for Zotero to sync. When you return to the Marginalia tab, it checks for updates by itself.
+
+The format, for anyone who wants to write cards by hand. Labels can be in Portuguese or in English:
+
+```
+CARD · Author (year), Title, excerpt
+Ref.: full reference, chapter/pages covered
+
+Thesis: 1 to 2 sentences. [p. X]
+
+Concepts: concept [p. X] · concept [p. X]
+
+To remember: one sentence.
+
+Dialogues: Author (relation) · Author (relation)
+
+Use: theory · methodology
+Video: link or "—"
+Full notes: link or "—"
+```
+
+| English | Portuguese |
+| --- | --- |
+| `CARD ·` | `FICHA ·` |
+| `Ref.:` or `Reference:` | `Ref.:` |
+| `Thesis:` | `Tese:` |
+| `Concepts:` | `Conceitos:` |
+| `To remember:` | `Para lembrar:` |
+| `Dialogues:` | `Diálogos:` |
+| `Use:` | `Uso:` |
+| `Video:` | `Vídeo:` |
+| `Full notes:` | `Fichamento completo:` |
+
+The tag is always `ficha`. Notes tagged `ficha` that don't follow the format don't disappear: they show up under **Cards with problems**, with the reason.
+
+## Using the table
+
+The top bar, left to right: **collection** and **search** · **Table | List** · table tools (**New area**, **Collapse all**, **Link cards**, **✏ Draw**, **Notes visible**) · zoom and **Menu**.
+
+- **Move:** drag a card; drag the background (or scroll) to move around the table.
+- **Zoom:** Ctrl + mouse wheel, pinch on a touchpad, or the − and + buttons. **Fit all** frames all cards.
+- **Collection:** the bar menu shows only the cards in one collection (and its subcollections).
+- **Search:** the "Highlight concept, author…" field dims the cards that don't contain the typed text, in any field, ignoring accents and case.
+- **List:** shows the cards as text, to check how each note was read.
+- **Collapse a card:** the ▾ button on the card, or double-click it. Collapsed, it shows only author and title. **Collapse all / Expand all** acts on the visible cards.
+- **Card color and fields:** the **⋯** button at the bottom of the card. Choose the border color and, under "Fields shown on this card", uncheck what you don't want to see on that card.
+- **Areas:** **New area** creates a rectangle in the middle of the screen, with the title ready to type. Drag it by the title (or ⠿) to move it: the cards inside go along. Drag the bottom-right corner to resize. The × removes the area (asks for a second click); the cards stay on the table.
+- **Link cards:** turn on **Link cards**, click the card the relation starts from, then the other one. An arrow appears with a box in the middle, and the link panel opens. Esc leaves link mode.
+- **Link panel:** shows both cards (author, title, thesis). Write the **relation** (free text; the buttons suggest the ones already used) and the **note**. **Reverse direction**, **Re-center box** and **Remove link** (asks for a second click).
+- **Link box:** click it to open the panel; drag it out of the way (a dashed line ties it to the arrow); drag its corner to resize. **Notes visible** shows or hides the notes in the boxes.
+- **Draw (pencil button ✏):** opens a palette at the top of the table:
+  - **Pen**: freehand strokes, in five colors and three thicknesses;
+  - **Highlighter**: wide translucent strokes over cards or the table;
+  - **Highlight text**: select a passage on a card and it is highlighted in the chosen color. Click a highlight to remove it;
+  - **Eraser**: pass over a stroke to erase it;
+  - **Undo** (or Ctrl+Z) and **✕** (or Esc) to stop drawing.
+
+  Drawings follow the table when you pan and zoom, are saved and appear in the exported image. Nothing here changes Zotero.
+- **Menu:** **Check Zotero for updates**, **Reload everything from Zotero**, **Theme…** (light, dark or system, with editable colors), **Export…** (PNG image, links summary in Markdown, cards for Claude), **Import links…**, **Save or open…** (a `.json` file with the whole layout), **English / Português**, **Disconnect from Zotero…**.
+
+## Suggest relations with Claude
+
+With the `relacoes-entre-textos` skill installed (step 4):
+
+1. In Marginalia, choose the collection and open **Menu → Export… → Cards for Claude → Download cards for Claude**. The file lists each card with an identifier, like `[ABCD1234]`, and the existing links.
+2. In Claude, send that file along with your **project context** (topic, research question, goals, chapters) and ask: **"suggest the relations between these texts for Marginalia"**.
+3. Claude answers with an overview, a readable list and a code block at the end.
+4. In Marginalia, **Menu → Import links…**: paste the whole answer (or just the block). Check the ones you want and click **Place on the table**.
+
+Imported links are just like the ones made by hand: you can edit, reverse, move or remove them.
+
+## New and removed cards
+
+- **New cards:** cards that arrive from Zotero after the first time appear in the **New cards** strip, at the bottom left. Drag each one where you want, click **Place** (it goes to an empty spot on screen) or **Place all**.
+- **Removed cards:** if a card on the table disappears from Zotero (note deleted, in the trash or without the `ficha` tag), it stays on the table marked **Removed from Zotero**, showing its last known content. Its links **are not deleted**. If the note comes back, the card returns to normal. To get rid of it, click **Remove from table** (asks for a second click).
+- **Sync:** Marginalia keeps a copy of what it has downloaded and afterwards asks Zotero only for what changed, so it opens quickly even with many cards.
+
+## Where your data lives
+
+- **Cards:** in Zotero. Marginalia only reads them.
+- **Zotero user ID and key:** only in your browser; sent only to Zotero (api.zotero.org).
+- **Table layout:** saved automatically **in the browser** shortly after each change ("Table saved in this browser", in the corner). So:
+  - in another browser or computer, the table starts empty. To move the layout, use **Menu → Save or open…**;
+  - clearing browsing data erases the layout (cards stay safe in Zotero). Save the table to a file now and then.
+
+## Common problems
+
+- **"Zotero did not recognize the key"**: the key was copied partially or deleted. Create another one (step 1).
+- **"This key belongs to user X, not Y"**: the user ID doesn't match the key; copy the number from the same page as the key.
+- **"The key needs permission…"**: edit the key at zotero.org/settings/keys and check *Allow library access* and *Allow notes access*.
+- **A new card doesn't show up:** check that Zotero synced, that the note has the `ficha` tag and that the collection chosen in the bar is the item's. Then use **Menu → Check Zotero for updates**.
+- **"Open Marginalia" is missing in Zotero:** in Tools → Plugins, check that the plugin is enabled.
+
+## For developers
+
+1. Install [Node.js](https://nodejs.org) (LTS) and [Git](https://git-scm.com).
+2. `git clone https://github.com/ghsantosalves/mesa-de-fichas.git`, enter the folder and run `npm install`.
+3. Optional: copy `.env.example` to `.env.local` and fill in `ZOTERO_USER_ID` and `ZOTERO_API_KEY`. The key then stays in the local server and the app doesn't ask to connect.
+4. `npm run dev` and open http://localhost:5173.
+
+Interface texts are in `src/i18n.ts`, each one as a `[Portuguese, English]` pair. Every push to `main` publishes the website and the plugin (`.github/workflows/site.yml`).

@@ -4,12 +4,16 @@
 import type { Edge, ReactFlowInstance } from '@xyflow/react'
 import { alterarMesa, type Associacao } from '../estado/mesa.ts'
 import type { NoMesa } from './operacoes.ts'
+import { idioma } from '../i18n.ts'
 
 export type DadosAresta = { assoc: Associacao }
 export type ArestaAssoc = Edge<DadosAresta, 'assoc'>
 type Mesa = ReactFlowInstance<NoMesa, ArestaAssoc>
 
-export const RELACOES_PADRAO = ['apoia-se em', 'critica', 'amplia', 'dialoga com', 'contrasta com']
+export const RELACOES_PADRAO =
+  idioma === 'en'
+    ? ['builds on', 'critiques', 'extends', 'dialogues with', 'contrasts with']
+    : ['apoia-se em', 'critica', 'amplia', 'dialoga com', 'contrasta com']
 export const LARGURA_MIN_CAIXA = 130
 export const ALTURA_MIN_CAIXA = 48
 

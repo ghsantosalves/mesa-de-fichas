@@ -2,6 +2,7 @@
 // O endereço e a chave vêm de credenciais.ts (servidor local ou direto do navegador).
 
 import { destino, lerCredenciais, MODO_LOCAL } from './credenciais.ts'
+import { t } from '../i18n.ts'
 
 const TENTATIVAS = 4
 
@@ -17,13 +18,13 @@ let liberadoEm = 0
 /** Caminho da biblioteca pessoal, ex.: /users/1234567 */
 export function caminhoUsuario(): string {
   const c = lerCredenciais()
-  if (!c) throw new ErroAcesso('Falta conectar ao Zotero.')
+  if (!c) throw new ErroAcesso(t('api.faltaConectar'))
   return `/users/${encodeURIComponent(c.userId)}`
 }
 
 async function pedir(caminho: string): Promise<Response> {
   const c = lerCredenciais()
-  if (!c) throw new ErroAcesso('Falta conectar ao Zotero.')
+  if (!c) throw new ErroAcesso(t('api.faltaConectar'))
   const { base, cabecalhos } = destino(c)
   for (let tentativa = 0; ; tentativa++) {
     const falta = liberadoEm - Date.now()
@@ -34,9 +35,7 @@ async function pedir(caminho: string): Promise<Response> {
       r = await fetch(base + caminho, { headers: cabecalhos })
     } catch {
       throw new ErroZotero(
-        MODO_LOCAL
-          ? 'Não consegui falar com o Zotero. Confira a internet e se o app está rodando (npm run dev).'
-          : 'Não consegui falar com o Zotero. Confira a internet.',
+        MODO_LOCAL ? t('api.erroRedeLocal') : t('con.erroRede'),
       )
     }
 
@@ -50,12 +49,10 @@ async function pedir(caminho: string): Promise<Response> {
     }
     if (r.status === 403) {
       throw new ErroAcesso(
-        MODO_LOCAL
-          ? 'O Zotero recusou o acesso. Confira ZOTERO_API_KEY no .env.local.'
-          : 'O Zotero recusou a chave (ela pode ter sido apagada ou mudada). Conecte de novo.',
+        MODO_LOCAL ? t('api.recusouLocal') : t('api.recusou'),
       )
     }
-    if (!r.ok) throw new ErroZotero(`O Zotero respondeu com erro ${r.status}.`)
+    if (!r.ok) throw new ErroZotero(t('con.erroStatus', { n: r.status }))
     return r
   }
 }

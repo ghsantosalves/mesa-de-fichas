@@ -5,6 +5,7 @@ import { memo, useEffect, useRef, useState } from 'react'
 import { NodeResizeControl, useReactFlow, type Node, type NodeProps } from '@xyflow/react'
 import { ALTURA_MIN_AREA, LARGURA_MIN_AREA, type Area } from '../estado/mesa.ts'
 import { mudarArea, removerArea, type NoMesa } from './operacoes.ts'
+import { t } from '../i18n.ts'
 
 export type DadosArea = { area: Area; nova?: boolean }
 export type NoArea = Node<DadosArea, 'area'>
@@ -31,7 +32,7 @@ function AreaNaMesa({ data }: NodeProps<NoArea>) {
 
   return (
     <section className="area">
-      <div className="area-cab" title="Arraste para mover a área e as fichas de dentro">
+      <div className="area-cab" title={t('area.arrastar')}>
         <span className="pega" aria-hidden="true">
           ⠿
         </span>
@@ -41,7 +42,7 @@ function AreaNaMesa({ data }: NodeProps<NoArea>) {
           value={a.titulo}
           size={Math.max(6, a.titulo.length + 1)}
           spellCheck={false}
-          aria-label="Título da área"
+          aria-label={t('area.titulo')}
           onChange={(e) => mudarArea(rf, a.id, { titulo: e.target.value })}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur()
@@ -49,10 +50,10 @@ function AreaNaMesa({ data }: NodeProps<NoArea>) {
         />
         <button
           className={`area-x nodrag${confirmar ? ' confirmar' : ''}`}
-          aria-label="Remover área"
+          aria-label={t('area.remover')}
           onClick={() => (confirmar ? removerArea(rf, a.id) : setConfirmar(true))}
         >
-          {confirmar ? 'Clique de novo para remover a área' : '×'}
+          {confirmar ? t('area.confirma') : '×'}
         </button>
       </div>
       <NodeResizeControl

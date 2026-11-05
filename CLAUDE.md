@@ -1,10 +1,10 @@
-# Mesa de fichas
+# Marginália
 
 App para organizar visualmente fichas de leitura acadêmicas, como fichas físicas numa mesa: arrastar, agrupar, associar e anotar relações entre textos. As fichas vêm do Zotero do usuário.
 
 ## Sobre o usuário
 - Quem mantém o projeto pode não ser programador: explique cada passo em português simples, diga o que é preciso fazer (instalar, rodar, testar) e o que esperar ver.
-- Toda a interface do app em português do Brasil.
+- Interface em português do Brasil (idioma principal) e em inglês. Todo texto da interface fica em `src/i18n.ts`, como par `[português, inglês]`; texto novo entra nos dois idiomas, nunca escrito direto no componente.
 - Dados pessoais de quem mantém o projeto ficam em `CLAUDE.local.md` (fora do git), se existir.
 
 ## Referência
@@ -45,6 +45,7 @@ Vídeo: link ou "—"
 Fichamento completo: link ou "—"
 ```
 - Rótulos e ordem fixos; um campo pode ocupar mais de uma linha (continua até o próximo rótulo).
+- Os rótulos também são aceitos em inglês (`CARD ·`, `Ref.`/`Reference`, `Thesis`, `Concepts`, `To remember`, `Dialogues`, `Use`, `Video`, `Full notes`); a tag é sempre `ficha`.
 - `Conceitos` e `Uso` separados por ` · `; `—` significa vazio.
 - O título antes do primeiro `)` é "Autor (ano)"; o resto é obra/trecho.
 - Nota com a tag mas fora do formato: não descartar em silêncio; mostrar numa lista "Fichas com problema" com o motivo.

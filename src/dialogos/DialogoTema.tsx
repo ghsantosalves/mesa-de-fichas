@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { VARS_TEMA, type ModoTema, type Tema } from '../estado/mesa.ts'
 import { corAtual, modoEfetivo } from '../tema.ts'
 import { Dialogo } from './Dialogo.tsx'
+import { t, type Chave } from '../i18n.ts'
 
-const MODOS: [ModoTema, string][] = [
-  ['sistema', 'Igual ao sistema'],
-  ['claro', 'Claro'],
-  ['escuro', 'Escuro'],
+const MODOS: [ModoTema, Chave][] = [
+  ['sistema', 'tema.sistema'],
+  ['claro', 'tema.claro'],
+  ['escuro', 'tema.escuro'],
 ]
 
 export function DialogoTema({ tema, aoMudar, aoFechar }: { tema: Tema; aoMudar: (t: Tema) => void; aoFechar: () => void }) {
@@ -29,30 +30,30 @@ export function DialogoTema({ tema, aoMudar, aoFechar }: { tema: Tema; aoMudar: 
   }
 
   return (
-    <Dialogo titulo="Tema" aoFechar={aoFechar}>
+    <Dialogo titulo={t('tema.titulo')} aoFechar={aoFechar}>
       <div className="seg">
         {MODOS.map(([m, nome]) => (
           <button key={m} className="btn" aria-pressed={tema.modo === m} onClick={() => mudarModo(m)}>
-            {nome}
+            {t(nome)}
           </button>
         ))}
       </div>
-      <p className="d-rot">Cores do tema {efetivo === 'escuro' ? 'escuro' : 'claro'}</p>
+      <p className="d-rot">{efetivo === 'escuro' ? t('tema.coresEscuro') : t('tema.coresClaro')}</p>
       <div className="cores-tema">
         {VARS_TEMA.map(([nome, rotulo]) => (
           <label key={nome}>
-            <span>{rotulo}</span>
+            <span>{t(rotulo)}</span>
             <input type="color" value={cores[nome]} onChange={(e) => mudarCor(nome, e.target.value)} />
           </label>
         ))}
       </div>
-      <p className="d-dica">As cores ficam guardadas separadamente para o tema claro e o escuro.</p>
+      <p className="d-dica">{t('tema.dica')}</p>
       <div className="d-acoes">
         <button className="btn" onClick={restaurar}>
-          Restaurar cores padrão
+          {t('tema.restaurar')}
         </button>
         <button className="btn primario" onClick={aoFechar}>
-          Pronto
+          {t('tema.pronto')}
         </button>
       </div>
     </Dialogo>

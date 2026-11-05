@@ -114,9 +114,25 @@ input {
   border-bottom: 1px solid var(--barra-borda);
 }
 .marca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font: 600 18px/1 var(--serifa);
   margin-right: 4px;
   white-space: nowrap;
+}
+.marca img {
+  display: block;
+  border-radius: 6px;
+}
+.marca .subtitulo {
+  font: 400 12px/1 var(--sans);
+  opacity: 0.7;
+}
+@media (max-width: 900px) {
+  .marca .subtitulo {
+    display: none;
+  }
 }
 .grupo {
   display: flex;

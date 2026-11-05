@@ -1,4 +1,6 @@
-# Mesa de fichas
+# Marginália
+
+**Português** · [English](README.en.md)
 
 App para organizar visualmente fichas de leitura acadêmicas, como fichas de papel espalhadas numa mesa: arrastar, agrupar em áreas, associar textos entre si e anotar essas relações. As fichas vêm do seu **Zotero**: são notas com a tag `ficha`, escritas num formato fixo (gerado pela skill do Claude que vem neste projeto).
 
@@ -7,7 +9,8 @@ App para organizar visualmente fichas de leitura acadêmicas, como fichas de pap
 - É um site: não precisa instalar nada além do Zotero. Na primeira vez, você conecta sua conta do Zotero com uma chave só de leitura.
 - **Só lê** o Zotero; nunca altera nada lá.
 - Número e chave do Zotero e a arrumação da mesa ficam só no seu navegador.
-- Plugin opcional para o Zotero: **Ferramentas → Abrir Mesa de fichas**.
+- Interface em português e em inglês (**Menu → English**). Começa no idioma do navegador.
+- Plugin opcional para o Zotero: **Ferramentas → Abrir Marginália**.
 
 O passo a passo completo, com a chave do Zotero, o plugin e a skill do Claude, está em **[docs/TUTORIAL.md](docs/TUTORIAL.md)**.
 
@@ -18,7 +21,7 @@ O passo a passo completo, com a chave do Zotero, o plugin e a skill do Claude, e
 | `src/` | Código do app (React + TypeScript + React Flow). |
 | `zotero-plugin/` | Plugin do Zotero que abre o site pelo menu Ferramentas. |
 | `skill/ficha-academica/` | Skill do Claude que gera fichas no formato que o app lê. |
-| `skill/relacoes-entre-textos/` | Skill do Claude que sugere relações entre os textos do projeto, para importar na Mesa. |
+| `skill/relacoes-entre-textos/` | Skill do Claude que sugere relações entre os textos do projeto, para importar na Marginália. |
 | `docs/TUTORIAL.md` | Tutorial de instalação e uso. |
 | `.github/workflows/site.yml` | Publica o site e o plugin no GitHub Pages a cada envio. |
 | `.env.example` | Modelo do `.env.local`, para rodar no computador com `npm run dev`. |

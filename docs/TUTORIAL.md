@@ -1,8 +1,12 @@
-# Tutorial da Mesa de fichas
+# Tutorial da Marginália
 
-Este guia é para quem não é programador. Siga na ordem; cada passo diz o que você deve ver. Não é preciso instalar nada além do Zotero: a Mesa de fichas é um site.
+**Português** · [English](TUTORIAL.en.md)
+
+Este guia é para quem não é programador. Siga na ordem; cada passo diz o que você deve ver. Não é preciso instalar nada além do Zotero: a Marginália é um site.
 
 **Site:** https://ghsantosalves.github.io/mesa-de-fichas/
+
+A interface está em português e em inglês: **Menu → English (idioma)** troca o idioma (e **Menu → Português (language)** volta). Na primeira visita, ela segue o idioma do navegador.
 
 1. [Como funciona](#como-funciona)
 2. [Criar a chave do Zotero](#1-criar-a-chave-do-zotero)
@@ -19,20 +23,20 @@ Este guia é para quem não é programador. Siga na ordem; cada passo diz o que 
 ## Como funciona
 
 ```
-texto lido ──► Claude (skill ficha-academica) ──► nota no Zotero com a tag "ficha" ──► Mesa de fichas
+texto lido ──► Claude (skill ficha-academica) ──► nota no Zotero com a tag "ficha" ──► Marginália
 ```
 
 1. Você lê um texto e pede ao Claude uma ficha curta, usando a skill que vem neste projeto.
 2. Cola a ficha como **nota filha** do item no Zotero e coloca a tag `ficha`.
-3. A Mesa de fichas busca essas notas no Zotero e mostra cada uma como um cartão, numa mesa onde você arrasta, agrupa em áreas e liga os textos entre si.
+3. A Marginália busca essas notas no Zotero e mostra cada uma como um cartão, numa mesa onde você arrasta, agrupa em áreas e liga os textos entre si.
 
-O conteúdo das fichas mora no Zotero (para corrigir uma ficha, edite a nota lá). A arrumação da mesa (posições, cores, áreas, associações, anotações) mora no seu navegador. A Mesa **só lê** o Zotero: nunca muda nada lá.
+O conteúdo das fichas mora no Zotero (para corrigir uma ficha, edite a nota lá). A arrumação da mesa (posições, cores, áreas, associações, anotações) mora no seu navegador. A Marginália **só lê** o Zotero: nunca muda nada lá.
 
 Você precisa de uma conta no **Zotero** com a biblioteca sincronizada na nuvem (no Zotero: Editar → Configurações → Sincronização).
 
 ## 1. Criar a chave do Zotero
 
-A chave é o que deixa a Mesa ler suas notas.
+A chave é o que deixa a Marginália ler suas notas.
 
 1. Entre em https://www.zotero.org/settings/keys (com sua conta).
 2. Anote o número em **"Your user ID for use in API calls is …"**.
@@ -41,24 +45,24 @@ A chave é o que deixa a Mesa ler suas notas.
    - Personal Library → **Allow notes access**
    - Deixe **Allow write access** desmarcado.
    - Default Group Permissions → **None**.
-4. Dê um nome (ex.: "Mesa de fichas"), clique em **Save Key** e copie a chave que aparece. Guarde-a num lugar seguro: o site do Zotero só a mostra uma vez.
+4. Dê um nome (ex.: "Marginália"), clique em **Save Key** e copie a chave que aparece. Guarde-a num lugar seguro: o site do Zotero só a mostra uma vez.
 
 A chave só de leitura garante que, mesmo se ela vazar, ninguém consegue alterar sua biblioteca.
 
 ## 2. Instalar o botão no Zotero
 
-O plugin acrescenta **Abrir Mesa de fichas** ao menu **Ferramentas** do Zotero (e ao menu do botão direito dos itens). Ele só abre o site; não lê nem muda nada na biblioteca.
+O plugin acrescenta **Abrir Marginália** ao menu **Ferramentas** do Zotero (e ao menu do botão direito dos itens). Ele só abre o site; não lê nem muda nada na biblioteca.
 
 1. Baixe o plugin: https://ghsantosalves.github.io/mesa-de-fichas/mesa-de-fichas.xpi (se o navegador perguntar, escolha salvar o arquivo).
 2. No Zotero, abra **Ferramentas → Plugins** (em inglês, *Tools → Plugins*).
 3. Clique na engrenagem ⚙ no alto da janela → **Instalar plugin a partir de arquivo…** (*Install Plugin From File…*) e escolha o `mesa-de-fichas.xpi` baixado.
-4. Feche a janela de plugins. Em **Ferramentas** deve aparecer **Abrir Mesa de fichas**.
+4. Feche a janela de plugins. Em **Ferramentas** deve aparecer **Abrir Marginália**.
 
-Sem o plugin, a Mesa funciona do mesmo jeito: basta abrir o site no navegador (vale a pena salvá-lo nos favoritos).
+Sem o plugin, a Marginália funciona do mesmo jeito: basta abrir o site no navegador (vale a pena salvá-lo nos favoritos).
 
 ## 3. Abrir a mesa e conectar
 
-1. No Zotero, **Ferramentas → Abrir Mesa de fichas** (ou abra o site no navegador).
+1. No Zotero, **Ferramentas → Abrir Marginália** (ou abra o site no navegador).
 2. Na primeira vez, aparece **Conectar ao seu Zotero**. Cole o número de usuário e a chave do passo 1 e clique em **Conectar**.
 3. O site confere a chave com o Zotero. Se estiver tudo certo, aparecem suas fichas, arrumadas sozinhas em colunas.
 
@@ -70,8 +74,8 @@ O projeto traz duas *skills* do Claude (instruções que ensinam o Claude a faze
 
 | Skill | O que faz | Baixar |
 | --- | --- | --- |
-| `ficha-academica` | Escreve fichas exatamente no formato que a Mesa lê. | https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip |
-| `relacoes-entre-textos` | Sugere relações entre os textos do seu projeto, para importar na Mesa (veja [Sugerir relações com o Claude](#sugerir-relações-com-o-claude)). | https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip |
+| `ficha-academica` | Escreve fichas exatamente no formato que a Marginália lê. | https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip |
+| `relacoes-entre-textos` | Sugere relações entre os textos do seu projeto, para importar na Marginália (veja [Sugerir relações com o Claude](#sugerir-relações-com-o-claude)). | https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip |
 
 **No Claude (site ou app):** baixe o `.zip`, abra **Configurações → Capacidades** (ou **Skills**) e envie o arquivo. Não descompacte.
 
@@ -86,8 +90,8 @@ Se o menu estiver com outro nome na sua versão, procure por "Skills" nas config
 3. No Zotero, clique com o botão direito no item do texto → **Adicionar nota** (nota filha, presa ao item).
 4. Cole a ficha na nota.
 5. Na nota, adicione a tag **`ficha`** (exatamente assim, minúsculo).
-6. Coloque o **item** (não a nota) nas coleções que quiser. Na Mesa, as coleções servem de filtro: por exemplo, uma coleção por disciplina ou por capítulo da tese.
-7. Espere o Zotero sincronizar (ícone de setas verde no canto superior direito). Ao voltar para a aba da Mesa, ela confere sozinha se há novidades.
+6. Coloque o **item** (não a nota) nas coleções que quiser. Na Marginália, as coleções servem de filtro: por exemplo, uma coleção por disciplina ou por capítulo da tese.
+7. Espere o Zotero sincronizar (ícone de setas verde no canto superior direito). Ao voltar para a aba da Marginália, ela confere sozinha se há novidades.
 
 O formato completo, para quem quiser escrever fichas à mão:
 
@@ -107,6 +111,8 @@ Uso: teoria · metodologia
 Vídeo: link ou "—"
 Fichamento completo: link ou "—"
 ```
+
+Os rótulos também podem estar em inglês (`CARD ·`, `Thesis:`, `Concepts:`, `To remember:`, `Dialogues:`, `Use:`, `Video:`, `Full notes:`); a tag continua sendo `ficha`.
 
 Notas com a tag `ficha` que estiverem fora desse formato não somem: aparecem no botão **Fichas com problema**, com o motivo.
 
@@ -134,21 +140,22 @@ A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa
 
   Os desenhos acompanham a mesa ao arrastar e dar zoom, aparecem na coleção em que foram feitos, ficam salvos e saem na imagem exportada. Grifos e desenhos não mudam nada no Zotero.
 - **Menu:**
-  - **Buscar novidades no Zotero** (a Mesa também faz isso sozinha ao voltar para a aba) e **Ler tudo do Zotero de novo** (se algo parecer desatualizado).
+  - **Buscar novidades no Zotero** (a Marginália também faz isso sozinha ao voltar para a aba) e **Ler tudo do Zotero de novo** (se algo parecer desatualizado).
   - **Tema:** claro, escuro ou igual ao sistema, com cinco cores editáveis, guardadas separadamente para o claro e o escuro.
   - **Exportar:** imagem PNG do que está visível na coleção escolhida; **resumo das associações** em Markdown (copiar ou baixar `.md`); **fichas para o Claude** (veja abaixo).
   - **Importar associações:** coloca na mesa as relações sugeridas pelo Claude.
   - **Salvar ou abrir:** baixa um `.json` com toda a arrumação ou abre um salvo antes (a mesa anterior fica como cópia de segurança no navegador).
+  - **English (idioma):** mostra a interface em inglês (e **Português (language)** volta).
   - **Desconectar do Zotero:** esquece o número e a chave neste navegador.
 
 ## Sugerir relações com o Claude
 
 Com a skill `relacoes-entre-textos` instalada (passo 4):
 
-1. Na Mesa, escolha a coleção e abra **Menu → Exportar… → Fichas para o Claude → Baixar fichas para o Claude**. O arquivo traz cada ficha com um identificador, como `[ABCD1234]`, e as associações que já existem.
-2. No Claude, envie esse arquivo junto com o **contexto do projeto** (tema, pergunta de pesquisa, objetivos, capítulos ou eixos; pode ser o texto do projeto) e peça: **"sugira as relações entre esses textos para a mesa de fichas"**.
+1. Na Marginália, escolha a coleção e abra **Menu → Exportar… → Fichas para o Claude → Baixar fichas para o Claude**. O arquivo traz cada ficha com um identificador, como `[ABCD1234]`, e as associações que já existem.
+2. No Claude, envie esse arquivo junto com o **contexto do projeto** (tema, pergunta de pesquisa, objetivos, capítulos ou eixos; pode ser o texto do projeto) e peça: **"sugira as relações entre esses textos para a Marginália"**.
 3. O Claude responde com um panorama, uma lista legível (Autor → relação → Autor, com justificativa e confiança) e um bloco de código no fim.
-4. Na Mesa, **Menu → Importar associações**: cole a resposta inteira (ou só o bloco). Aparece a lista; as sugestões que repetem associações existentes vêm desmarcadas, e as que citam fichas que não existem ficam bloqueadas. Marque as que quiser e clique em **Colocar na mesa**.
+4. Na Marginália, **Menu → Importar associações**: cole a resposta inteira (ou só o bloco). Aparece a lista; as sugestões que repetem associações existentes vêm desmarcadas, e as que citam fichas que não existem ficam bloqueadas. Marque as que quiser e clique em **Colocar na mesa**.
 
 As associações importadas são iguais às feitas à mão: dá para editar a relação e a anotação, inverter, mover a caixa ou remover. Se uma das fichas ainda estiver na faixa "Novas fichas", a seta aparece quando ela for colocada na mesa.
 
@@ -156,11 +163,11 @@ As associações importadas são iguais às feitas à mão: dá para editar a re
 
 - **Fichas novas:** fichas que chegam do Zotero depois da primeira vez aparecem na faixa **Novas fichas**, no canto inferior esquerdo, e um aviso diz quantas chegaram. Arraste cada uma para o lugar que quiser na mesa, clique em **Colocar** (ela vai para um espaço vazio da tela) ou em **Colocar todas**.
 - **Fichas removidas:** se uma ficha que estava na mesa some do Zotero (nota apagada, na lixeira ou sem a tag `ficha`), ela continua na mesa com a faixa **Removida do Zotero**, mostrando o último conteúdo conhecido. As associações dela **não são apagadas**. Se a nota voltar ao Zotero, a ficha volta ao normal. Para tirá-la de vez, clique em **Tirar da mesa** (pede um segundo clique e avisa quantas associações vão junto).
-- **Sincronização:** a Mesa guarda uma cópia do que já baixou e, nas próximas vezes, pede ao Zotero só o que mudou. Por isso abre rápido mesmo com muitas fichas.
+- **Sincronização:** a Marginália guarda uma cópia do que já baixou e, nas próximas vezes, pede ao Zotero só o que mudou. Por isso abre rápido mesmo com muitas fichas.
 
 ## Onde ficam os dados
 
-- **Fichas:** no Zotero. A Mesa só lê.
+- **Fichas:** no Zotero. A Marginália só lê.
 - **Número e chave do Zotero:** só no seu navegador; são enviados só para o Zotero (api.zotero.org).
 - **Arrumação da mesa:** salva sozinha **no navegador**, um instante depois de cada mudança ("Mesa salva neste navegador", no canto). Por isso:
   - em outro navegador ou computador, a mesa começa vazia. Para levar a arrumação, use **Menu → Salvar ou abrir**: salve o arquivo num e abra no outro;
@@ -172,7 +179,7 @@ As associações importadas são iguais às feitas à mão: dá para editar a re
 - **"Esta chave é do usuário X, não do Y"**: o número de usuário não bate com a chave; copie o número da mesma página da chave.
 - **"A chave precisa de permissão…"**: edite a chave em zotero.org/settings/keys e marque *Allow library access* e *Allow notes access*.
 - **Uma ficha nova não aparece:** confira se o Zotero sincronizou, se a nota tem a tag `ficha` e se a coleção escolhida na barra é a do item. Depois use **Menu → Buscar novidades no Zotero**.
-- **"Abrir Mesa de fichas" não aparece no Zotero:** em Ferramentas → Plugins, confira se o plugin está ativado. Se o Zotero disser que ele é incompatível com a sua versão, use o site direto pelo navegador e avise no GitHub.
+- **"Abrir Marginália" não aparece no Zotero:** em Ferramentas → Plugins, confira se o plugin está ativado. Se o Zotero disser que ele é incompatível com a sua versão, use o site direto pelo navegador e avise no GitHub.
 
 ## Para quem desenvolve
 

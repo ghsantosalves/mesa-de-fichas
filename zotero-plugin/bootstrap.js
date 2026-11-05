@@ -1,6 +1,6 @@
-/* Plugin do Zotero "Mesa de fichas": acrescenta "Abrir Mesa de fichas" ao menu
+/* Plugin do Zotero "Marginália": acrescenta "Abrir Marginália" ao menu
  * Ferramentas e ao menu do botão direito dos itens. Ao clicar, abre o site da
- * Mesa de fichas no navegador. O plugin não lê nem muda nada na biblioteca. */
+ * Marginália no navegador. O plugin não lê nem muda nada na biblioteca. */
 
 var ENDERECO = 'https://ghsantosalves.github.io/mesa-de-fichas/';
 var ID_PLUGIN = 'mesa-de-fichas@ghsantosalves.github.io';
