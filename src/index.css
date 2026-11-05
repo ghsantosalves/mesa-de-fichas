@@ -252,6 +252,39 @@ input {
   display: flex;
   gap: 6px;
 }
+.campos-visiveis {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+.campos-visiveis legend {
+  font: 600 11.5px/1.2 var(--sans);
+  color: var(--rotulo);
+  padding: 0;
+  margin-bottom: 6px;
+}
+.campos-visiveis label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 500 12px/1 var(--sans);
+  padding: 5px 8px;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  background: var(--cartao);
+  cursor: pointer;
+}
+.campos-visiveis input {
+  margin: 0;
+  accent-color: var(--linha);
+}
+.ocultos-aviso {
+  font-style: italic;
+}
 .ponto {
   width: 18px;
   height: 18px;

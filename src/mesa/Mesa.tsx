@@ -56,6 +56,7 @@ export function Mesa({ bib, colecao }: { bib: Biblioteca; colecao: string }) {
           colecoes: f.colecoes.map((k) => nomeColecao.get(k) ?? '?'),
           cor: salvo?.cor,
           recolhida: !!salvo?.recolhida,
+          ocultos: salvo?.ocultos ?? [],
         },
         hidden: !passa(f, filtro),
       }

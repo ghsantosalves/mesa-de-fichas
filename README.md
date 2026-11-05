@@ -6,7 +6,7 @@ App para organizar visualmente fichas de leitura acadêmicas, como fichas de pap
 - **Só lê** o Zotero; nunca altera nada lá.
 - Cada pessoa usa o próprio Zotero, com a própria chave, guardada só no seu computador.
 
-> **Em construção.** Hoje o app lê suas fichas do Zotero e as põe numa mesa onde dá para arrastar, dar zoom e filtrar por coleção; a arrumação fica salva no navegador. As próximas etapas estão no [tutorial](docs/TUTORIAL.md#o-que-já-funciona).
+> **Em construção.** Hoje o app lê suas fichas do Zotero e as põe numa mesa onde dá para arrastar, dar zoom, filtrar por coleção, criar áreas, colorir, recolher fichas e ocultar campos; a arrumação fica salva no navegador. As próximas etapas estão no [tutorial](docs/TUTORIAL.md#o-que-já-funciona).
 
 ## Começo rápido
 

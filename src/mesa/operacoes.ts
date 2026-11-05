@@ -2,7 +2,7 @@
 // e o estado salvo. Usadas pelos cartões, pelas áreas e pela barra.
 
 import type { ReactFlowInstance } from '@xyflow/react'
-import { alterarMesa, arredondar, type Area, type Cor } from '../estado/mesa.ts'
+import { alterarMesa, arredondar, type Area, type Campo, type Cor } from '../estado/mesa.ts'
 import type { NoFicha } from './NoFicha.tsx'
 import type { NoArea } from './NoArea.tsx'
 
@@ -11,8 +11,12 @@ type Mesa = ReactFlowInstance<NoMesa>
 
 export const idNoArea = (id: string) => `area:${id}`
 
-/** Muda cor e/ou recolhimento de fichas. `cor: null` tira a cor. */
-export function mudarFichas(rf: Mesa, chaves: string[], m: { cor?: Cor | null; recolhida?: boolean }) {
+/** Muda cor, recolhimento e/ou campos ocultos de fichas. `cor: null` tira a cor. */
+export function mudarFichas(
+  rf: Mesa,
+  chaves: string[],
+  m: { cor?: Cor | null; recolhida?: boolean; ocultos?: Campo[] },
+) {
   const alvo = new Set(chaves)
   rf.setNodes((ns) =>
     ns.map((n) => {
@@ -20,6 +24,7 @@ export function mudarFichas(rf: Mesa, chaves: string[], m: { cor?: Cor | null; r
       const data = { ...n.data }
       if ('cor' in m) data.cor = m.cor ?? undefined
       if ('recolhida' in m) data.recolhida = !!m.recolhida
+      if (m.ocultos) data.ocultos = m.ocultos
       return { ...n, data }
     }),
   )
@@ -33,6 +38,10 @@ export function mudarFichas(rf: Mesa, chaves: string[], m: { cor?: Cor | null; r
       if ('recolhida' in m) {
         if (m.recolhida) f.recolhida = true
         else delete f.recolhida
+      }
+      if (m.ocultos) {
+        if (m.ocultos.length) f.ocultos = [...m.ocultos]
+        else delete f.ocultos
       }
       e.fichas[chave] = f
     }

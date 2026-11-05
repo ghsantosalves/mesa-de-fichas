@@ -13,7 +13,19 @@ export const LARGURA_MIN_AREA = 240
 export const ALTURA_MIN_AREA = 160
 export const CORES = ['amarelo', 'azul', 'verde', 'rosa', 'cinza'] as const
 export type Cor = (typeof CORES)[number]
-export type EstadoFicha = Posicao & { cor?: Cor; recolhida?: boolean }
+/** Campos que podem ser ocultados em cada ficha (o título sempre aparece). */
+export const CAMPOS = ['tese', 'conceitos', 'lembrar', 'dialogos', 'usos', 'ref', 'colecoes'] as const
+export type Campo = (typeof CAMPOS)[number]
+export const NOMES_CAMPOS: Record<Campo, string> = {
+  tese: 'Tese',
+  conceitos: 'Conceitos',
+  lembrar: 'Para lembrar',
+  dialogos: 'Diálogos',
+  usos: 'Uso no projeto',
+  ref: 'Referência',
+  colecoes: 'Coleções',
+}
+export type EstadoFicha = Posicao & { cor?: Cor; recolhida?: boolean; ocultos?: Campo[] }
 /** Área da mesa. `colecao` é a coleção em que foi criada ('*' = aparece em todas). */
 export type Area = { id: string; x: number; y: number; w: number; h: number; titulo: string; colecao: string }
 export type EstadoMesa = {
@@ -50,6 +62,10 @@ function validar(d: unknown): EstadoMesa {
       const f: EstadoFicha = { x: numero(q.x, 0), y: numero(q.y, 0) }
       if (CORES.includes(q.cor as Cor)) f.cor = q.cor as Cor
       if (q.recolhida === true) f.recolhida = true
+      if (Array.isArray(q.ocultos)) {
+        const ocultos = CAMPOS.filter((c) => (q.ocultos as unknown[]).includes(c))
+        if (ocultos.length) f.ocultos = ocultos
+      }
       e.fichas[k] = f
     }
   }

@@ -158,6 +158,15 @@ Fichamento completo: link ou "—"
 
 Notas com a tag `ficha` que estiverem fora desse formato não somem: o app as mostrará numa lista "Fichas com problema", com o motivo.
 
+## Usando a mesa
+
+- **Mover:** arraste uma ficha pelo cartão; arraste o fundo (ou role a roda do mouse) para andar pela mesa.
+- **Zoom:** Ctrl + roda do mouse, pinça no touchpad, ou os botões − e + da barra. **Ver tudo** enquadra as fichas.
+- **Coleção:** o menu da barra mostra só as fichas de uma coleção (e de suas subcoleções).
+- **Recolher uma ficha:** botão ▾ no canto da ficha, ou clique duplo nela. Recolhida, mostra só autor e obra. **Recolher todas / Expandir todas** na barra age sobre as fichas visíveis.
+- **Cor e campos de uma ficha:** botão **⋯** no rodapé da ficha. Ali você escolhe a cor da borda e, em "Campos visíveis nesta ficha", desmarca o que não quer ver naquela ficha (tese, conceitos, para lembrar, diálogos, uso, referência, coleções). O rodapé avisa quantos campos estão ocultos. Nada disso altera o Zotero.
+- **Áreas:** **Nova área** cria um retângulo no centro da tela, já com o título pronto para digitar. Arraste pelo título (ou pelo ⠿) para mover a área: as fichas de dentro vão junto. Puxe o canto inferior direito para mudar o tamanho. O × remove a área (pede um segundo clique) e as fichas continuam na mesa. Uma área criada com uma coleção escolhida aparece só nessa coleção.
+
 ## O que já funciona
 
 O app está sendo construído em etapas:
@@ -168,7 +177,7 @@ O app está sendo construído em etapas:
 | 2 | Lista coleções e fichas, com "Fichas com problema" | ✅ pronta |
 | 3 | Fichas na mesa: arrastar, zoom, "Ver tudo", filtro por coleção | ✅ pronta |
 | 4 | Salvar a mesa e reabrir de onde parou | ✅ pronta |
-| 5 | Áreas, cores, recolher fichas | em breve |
+| 5 | Áreas, cores, recolher fichas, ocultar campos de cada ficha | ✅ pronta |
 | 6 | Associações entre fichas, com relação e anotação | em breve |
 | 7 | Tema, busca, exportar imagem e resumo em Markdown, salvar/abrir arquivo | em breve |
 | 8 | Sincronização incremental, fichas novas e removidas | em breve |

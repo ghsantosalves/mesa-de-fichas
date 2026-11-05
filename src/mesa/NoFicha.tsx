@@ -3,10 +3,10 @@
 import { memo, useState } from 'react'
 import { useReactFlow, type Node, type NodeProps } from '@xyflow/react'
 import { linkZotero, type Ficha } from '../zotero/biblioteca.ts'
-import { CORES, type Cor } from '../estado/mesa.ts'
+import { CAMPOS, CORES, NOMES_CAMPOS, type Campo, type Cor } from '../estado/mesa.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
 
-export type DadosFicha = { ficha: Ficha; colecoes: string[]; cor?: Cor; recolhida: boolean }
+export type DadosFicha = { ficha: Ficha; colecoes: string[]; cor?: Cor; recolhida: boolean; ocultos: Campo[] }
 export type NoFicha = Node<DadosFicha, 'ficha'>
 
 export const LARGURA_FICHA = 300
@@ -26,10 +26,14 @@ function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   const [menu, setMenu] = useState(false)
   const f = data.ficha
   const alternar = () => mudarFichas(rf, [id], { recolhida: !data.recolhida })
-  const campo = (rotulo: string, v: string) =>
-    v && (
+  const ve = (c: Campo) => !data.ocultos.includes(c)
+  const alternarCampo = (c: Campo) =>
+    mudarFichas(rf, [id], { ocultos: ve(c) ? [...data.ocultos, c] : data.ocultos.filter((x) => x !== c) })
+  const campo = (c: Campo, v: string) =>
+    v &&
+    ve(c) && (
       <div>
-        <dt>{rotulo}</dt>
+        <dt>{NOMES_CAMPOS[c]}</dt>
         <dd>{v}</dd>
       </div>
     )
@@ -59,11 +63,11 @@ function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
       {!data.recolhida && (
         <>
           <dl className="campos">
-            {campo('Tese', f.tese)}
-            {campo('Conceitos', f.conceitos.join(' · '))}
-            {campo('Para lembrar', f.lembrar)}
-            {campo('Diálogos', f.dialogos.join(' · '))}
-            {f.usos.length > 0 && (
+            {campo('tese', f.tese)}
+            {campo('conceitos', f.conceitos.join(' · '))}
+            {campo('lembrar', f.lembrar)}
+            {campo('dialogos', f.dialogos.join(' · '))}
+            {f.usos.length > 0 && ve('usos') && (
               <div>
                 <dt>Uso no projeto</dt>
                 <dd className="tags">
@@ -76,9 +80,17 @@ function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
               </div>
             )}
           </dl>
-          {f.ref && <p className="ref">{f.ref}</p>}
+          {f.ref && ve('ref') && <p className="ref">{f.ref}</p>}
           <div className="pe">
-            <span className="bibs">{data.colecoes.join(' · ')}</span>
+            <span className="bibs">
+              {ve('colecoes') && data.colecoes.join(' · ')}
+              {data.ocultos.length > 0 && (
+                <span className="ocultos-aviso">
+                  {ve('colecoes') && ' · '}
+                  {data.ocultos.length === 1 ? '1 campo oculto' : `${data.ocultos.length} campos ocultos`}
+                </span>
+              )}
+            </span>
             {link(f.video, 'Vídeo da aula')}
             {link(f.fichamento, 'Fichamento completo')}
             <a className="nodrag" href={linkZotero(f)}>
@@ -106,6 +118,15 @@ function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
                   />
                 ))}
               </div>
+              <fieldset className="campos-visiveis">
+                <legend>Campos visíveis nesta ficha</legend>
+                {CAMPOS.map((c) => (
+                  <label key={c}>
+                    <input type="checkbox" checked={ve(c)} onChange={() => alternarCampo(c)} />
+                    {NOMES_CAMPOS[c]}
+                  </label>
+                ))}
+              </fieldset>
             </div>
           )}
         </>
