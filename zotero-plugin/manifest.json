@@ -1,13 +1,14 @@
 {
   "manifest_version": 2,
   "name": "Mesa de fichas",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Abre a Mesa de fichas (organizar fichas de leitura numa mesa visual) a partir do Zotero.",
   "author": "ghsantosalves",
   "homepage_url": "https://github.com/ghsantosalves/mesa-de-fichas",
   "applications": {
     "zotero": {
       "id": "mesa-de-fichas@ghsantosalves.github.io",
+      "update_url": "https://ghsantosalves.github.io/mesa-de-fichas/updates.json",
       "strict_min_version": "6.999",
       "strict_max_version": "10.*"
     }

@@ -1,0 +1,18 @@
+{
+  "addons": {
+    "mesa-de-fichas@ghsantosalves.github.io": {
+      "updates": [
+        {
+          "version": "1.0.1",
+          "update_link": "https://ghsantosalves.github.io/mesa-de-fichas/mesa-de-fichas.xpi",
+          "applications": {
+            "zotero": {
+              "strict_min_version": "6.999",
+              "strict_max_version": "10.*"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
