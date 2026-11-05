@@ -23,8 +23,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: lts/*
           cache: npm
@@ -34,7 +34,7 @@ jobs:
       - name: Empacotar o plugin do Zotero
         run: cd zotero-plugin && zip -r -X ../dist/mesa-de-fichas.xpi manifest.json bootstrap.js locale
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
       - id: deploy
