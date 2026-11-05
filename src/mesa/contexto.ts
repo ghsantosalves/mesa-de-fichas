@@ -13,8 +13,17 @@ export type ContextoMesa = {
   pontas: string[]
   /** Mostrar anotações nas caixas das associações. */
   notas: boolean
+  /** Texto da busca, já normalizado (sem acentos, minúsculo). Vazio = sem busca. */
+  busca: string
   abrirAssoc: (id: string) => void
 }
+
+/** Minúsculas e sem acentos, para comparar textos na busca. */
+export const normalizar = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
 
 export const Contexto = createContext<ContextoMesa>({
   ligando: false,
@@ -22,5 +31,6 @@ export const Contexto = createContext<ContextoMesa>({
   ativa: null,
   pontas: [],
   notas: true,
+  busca: '',
   abrirAssoc: () => {},
 })

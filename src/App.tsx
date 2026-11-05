@@ -7,9 +7,16 @@ import { BarraZoom } from './mesa/BarraZoom.tsx'
 import { BarraMesa } from './mesa/BarraMesa.tsx'
 import { PainelAssoc } from './mesa/PainelAssoc.tsx'
 import { criarAssociacao, type ArestaAssoc } from './mesa/assoc.ts'
-import { Contexto, type ContextoMesa } from './mesa/contexto.ts'
+import { Contexto, normalizar, type ContextoMesa } from './mesa/contexto.ts'
 import type { NoMesa } from './mesa/operacoes.ts'
-import { alterarMesa, mesa, useSituacao } from './estado/mesa.ts'
+import { alterarMesa, mesa, useSituacao, type Tema } from './estado/mesa.ts'
+import { aoMudarSistema, aplicarTema } from './tema.ts'
+import { DialogoTema } from './dialogos/DialogoTema.tsx'
+import { DialogoExportar } from './dialogos/DialogoExportar.tsx'
+import { DialogoArquivo } from './dialogos/DialogoArquivo.tsx'
+
+// Aplica o tema salvo antes de desenhar qualquer coisa.
+aplicarTema(mesa.tema)
 
 type Estado =
   | { tipo: 'carregando' }
@@ -64,6 +71,18 @@ function Interior() {
 
   const bib = estado.tipo === 'pronto' ? estado.bib : null
 
+  // --- Tema, busca e janelas ---
+  const [tema, setTema] = useState<Tema>(mesa.tema)
+  const [busca, setBusca] = useState('')
+  const [janela, setJanela] = useState<'tema' | 'exportar' | 'arquivo' | null>(null)
+  const mudarTema = (t: Tema) => {
+    setTema(t)
+    aplicarTema(t)
+    alterarMesa((e) => (e.tema = t))
+  }
+  // No modo "Igual ao sistema", acompanha a troca de claro/escuro do computador.
+  useEffect(() => aoMudarSistema(() => aplicarTema(mesa.tema)), [])
+
   // --- Associações ---
   const [ligando, setLigando] = useState(false)
   const [escolhida, setEscolhida] = useState<string | null>(null)
@@ -113,7 +132,7 @@ function Interior() {
   // Esc sai do modo de associar ou fecha o painel.
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
+      if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return
       if (ligando) {
         setLigando(false)
         setEscolhida(null)
@@ -130,9 +149,10 @@ function Interior() {
       ativa,
       pontas: pontasTexto ? pontasTexto.split('|') : [],
       notas,
+      busca: normalizar(busca.trim()),
       abrirAssoc: (id: string) => abrirAssoc(id),
     }),
-    [ligando, escolhida, ativa, pontasTexto, notas, abrirAssoc],
+    [ligando, escolhida, ativa, pontasTexto, notas, busca, abrirAssoc],
   )
 
   return (
@@ -175,6 +195,25 @@ function Interior() {
               <button className="btn" onClick={recarregar}>
                 Recarregar do Zotero
               </button>
+              <button className="btn" onClick={() => setJanela('tema')}>
+                Tema
+              </button>
+              <button className="btn" onClick={() => setJanela('exportar')}>
+                Exportar
+              </button>
+              <button className="btn" onClick={() => setJanela('arquivo')}>
+                Salvar ou abrir
+              </button>
+              {modo === 'mesa' && (
+                <input
+                  className="busca"
+                  type="search"
+                  placeholder="Destacar conceito, autor…"
+                  aria-label="Destacar fichas"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                />
+              )}
             </div>
           )}
           {bib && modo === 'mesa' && <BarraZoom />}
@@ -226,6 +265,11 @@ function Interior() {
           </div>
         )}
         <SituacaoSalvamento />
+        {janela === 'tema' && <DialogoTema tema={tema} aoMudar={mudarTema} aoFechar={() => setJanela(null)} />}
+        {janela === 'exportar' && bib && (
+          <DialogoExportar bib={bib} colecao={colecao} aoFechar={() => setJanela(null)} />
+        )}
+        {janela === 'arquivo' && <DialogoArquivo aoFechar={() => setJanela(null)} />}
         {aviso && (
           <div className="aviso" role="status">
             {aviso}

@@ -44,8 +44,19 @@ export type Associacao = {
   w?: number
   h?: number
 }
+export type ModoTema = 'sistema' | 'claro' | 'escuro'
+/** Cores editadas pelo usuário, por tema (nome da variável CSS → cor #rrggbb). */
+export type Tema = { modo: ModoTema; cores: { claro: Record<string, string>; escuro: Record<string, string> } }
+export const VARS_TEMA: [string, string][] = [
+  ['--mesa', 'Fundo da mesa'],
+  ['--cartao', 'Fundo da ficha'],
+  ['--tinta', 'Texto'],
+  ['--rotulo', 'Nomes dos campos'],
+  ['--linha', 'Associações'],
+]
 export type EstadoMesa = {
   versao: 1
+  tema: Tema
   /** Por chave da nota no Zotero. Fichas que sumiram do Zotero continuam aqui. */
   fichas: Record<string, EstadoFicha>
   areas: Area[]
@@ -66,7 +77,16 @@ export type Situacao =
 const numero = (v: unknown, padrao: number) => (typeof v === 'number' && Number.isFinite(v) ? v : padrao)
 
 function vazio(): EstadoMesa {
-  return { versao: 1, fichas: {}, areas: [], associacoes: [], notas: true, vista: null, colecao: '*' }
+  return {
+    versao: 1,
+    tema: { modo: 'sistema', cores: { claro: {}, escuro: {} } },
+    fichas: {},
+    areas: [],
+    associacoes: [],
+    notas: true,
+    vista: null,
+    colecao: '*',
+  }
 }
 
 /** Confere o que veio do armazenamento, aproveitando o que estiver certo. */
@@ -120,6 +140,18 @@ function validar(d: unknown): EstadoMesa {
     }
   }
   if (o.notas === false) e.notas = false
+  const t = o.tema as Record<string, unknown> | null
+  if (t && typeof t === 'object') {
+    if (t.modo === 'claro' || t.modo === 'escuro' || t.modo === 'sistema') e.tema.modo = t.modo
+    const cores = t.cores as Record<string, Record<string, unknown>> | null
+    for (const qual of ['claro', 'escuro'] as const) {
+      const c = cores?.[qual]
+      if (!c || typeof c !== 'object') continue
+      for (const [nome] of VARS_TEMA) {
+        if (typeof c[nome] === 'string' && /^#[0-9a-f]{6}$/i.test(c[nome] as string)) e.tema.cores[qual][nome] = c[nome] as string
+      }
+    }
+  }
   const v = o.vista as Record<string, unknown> | null
   if (v && typeof v === 'object') e.vista = { x: numero(v.x, 0), y: numero(v.y, 0), zoom: numero(v.zoom, 1) }
   if (typeof o.colecao === 'string') e.colecao = o.colecao
@@ -172,6 +204,33 @@ function gravar() {
 }
 
 /** Muda o estado e agenda a gravação. */
+/** Conteúdo do arquivo .json com a mesa inteira (o conteúdo das fichas fica no Zotero). */
+export function arquivoDaMesa(): string {
+  return JSON.stringify({ formato: 'mesa-de-fichas', versao: 1, salvoEm: new Date().toISOString(), mesa }, null, 1)
+}
+
+/** Lê um arquivo salvo por `arquivoDaMesa`. Lança erro se não for uma mesa. */
+export function lerArquivoDaMesa(texto: string): EstadoMesa {
+  const d = JSON.parse(texto) as Record<string, unknown>
+  if (!d || d.formato !== 'mesa-de-fichas' || !d.mesa) throw new Error('não é uma mesa')
+  return validar(d.mesa)
+}
+
+/**
+ * Troca a mesa atual por outra. Antes, guarda no navegador uma cópia da atual,
+ * para nada se perder. Depois disso a página deve ser recarregada.
+ */
+export function substituirMesa(nova: EstadoMesa) {
+  try {
+    localStorage.setItem(`${CHAVE}:copia-${new Date().toISOString()}`, JSON.stringify(mesa))
+  } catch {
+    /* sem espaço para a cópia; segue mesmo assim */
+  }
+  for (const k of Object.keys(mesa) as (keyof EstadoMesa)[]) delete mesa[k]
+  Object.assign(mesa, nova)
+  gravar()
+}
+
 export function alterarMesa(mudar: (e: EstadoMesa) => void) {
   mudar(mesa)
   if (temporizador) clearTimeout(temporizador)

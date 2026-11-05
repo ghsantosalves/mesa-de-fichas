@@ -1,8 +1,8 @@
 // Cartão de uma ficha na mesa (um "nó" do React Flow).
 
-import { memo, useContext, useState } from 'react'
+import { memo, useContext, useMemo, useState } from 'react'
 import { Handle, Position, useReactFlow, type Node, type NodeProps } from '@xyflow/react'
-import { Contexto } from './contexto.ts'
+import { Contexto, normalizar } from './contexto.ts'
 import { linkZotero, type Ficha } from '../zotero/biblioteca.ts'
 import { CAMPOS, CORES, NOMES_CAMPOS, type Campo, type Cor } from '../estado/mesa.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
@@ -24,9 +24,18 @@ function link(url: string, texto: string) {
 
 function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   const rf = useReactFlow<NoMesa>()
-  const { escolhida, pontas } = useContext(Contexto)
+  const { escolhida, pontas, busca } = useContext(Contexto)
   const [menu, setMenu] = useState(false)
   const f = data.ficha
+  // Busca em todos os campos, inclusive o uso, mesmo os ocultos.
+  const textoBusca = useMemo(
+    () =>
+      normalizar(
+        [f.titulo, f.ref, f.tese, f.conceitos.join(' '), f.lembrar, f.dialogos.join(' '), f.usos.join(' ')].join(' '),
+      ),
+    [f],
+  )
+  const apagada = busca !== '' && !textoBusca.includes(busca)
   const alternar = () => mudarFichas(rf, [id], { recolhida: !data.recolhida })
   const ve = (c: Campo) => !data.ocultos.includes(c)
   const alternarCampo = (c: Campo) =>
@@ -42,7 +51,7 @@ function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
 
   return (
     <article
-      className={`ficha-mesa${data.recolhida ? ' recolhida' : ''}${selected ? ' selecionada' : ''}${dragging ? ' arrastando' : ''}${escolhida === id ? ' escolhida' : ''}${pontas.includes(id) ? ' ponta' : ''}`}
+      className={`ficha-mesa${data.recolhida ? ' recolhida' : ''}${selected ? ' selecionada' : ''}${dragging ? ' arrastando' : ''}${escolhida === id ? ' escolhida' : ''}${pontas.includes(id) ? ' ponta' : ''}${apagada ? ' apagada' : ''}`}
       style={{
         width: data.recolhida ? LARGURA_RECOLHIDA : LARGURA_FICHA,
         borderLeftColor: data.cor ? `var(--c-${data.cor})` : undefined,

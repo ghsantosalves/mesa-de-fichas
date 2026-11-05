@@ -25,8 +25,25 @@
   --sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
 }
+/* Tema escuro: escolhido no app (data-theme="dark") ou do sistema (se não escolheu "claro"). */
+:root[data-theme='dark'] {
+  --mesa: #181b1d;
+  --ponto: rgba(255, 255, 255, 0.06);
+  --cartao: #23282c;
+  --tinta: #e4e7ea;
+  --tinta-2: #a3acb4;
+  --rotulo: #d4b07a;
+  --borda: #353c42;
+  --barra: rgba(24, 27, 29, 0.95);
+  --barra-borda: rgba(255, 255, 255, 0.1);
+  --linha: #79a7dc;
+  --zona-fundo: rgba(255, 255, 255, 0.03);
+  --zona-borda: rgba(255, 255, 255, 0.25);
+  --linha-sel: #a9c8ee;
+  color-scheme: dark;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --mesa: #181b1d;
     --ponto: rgba(255, 255, 255, 0.06);
     --cartao: #23282c;
@@ -163,6 +180,10 @@ input {
   color: var(--tinta-2);
   max-width: 60vw;
   pointer-events: none;
+  background: var(--barra);
+  border: 1px solid var(--barra-borda);
+  border-radius: 6px;
+  padding: 4px 8px;
 }
 .situacao.ruim {
   color: var(--erro);
@@ -634,6 +655,134 @@ input {
     border-left: 0;
     border-top: 1px solid var(--borda);
   }
+}
+
+/* Busca */
+.busca {
+  font: 400 13.5px/1 var(--sans);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--tinta);
+  width: 200px;
+  max-width: 100%;
+}
+.ficha-mesa.apagada {
+  opacity: 0.18;
+}
+
+/* Janelas (tema, exportar, salvar ou abrir) */
+.dialogo {
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--cartao);
+  color: var(--tinta);
+  width: min(580px, 92vw);
+  padding: 18px;
+}
+.dialogo::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+.dialogo h2 {
+  font: 600 18px/1.2 var(--serifa);
+  margin: 0 0 10px;
+}
+.d-rot {
+  font: 600 12.5px/1.2 var(--sans);
+  color: var(--rotulo);
+  margin: 16px 0 6px;
+}
+.d-texto,
+.d-dica {
+  font: 400 13.5px/1.45 var(--sans);
+  color: var(--tinta-2);
+  margin: 0 0 10px;
+}
+.d-dica {
+  font-size: 12.5px;
+  margin-top: 10px;
+}
+.d-bloco {
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+}
+.d-bloco .d-rot {
+  margin-top: 0;
+}
+.d-bloco input[type='file'] {
+  display: block;
+  margin: 4px 0 8px;
+  font: 400 13px/1.3 var(--sans);
+}
+.d-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 13.5px/1.2 var(--sans);
+  margin: 4px 0 8px;
+}
+.d-area {
+  width: 100%;
+  height: 220px;
+  border-radius: 6px;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--tinta);
+  padding: 9px 10px;
+  font: 400 12.5px/1.5 ui-monospace, Consolas, monospace;
+  resize: vertical;
+}
+.d-acoes {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  align-items: center;
+}
+.d-msg {
+  font: 500 13px/1.3 var(--sans);
+  color: var(--linha);
+  margin-right: auto;
+}
+.d-msg.erro {
+  color: var(--erro);
+}
+.btn.primario {
+  background: var(--tinta);
+  color: var(--cartao);
+  border-color: var(--tinta);
+}
+.btn.perigo {
+  border-color: var(--erro);
+  color: var(--erro);
+}
+.seg {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cores-tema {
+  display: grid;
+  gap: 8px;
+}
+.cores-tema label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  font: 500 13.5px/1.2 var(--sans);
+}
+.cores-tema input[type='color'] {
+  width: 46px;
+  height: 32px;
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  cursor: pointer;
 }
 
 .ficha-mesa .ref {

@@ -112,7 +112,7 @@ Para fechar o app, volte ao terminal e aperte `Ctrl + C`. Sempre que mudar o `.e
 **Onde a mesa fica salva.** A arrumação da mesa (posições, zoom, coleção escolhida) é salva sozinha **no navegador**, um instante depois de cada mudança; o aviso no canto inferior esquerdo diz "Mesa salva neste navegador". Por isso:
 
 - use sempre o mesmo navegador e o mesmo endereço (http://localhost:5173). Em outro navegador, a mesa começa vazia;
-- limpar os dados de navegação do navegador apaga a mesa (as fichas continuam seguras no Zotero);
+- limpar os dados de navegação do navegador apaga a mesa (as fichas continuam seguras no Zotero). Para não perder a arrumação, use de vez em quando **Salvar ou abrir → Salvar arquivo da mesa**;
 - o app sempre abre na porta 5173. Se aparecer um erro dizendo que a porta está em uso, é porque o app já está aberto em outro terminal: feche aquele (`Ctrl + C`) ou use o que já está rodando.
 
 ## 6. Instalar a skill de fichas no Claude
@@ -169,6 +169,10 @@ Notas com a tag `ficha` que estiverem fora desse formato não somem: o app as mo
 - **Associar fichas:** ligue **Associar fichas** na barra, clique na ficha de onde parte a relação e depois na outra. Aparece uma seta da primeira para a segunda, com uma caixa no meio, e abre o painel da associação. Esc sai do modo de associar. Clicar de novo no mesmo par abre a associação que já existe.
 - **Painel da associação:** mostra as duas fichas (autor, obra, tese). Escreva a **relação** (texto livre; os botões sugerem as já usadas) e a **anotação**. **Inverter direção** troca a ponta da seta; **Recentralizar caixa** devolve a caixa ao meio da seta; **Remover associação** pede um segundo clique. Fechar ou Esc fecha o painel.
 - **Caixa da associação:** clique para abrir o painel; arraste para tirá-la de cima de alguma coisa (um tracejado a liga à seta); puxe o canto para mudar o tamanho. **Anotações visíveis** na barra mostra ou esconde as anotações nas caixas.
+- **Busca:** o campo "Destacar conceito, autor…" na barra apaga as fichas que não têm o texto digitado, em qualquer campo (inclusive uso e campos ocultos), sem diferenciar acentos nem maiúsculas.
+- **Tema:** o botão **Tema** escolhe claro, escuro ou igual ao sistema, e deixa mudar cinco cores (fundo da mesa, fundo da ficha, texto, nomes dos campos, associações). As cores ficam guardadas separadamente para o claro e o escuro.
+- **Exportar:** **Baixar imagem** gera um PNG com o que está visível na coleção escolhida. O **resumo das associações** traz, para cada associação, a referência e a tese dos dois textos, a área, a relação e a anotação (opção de incluir as fichas completas); dá para copiar ou baixar como `.md`. Os arquivos vão para a pasta Downloads.
+- **Salvar ou abrir:** **Salvar arquivo da mesa** baixa um `.json` com toda a arrumação (posições, cores, áreas, associações, tema). Para usar em outro navegador ou computador, ou voltar a uma versão antiga, escolha o arquivo em "Abrir mesa de um arquivo" e clique em **Substituir a mesa atual**. A mesa anterior fica guardada como cópia de segurança no navegador.
 
 ## O que já funciona
 
@@ -182,7 +186,7 @@ O app está sendo construído em etapas:
 | 4 | Salvar a mesa e reabrir de onde parou | ✅ pronta |
 | 5 | Áreas, cores, recolher fichas, ocultar campos de cada ficha | ✅ pronta |
 | 6 | Associações entre fichas, com relação e anotação | ✅ pronta |
-| 7 | Tema, busca, exportar imagem e resumo em Markdown, salvar/abrir arquivo | em breve |
+| 7 | Tema, busca, exportar imagem e resumo em Markdown, salvar/abrir arquivo | ✅ pronta |
 | 8 | Sincronização incremental, fichas novas e removidas | em breve |
 
 ## Problemas comuns
