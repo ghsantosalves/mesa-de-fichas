@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ReactFlowProvider, useReactFlow, useStore } from '@xyflow/react'
-import { Paintbrush } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 import {
   carregarBiblioteca,
   comSubcolecoes,
@@ -278,7 +278,7 @@ function Interior() {
                       title="Desenhar: caneta, marcador e grifo (Esc para sair)"
                       onClick={() => mudarFerramenta(ferramenta ? null : 'caneta')}
                     >
-                      <Paintbrush size={17} strokeWidth={2} aria-hidden="true" />
+                      <Pencil size={17} strokeWidth={2} aria-hidden="true" />
                     </button>
                     <button
                       className="btn"

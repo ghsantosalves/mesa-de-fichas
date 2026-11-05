@@ -33,7 +33,15 @@ export type CampoGrifo = (typeof CAMPOS_GRIFO)[number]
 export type Grifo = { campo: CampoGrifo; inicio: number; fim: number; trecho: string; cor: string }
 export type EstadoFicha = Posicao & { cor?: Cor; recolhida?: boolean; ocultos?: Campo[]; grifos?: Grifo[] }
 /** Traço feito à mão na mesa (caneta ou marcador). Pontos em coordenadas da mesa: x1, y1, x2, y2… */
-export type Traco = { id: string; tipo: 'caneta' | 'marcador'; cor: string; pontos: number[]; colecao: string }
+export type Traco = {
+  id: string
+  tipo: 'caneta' | 'marcador'
+  cor: string
+  /** Espessura do traço (em unidades da mesa). Sem ela, usa a espessura média do tipo. */
+  largura?: number
+  pontos: number[]
+  colecao: string
+}
 /** Área da mesa. `colecao` é a coleção em que foi criada ('*' = aparece em todas). */
 export type Area = { id: string; x: number; y: number; w: number; h: number; titulo: string; colecao: string }
 /**
@@ -174,7 +182,9 @@ function validar(d: unknown): EstadoMesa {
       if (typeof t.cor !== 'string' || !COR_VALIDA.test(t.cor)) continue
       const pontos = (t.pontos as unknown[]).filter((n): n is number => typeof n === 'number' && Number.isFinite(n))
       if (pontos.length < 4 || pontos.length % 2) continue
-      e.desenhos.push({ id: t.id, tipo: t.tipo, cor: t.cor, pontos, colecao: typeof t.colecao === 'string' ? t.colecao : '*' })
+      const traco: Traco = { id: t.id, tipo: t.tipo, cor: t.cor, pontos, colecao: typeof t.colecao === 'string' ? t.colecao : '*' }
+      if (typeof t.largura === 'number' && t.largura > 0 && t.largura <= 60) traco.largura = t.largura
+      e.desenhos.push(traco)
     }
   }
   if (o.notas === false) e.notas = false

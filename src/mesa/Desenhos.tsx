@@ -11,8 +11,12 @@ import { alterarMesa, mesa, type CampoGrifo, type Grifo, type Traco } from '../e
 import { CORES_CANETA, CORES_MARCADOR, type Ferramenta } from './contexto.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
 
-const LARGURA = { caneta: 2.5, marcador: 18 }
+/** Espessuras para escolher (fina, média, grossa); a do meio é a padrão. */
+const ESPESSURAS = { caneta: [1.5, 3, 6], marcador: [10, 18, 30] }
+const LARGURA = { caneta: ESPESSURAS.caneta[1], marcador: ESPESSURAS.marcador[1] }
 const OPACIDADE = { caneta: 1, marcador: 0.4 }
+const NOMES_ESPESSURA = ['fina', 'média', 'grossa']
+const larguraDe = (t: Traco) => t.largura ?? LARGURA[t.tipo]
 
 const caminho = (p: number[]) => {
   let d = `M${p[0]},${p[1]}`
@@ -51,7 +55,7 @@ function distanciaSegmentos(ax: number, ay: number, bx: number, by: number, cx: 
 
 /** A borracha, indo de (x0, y0) a (x1, y1), passou perto do traço? */
 function tocou(t: Traco, x0: number, y0: number, x1: number, y1: number, raio: number) {
-  const r = raio + LARGURA[t.tipo] / 2
+  const r = raio + larguraDe(t) / 2
   for (let i = 0; i + 3 < t.pontos.length; i += 2) {
     if (distanciaSegmentos(x0, y0, x1, y1, t.pontos[i], t.pontos[i + 1], t.pontos[i + 2], t.pontos[i + 3]) <= r) return true
   }
@@ -72,6 +76,7 @@ export function Desenhos({ ferramenta, aoMudarFerramenta, colecao }: Props) {
   const [atual, setAtual] = useState<number[] | null>(null)
   const [corCaneta, setCorCaneta] = useState(CORES_CANETA[0])
   const [corMarcador, setCorMarcador] = useState(CORES_MARCADOR[0])
+  const [espessura, setEspessura] = useState({ caneta: LARGURA.caneta, marcador: LARGURA.marcador })
   /** O que pode ser desfeito, do mais antigo ao mais recente. */
   const historico = useRef<({ tipo: 'traco'; id: string } | { tipo: 'apagados'; tracos: Traco[] })[]>([])
   const desenhando = useRef(false)
@@ -129,6 +134,7 @@ export function Desenhos({ ferramenta, aoMudarFerramenta, colecao }: Props) {
       id: crypto.randomUUID().slice(0, 8),
       tipo: ferramenta,
       cor: ferramenta === 'caneta' ? corCaneta : corMarcador,
+      largura: espessura[ferramenta],
       pontos,
       colecao,
     }
@@ -216,7 +222,7 @@ export function Desenhos({ ferramenta, aoMudarFerramenta, colecao }: Props) {
               d={caminho(t.pontos)}
               fill="none"
               stroke={t.cor}
-              strokeWidth={LARGURA[t.tipo]}
+              strokeWidth={larguraDe(t)}
               strokeOpacity={OPACIDADE[t.tipo]}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -227,7 +233,7 @@ export function Desenhos({ ferramenta, aoMudarFerramenta, colecao }: Props) {
               d={caminho(atual.length === 2 ? [...atual, atual[0] + 0.1, atual[1]] : atual)}
               fill="none"
               stroke={corAtiva}
-              strokeWidth={LARGURA[tipoAtual]}
+              strokeWidth={espessura[tipoAtual]}
               strokeOpacity={OPACIDADE[tipoAtual]}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -272,6 +278,28 @@ export function Desenhos({ ferramenta, aoMudarFerramenta, colecao }: Props) {
                   aria-label={`Cor ${c}`}
                   onClick={() => (ferramenta === 'caneta' ? setCorCaneta(c) : setCorMarcador(c))}
                 />
+              ))}
+            </span>
+          )}
+          {tipoAtual && (
+            <span className="bd-espessuras" role="group" aria-label="Espessura">
+              {ESPESSURAS[tipoAtual].map((w, i) => (
+                <button
+                  key={w}
+                  className={`bd-espessura${espessura[tipoAtual] === w ? ' ativa' : ''}`}
+                  aria-label={`Espessura ${NOMES_ESPESSURA[i]}`}
+                  title={`Espessura ${NOMES_ESPESSURA[i]}`}
+                  onClick={() => setEspessura({ ...espessura, [tipoAtual]: w })}
+                >
+                  {/* Amostra do traço, do tamanho relativo da espessura. */}
+                  <span
+                    style={{
+                      height: Math.max(2, Math.round(w * (tipoAtual === 'caneta' ? 1.6 : 0.45))),
+                      background: corAtiva,
+                      opacity: OPACIDADE[tipoAtual] === 1 ? 1 : 0.6,
+                    }}
+                  />
+                </button>
               ))}
             </span>
           )}

@@ -112,7 +112,7 @@ Notas com a tag `ficha` que estiverem fora desse formato não somem: aparecem no
 
 ## Usando a mesa
 
-A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Associar fichas**, **🖌 Desenhar**, **Anotações visíveis**) · zoom e **Menu**.
+A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Associar fichas**, **✏ Desenhar**, **Anotações visíveis**) · zoom e **Menu**.
 
 - **Mover:** arraste uma ficha pelo cartão; arraste o fundo (ou role a roda do mouse) para andar pela mesa.
 - **Zoom:** Ctrl + roda do mouse, pinça no touchpad, ou os botões − e + da barra. **Ver tudo** enquadra as fichas.
@@ -125,9 +125,9 @@ A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa
 - **Associar fichas:** ligue **Associar fichas**, clique na ficha de onde parte a relação e depois na outra. Aparece uma seta da primeira para a segunda, com uma caixa no meio, e abre o painel da associação. Esc sai do modo de associar.
 - **Painel da associação:** mostra as duas fichas (autor, obra, tese). Escreva a **relação** (texto livre; os botões sugerem as já usadas) e a **anotação**. **Inverter direção**, **Recentralizar caixa** e **Remover associação** (pede um segundo clique). Fechar ou Esc fecha o painel.
 - **Caixa da associação:** clique para abrir o painel; arraste para tirá-la de cima de alguma coisa (um tracejado a liga à seta); puxe o canto para mudar o tamanho. **Anotações visíveis** mostra ou esconde as anotações nas caixas.
-- **Desenhar (botão do pincel 🖌):** abre uma paleta no alto da mesa:
-  - **Caneta**: traços finos à mão (setas, círculos, sublinhados), em cinco cores;
-  - **Marcador**: traços largos e transparentes, como marca-texto, por cima de fichas ou da mesa;
+- **Desenhar (botão do lápis ✏):** abre uma paleta no alto da mesa:
+  - **Caneta**: traços à mão (setas, círculos, sublinhados), em cinco cores e três espessuras (fina, média, grossa);
+  - **Marcador**: traços largos e transparentes, como marca-texto, por cima de fichas ou da mesa, também em três espessuras;
   - **Grifar texto**: selecione um trecho de uma ficha (tese, conceitos, para lembrar, diálogos ou referência) e ele fica grifado na cor escolhida. Clique num grifo para tirá-lo. Enquanto essa ferramenta está ligada, as fichas não se arrastam;
   - **Borracha**: passe por cima de um traço para apagá-lo;
   - **Desfazer** (ou Ctrl+Z) e **✕** (ou Esc) para parar de desenhar.
