@@ -37,3 +37,7 @@ O passo a passo completo, inclusive como criar a chave do Zotero e como gerar fi
 | `docs/TUTORIAL.md` | Tutorial de instalação e uso. |
 | `.env.example` | Modelo do arquivo de credenciais (`.env.local`, que não vai para o git). |
 | `CLAUDE.md` | Especificação do projeto, usada pelo Claude Code ao desenvolver. |
+
+## Licença
+
+[MIT](LICENSE): pode usar, copiar, modificar e redistribuir, inclusive a skill, desde que mantenha o aviso de autoria.
