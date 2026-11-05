@@ -166,6 +166,9 @@ Notas com a tag `ficha` que estiverem fora desse formato não somem: o app as mo
 - **Recolher uma ficha:** botão ▾ no canto da ficha, ou clique duplo nela. Recolhida, mostra só autor e obra. **Recolher todas / Expandir todas** na barra age sobre as fichas visíveis.
 - **Cor e campos de uma ficha:** botão **⋯** no rodapé da ficha. Ali você escolhe a cor da borda e, em "Campos visíveis nesta ficha", desmarca o que não quer ver naquela ficha (tese, conceitos, para lembrar, diálogos, uso, referência, coleções). O rodapé avisa quantos campos estão ocultos. Nada disso altera o Zotero.
 - **Áreas:** **Nova área** cria um retângulo no centro da tela, já com o título pronto para digitar. Arraste pelo título (ou pelo ⠿) para mover a área: as fichas de dentro vão junto. Puxe o canto inferior direito para mudar o tamanho. O × remove a área (pede um segundo clique) e as fichas continuam na mesa. Uma área criada com uma coleção escolhida aparece só nessa coleção.
+- **Associar fichas:** ligue **Associar fichas** na barra, clique na ficha de onde parte a relação e depois na outra. Aparece uma seta da primeira para a segunda, com uma caixa no meio, e abre o painel da associação. Esc sai do modo de associar. Clicar de novo no mesmo par abre a associação que já existe.
+- **Painel da associação:** mostra as duas fichas (autor, obra, tese). Escreva a **relação** (texto livre; os botões sugerem as já usadas) e a **anotação**. **Inverter direção** troca a ponta da seta; **Recentralizar caixa** devolve a caixa ao meio da seta; **Remover associação** pede um segundo clique. Fechar ou Esc fecha o painel.
+- **Caixa da associação:** clique para abrir o painel; arraste para tirá-la de cima de alguma coisa (um tracejado a liga à seta); puxe o canto para mudar o tamanho. **Anotações visíveis** na barra mostra ou esconde as anotações nas caixas.
 
 ## O que já funciona
 
@@ -178,7 +181,7 @@ O app está sendo construído em etapas:
 | 3 | Fichas na mesa: arrastar, zoom, "Ver tudo", filtro por coleção | ✅ pronta |
 | 4 | Salvar a mesa e reabrir de onde parou | ✅ pronta |
 | 5 | Áreas, cores, recolher fichas, ocultar campos de cada ficha | ✅ pronta |
-| 6 | Associações entre fichas, com relação e anotação | em breve |
+| 6 | Associações entre fichas, com relação e anotação | ✅ pronta |
 | 7 | Tema, busca, exportar imagem e resumo em Markdown, salvar/abrir arquivo | em breve |
 | 8 | Sincronização incremental, fichas novas e removidas | em breve |
 

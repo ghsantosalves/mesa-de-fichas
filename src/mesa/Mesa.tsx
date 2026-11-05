@@ -5,11 +5,14 @@ import {
   Background,
   BackgroundVariant,
   ReactFlow,
+  useEdgesState,
   useNodesInitialized,
   useNodesState,
   useReactFlow,
   type OnNodeDrag,
 } from '@xyflow/react'
+import { ArestaAssocMemo } from './ArestaAssoc.tsx'
+import { arestaDe, type ArestaAssoc } from './assoc.ts'
 import '@xyflow/react/dist/style.css'
 import { comSubcolecoes, type Biblioteca, type Ficha } from '../zotero/biblioteca.ts'
 import { alterarMesa, mesa, posicionarFicha, type Area, type Posicao } from '../estado/mesa.ts'
@@ -19,15 +22,26 @@ import { noDeArea, type NoMesa } from './operacoes.ts'
 import { VER_TUDO } from './opcoes.ts'
 
 const tiposDeNo = { ficha: NoFichaMemo, area: NoAreaMemo }
+const tiposDeAresta = { assoc: ArestaAssocMemo }
 const ESPACO = 40
 const ALTURA_ESTIMADA = 420
 
 const passa = (f: Ficha, filtro: Set<string> | null) => !filtro || f.colecoes.some((k) => filtro.has(k))
 const areaPassa = (a: Area, colecao: string) => colecao === '*' || a.colecao === '*' || a.colecao === colecao
 
-export function Mesa({ bib, colecao }: { bib: Biblioteca; colecao: string }) {
+type Props = {
+  bib: Biblioteca
+  colecao: string
+  ligando: boolean
+  notas: boolean
+  aoClicarFicha: (chave: string) => void
+  aoClicarFundo: () => void
+}
+
+export function Mesa({ bib, colecao, ligando, notas, aoClicarFicha, aoClicarFundo }: Props) {
   const [nos, setNos, aoMudarNos] = useNodesState<NoMesa>([])
-  const { fitView, getNodes } = useReactFlow<NoMesa>()
+  const [arestas, setArestas, aoMudarArestas] = useEdgesState<ArestaAssoc>([])
+  const { fitView, getNodes } = useReactFlow<NoMesa, ArestaAssoc>()
   const medidos = useNodesInitialized()
   /** Fichas que ainda não têm lugar na mesa e esperam ser medidas para serem arrumadas. */
   const semLugar = useRef(new Set<string>())
@@ -63,6 +77,9 @@ export function Mesa({ bib, colecao }: { bib: Biblioteca; colecao: string }) {
     })
     // Áreas primeiro: são desenhadas antes, ficando atrás das fichas.
     setNos([...areas, ...fichas])
+    // Associações cujas duas fichas estão no Zotero. As outras continuam guardadas.
+    const existem = new Set(bib.fichas.map((f) => f.chave))
+    setArestas(mesa.associacoes.filter((a) => existem.has(a.a) && existem.has(a.b)).map(arestaDe))
     // O filtro é tratado no efeito abaixo; aqui só reagimos a uma nova leitura do Zotero.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bib])
@@ -164,11 +181,20 @@ export function Mesa({ bib, colecao }: { bib: Biblioteca; colecao: string }) {
   }
 
   return (
-    <div className="mesa">
+    <div className={`mesa${ligando ? ' ligando' : ''}${notas ? '' : ' sem-notas'}`}>
       <ReactFlow
         nodes={nos}
+        edges={arestas}
         onNodesChange={aoMudarNos}
+        onEdgesChange={aoMudarArestas}
         nodeTypes={tiposDeNo}
+        edgeTypes={tiposDeAresta}
+        onNodeClick={(e, no) => {
+          // Cliques nos botões e links de dentro da ficha não contam.
+          if ((e.target as HTMLElement).closest('button, a, input, label')) return
+          if (no.type === 'ficha') aoClicarFicha(no.id)
+        }}
+        onPaneClick={aoClicarFundo}
         defaultViewport={mesa.vista ?? undefined}
         onNodeDragStart={aoComecarArrastar}
         onNodeDrag={aoArrastar}

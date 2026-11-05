@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
-import { ReactFlowProvider } from '@xyflow/react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ReactFlowProvider, useReactFlow, useStore } from '@xyflow/react'
 import { carregarBiblioteca, comSubcolecoes, type Biblioteca, type Colecao } from './zotero/biblioteca.ts'
 import { Listagem } from './Listagem.tsx'
 import { Mesa } from './mesa/Mesa.tsx'
 import { BarraZoom } from './mesa/BarraZoom.tsx'
 import { BarraMesa } from './mesa/BarraMesa.tsx'
+import { PainelAssoc } from './mesa/PainelAssoc.tsx'
+import { criarAssociacao, type ArestaAssoc } from './mesa/assoc.ts'
+import { Contexto, type ContextoMesa } from './mesa/contexto.ts'
+import type { NoMesa } from './mesa/operacoes.ts'
 import { alterarMesa, mesa, useSituacao } from './estado/mesa.ts'
 
 type Estado =
@@ -19,13 +23,26 @@ const FALTA_CONFIG = [
 ]
 
 function App() {
+  return (
+    <ReactFlowProvider>
+      <Interior />
+    </ReactFlowProvider>
+  )
+}
+
+function Interior() {
+  const rf = useReactFlow<NoMesa, ArestaAssoc>()
   const [estado, setEstado] = useState<Estado>({ tipo: 'carregando' })
   const [pedido, setPedido] = useState(0)
   const [modo, setModo] = useState<'mesa' | 'lista'>('mesa')
   const [colecao, setColecao] = useState(mesa.colecao)
+  /** Associação aberta no painel. */
+  const [ativa, setAtiva] = useState<string | null>(null)
   const recarregar = useCallback(() => setPedido((n) => n + 1), [])
   const escolherColecao = useCallback((c: string) => {
     setColecao(c)
+    // Trocar de coleção fecha o painel da associação.
+    setAtiva(null)
     if (mesa.colecao !== c) alterarMesa((e) => (e.colecao = c))
   }, [])
 
@@ -47,15 +64,103 @@ function App() {
 
   const bib = estado.tipo === 'pronto' ? estado.bib : null
 
+  // --- Associações ---
+  const [ligando, setLigando] = useState(false)
+  const [escolhida, setEscolhida] = useState<string | null>(null)
+  const [focarRelacao, setFocarRelacao] = useState(false)
+  const [notas, setNotas] = useState(mesa.notas)
+  const [aviso, setAviso] = useState<string | null>(null)
+  const tempoAviso = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const avisar = useCallback((texto: string) => {
+    setAviso(texto)
+    clearTimeout(tempoAviso.current)
+    tempoAviso.current = setTimeout(() => setAviso(null), 2600)
+  }, [])
+  const abrirAssoc = useCallback((id: string, focar = false) => {
+    setAtiva(id)
+    setFocarRelacao(focar)
+  }, [])
+  const fecharAssoc = useCallback(() => setAtiva(null), [])
+  const pontasTexto = useStore((s) => {
+    const e = s.edges.find((x) => x.id === ativa)
+    return e ? `${e.source}|${e.target}` : ''
+  })
+
+  const alternarLigando = (on: boolean) => {
+    setLigando(on)
+    setEscolhida(null)
+    if (on) avisar('Clique em duas fichas para associá-las. Esc para sair.')
+  }
+  const aoClicarFicha = (chave: string) => {
+    if (!ligando) return
+    if (!escolhida) {
+      setEscolhida(chave)
+      avisar('Agora clique na segunda ficha')
+      return
+    }
+    setEscolhida(null)
+    if (escolhida === chave) return
+    const existente = mesa.associacoes.find(
+      (x) => (x.a === escolhida && x.b === chave) || (x.a === chave && x.b === escolhida),
+    )
+    if (existente) abrirAssoc(existente.id)
+    else abrirAssoc(criarAssociacao(rf, escolhida, chave), true)
+  }
+  const aoClicarFundo = () => {
+    if (ligando) setEscolhida(null)
+  }
+
+  // Esc sai do modo de associar ou fecha o painel.
+  useEffect(() => {
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (ligando) {
+        setLigando(false)
+        setEscolhida(null)
+      } else setAtiva(null)
+    }
+    addEventListener('keydown', aoTeclar)
+    return () => removeEventListener('keydown', aoTeclar)
+  }, [ligando])
+
+  const contexto: ContextoMesa = useMemo(
+    () => ({
+      ligando,
+      escolhida,
+      ativa,
+      pontas: pontasTexto ? pontasTexto.split('|') : [],
+      notas,
+      abrirAssoc: (id: string) => abrirAssoc(id),
+    }),
+    [ligando, escolhida, ativa, pontasTexto, notas, abrirAssoc],
+  )
+
   return (
-    <ReactFlowProvider>
+    <Contexto.Provider value={contexto}>
       <div className="app">
         <header className="barra">
           <div className="marca">Mesa de fichas</div>
           {bib && (
             <div className="grupo">
               <SeletorColecao bib={bib} valor={colecao} aoMudar={escolherColecao} />
-              {modo === 'mesa' && <BarraMesa colecao={colecao} />}
+              {modo === 'mesa' && (
+                <>
+                  <BarraMesa colecao={colecao} />
+                  <button className="btn" aria-pressed={ligando} onClick={() => alternarLigando(!ligando)}>
+                    Associar fichas
+                  </button>
+                  <button
+                    className="btn"
+                    aria-pressed={notas}
+                    onClick={() => {
+                      setNotas(!notas)
+                      alterarMesa((e) => (e.notas = !notas))
+                    }}
+                  >
+                    Anotações visíveis
+                  </button>
+                </>
+              )}
               <button className="btn" aria-pressed={modo === 'mesa'} onClick={() => setModo('mesa')}>
                 Mesa
               </button>
@@ -92,7 +197,25 @@ function App() {
         ) : (
           // A mesa fica sempre montada (para não perder as posições); a lista abre por cima.
           <div className="conteudo">
-            <Mesa bib={bib} colecao={colecao} />
+            <Mesa
+              bib={bib}
+              colecao={colecao}
+              ligando={ligando}
+              notas={notas}
+              aoClicarFicha={aoClicarFicha}
+              aoClicarFundo={aoClicarFundo}
+            />
+            {modo === 'mesa' && ativa && (
+              // key: cada associação abre um painel novo (zera a confirmação de remover).
+              <PainelAssoc
+                key={ativa}
+                bib={bib}
+                id={ativa}
+                focarRelacao={focarRelacao}
+                aoFechar={fecharAssoc}
+                avisar={avisar}
+              />
+            )}
             {modo === 'lista' && (
               <main className="rolagem sobre-a-mesa">
                 <div className="inicio">
@@ -103,8 +226,13 @@ function App() {
           </div>
         )}
         <SituacaoSalvamento />
+        {aviso && (
+          <div className="aviso" role="status">
+            {aviso}
+          </div>
+        )}
       </div>
-    </ReactFlowProvider>
+    </Contexto.Provider>
   )
 }
 

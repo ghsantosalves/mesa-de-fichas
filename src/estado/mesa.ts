@@ -28,11 +28,30 @@ export const NOMES_CAMPOS: Record<Campo, string> = {
 export type EstadoFicha = Posicao & { cor?: Cor; recolhida?: boolean; ocultos?: Campo[] }
 /** Área da mesa. `colecao` é a coleção em que foi criada ('*' = aparece em todas). */
 export type Area = { id: string; x: number; y: number; w: number; h: number; titulo: string; colecao: string }
+/**
+ * Associação da ficha `a` para a ficha `b` (chaves das notas no Zotero), com relação
+ * em texto livre e anotação. dx/dy deslocam a caixa a partir do meio da seta; w/h
+ * fixam seu tamanho. Nunca é apagada quando uma ficha some do Zotero.
+ */
+export type Associacao = {
+  id: string
+  a: string
+  b: string
+  rel: string
+  nota: string
+  dx?: number
+  dy?: number
+  w?: number
+  h?: number
+}
 export type EstadoMesa = {
   versao: 1
   /** Por chave da nota no Zotero. Fichas que sumiram do Zotero continuam aqui. */
   fichas: Record<string, EstadoFicha>
   areas: Area[]
+  associacoes: Associacao[]
+  /** Mostrar as anotações dentro das caixas das associações. */
+  notas: boolean
   vista: Vista | null
   colecao: string
 }
@@ -47,7 +66,7 @@ export type Situacao =
 const numero = (v: unknown, padrao: number) => (typeof v === 'number' && Number.isFinite(v) ? v : padrao)
 
 function vazio(): EstadoMesa {
-  return { versao: 1, fichas: {}, areas: [], vista: null, colecao: '*' }
+  return { versao: 1, fichas: {}, areas: [], associacoes: [], notas: true, vista: null, colecao: '*' }
 }
 
 /** Confere o que veio do armazenamento, aproveitando o que estiver certo. */
@@ -83,6 +102,24 @@ function validar(d: unknown): EstadoMesa {
       })
     }
   }
+  if (Array.isArray(o.associacoes)) {
+    for (const x of o.associacoes as Record<string, unknown>[]) {
+      if (!x || typeof x !== 'object') continue
+      if (typeof x.id !== 'string' || typeof x.a !== 'string' || typeof x.b !== 'string') continue
+      const s: Associacao = {
+        id: x.id,
+        a: x.a,
+        b: x.b,
+        rel: typeof x.rel === 'string' ? x.rel : '',
+        nota: typeof x.nota === 'string' ? x.nota : '',
+      }
+      for (const k of ['dx', 'dy', 'w', 'h'] as const) {
+        if (typeof x[k] === 'number' && Number.isFinite(x[k])) s[k] = x[k] as number
+      }
+      e.associacoes.push(s)
+    }
+  }
+  if (o.notas === false) e.notas = false
   const v = o.vista as Record<string, unknown> | null
   if (v && typeof v === 'object') e.vista = { x: numero(v.x, 0), y: numero(v.y, 0), zoom: numero(v.zoom, 1) }
   if (typeof o.colecao === 'string') e.colecao = o.colecao

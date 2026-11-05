@@ -1,7 +1,8 @@
 // Cartão de uma ficha na mesa (um "nó" do React Flow).
 
-import { memo, useState } from 'react'
-import { useReactFlow, type Node, type NodeProps } from '@xyflow/react'
+import { memo, useContext, useState } from 'react'
+import { Handle, Position, useReactFlow, type Node, type NodeProps } from '@xyflow/react'
+import { Contexto } from './contexto.ts'
 import { linkZotero, type Ficha } from '../zotero/biblioteca.ts'
 import { CAMPOS, CORES, NOMES_CAMPOS, type Campo, type Cor } from '../estado/mesa.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
@@ -23,6 +24,7 @@ function link(url: string, texto: string) {
 
 function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   const rf = useReactFlow<NoMesa>()
+  const { escolhida, pontas } = useContext(Contexto)
   const [menu, setMenu] = useState(false)
   const f = data.ficha
   const alternar = () => mudarFichas(rf, [id], { recolhida: !data.recolhida })
@@ -40,7 +42,7 @@ function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
 
   return (
     <article
-      className={`ficha-mesa${data.recolhida ? ' recolhida' : ''}${selected ? ' selecionada' : ''}${dragging ? ' arrastando' : ''}`}
+      className={`ficha-mesa${data.recolhida ? ' recolhida' : ''}${selected ? ' selecionada' : ''}${dragging ? ' arrastando' : ''}${escolhida === id ? ' escolhida' : ''}${pontas.includes(id) ? ' ponta' : ''}`}
       style={{
         width: data.recolhida ? LARGURA_RECOLHIDA : LARGURA_FICHA,
         borderLeftColor: data.cor ? `var(--c-${data.cor})` : undefined,
@@ -49,6 +51,9 @@ function CartaoNaMesa({ id, data, selected, dragging }: NodeProps<NoFicha>) {
         if (!(e.target as HTMLElement).closest('button, a')) alternar()
       }}
     >
+      {/* Pontos de ligação invisíveis: as setas são calculadas de borda a borda. */}
+      <Handle type="target" position={Position.Top} isConnectable={false} className="ponto-ligacao" />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} className="ponto-ligacao" />
       <button
         className="recolher nodrag"
         onClick={alternar}
