@@ -160,7 +160,7 @@ O app está sendo construído em etapas:
 | --- | --- | --- |
 | 1 | App abre e confere a conexão com o Zotero | ✅ pronta |
 | 2 | Lista coleções e fichas, com "Fichas com problema" | ✅ pronta |
-| 3 | Fichas na mesa: arrastar, zoom, "Ver tudo", filtro por coleção | em breve |
+| 3 | Fichas na mesa: arrastar, zoom, "Ver tudo", filtro por coleção | ✅ pronta |
 | 4 | Salvar a mesa e reabrir de onde parou | em breve |
 | 5 | Áreas, cores, recolher fichas | em breve |
 | 6 | Associações entre fichas, com relação e anotação | em breve |

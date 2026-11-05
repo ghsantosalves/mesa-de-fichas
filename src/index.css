@@ -12,6 +12,7 @@
   --linha: #3a6ea8;
   --erro: #c4473d;
   --sombra: 0 1px 2px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.06);
+  --sombra-alta: 0 6px 24px rgba(0, 0, 0, 0.18);
   --serifa: 'Spectral', Georgia, 'Times New Roman', serif;
   --sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
@@ -47,27 +48,150 @@ body {
   background: var(--mesa);
   color: var(--tinta);
   font-family: var(--sans);
+  overflow: hidden;
+}
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--linha);
+  outline-offset: 2px;
+}
+
+/* Estrutura: barra no topo e, abaixo, a mesa ou a lista. */
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.rolagem {
+  flex: 1;
+  overflow: auto;
   background-image: radial-gradient(var(--ponto) 1.2px, transparent 1.3px);
   background-size: 24px 24px;
 }
 
 .barra {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
   padding: 10px 14px;
   background: var(--barra);
   border-bottom: 1px solid var(--barra-borda);
 }
 .marca {
   font: 600 18px/1 var(--serifa);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.grupo {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.zoom {
+  margin-left: auto;
+}
+.nivel {
+  font: 500 12.5px/1 var(--sans);
+  min-width: 42px;
+  text-align: center;
+  color: var(--tinta-2);
+}
+.sel-bib {
+  font: 500 13.5px/1 var(--sans);
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  max-width: 260px;
+}
+.btn[aria-pressed='true'] {
+  background: var(--tinta);
+  color: var(--cartao);
+  border-color: var(--tinta);
+}
+.btn.alerta {
+  border-color: var(--erro);
+  color: var(--erro);
+}
+
+/* A mesa (React Flow) */
+.conteudo {
+  flex: 1;
+  position: relative;
+  display: flex;
+}
+.mesa {
+  flex: 1;
+  position: relative;
+}
+.sobre-a-mesa {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background-color: var(--mesa);
+}
+.mesa .react-flow {
+  --xy-background-color: var(--mesa);
+  --xy-background-pattern-color: var(--ponto);
+}
+.mesa-vazia {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 400 15px/1.4 var(--sans);
+  color: var(--tinta-2);
+  pointer-events: none;
+}
+.ficha-mesa {
+  background: var(--cartao);
+  color: var(--tinta);
+  border: 1px solid var(--borda);
+  border-left: 5px solid var(--borda);
+  border-radius: 6px;
+  box-shadow: var(--sombra);
+  padding: 12px 14px 10px;
+  cursor: grab;
+  user-select: none;
+  transition: box-shadow 0.15s;
+}
+.ficha-mesa.arrastando {
+  cursor: grabbing;
+  box-shadow: var(--sombra-alta);
+}
+.ficha-mesa.selecionada {
+  outline: 2px solid var(--linha);
+  outline-offset: 2px;
+}
+.ficha-mesa .autor {
+  font: 600 16px/1.25 var(--serifa);
+}
+.ficha-mesa .obra {
+  font: italic 400 13.5px/1.35 var(--serifa);
+  color: var(--tinta-2);
+  margin-top: 2px;
+}
+.ficha-mesa .ref {
+  font: 400 12px/1.4 var(--sans);
+  color: var(--tinta-2);
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--borda);
 }
 
 .inicio {
   max-width: 520px;
   margin: 0 auto;
-  padding: 110px 16px 40px;
+  padding: 24px 16px 40px;
 }
 .cartao {
   background: var(--cartao);

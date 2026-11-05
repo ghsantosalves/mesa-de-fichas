@@ -1,4 +1,5 @@
-// Etapa 2: lista em texto o que foi lido do Zotero, para conferir a interpretação.
+// Lista em texto o que foi lido do Zotero, para conferir a interpretação.
+// As "Fichas com problema" aparecem sempre, qualquer que seja a coleção escolhida.
 
 import {
   comSubcolecoes,
@@ -9,21 +10,20 @@ import {
   type FichaComProblema,
 } from './zotero/biblioteca.ts'
 
-export function Listagem({ bib, aoRecarregar }: { bib: Biblioteca; aoRecarregar: () => void }) {
+export function Listagem({ bib, colecao }: { bib: Biblioteca; colecao: string }) {
   const nomeColecao = new Map(bib.colecoes.map((c) => [c.chave, c.nome]))
   const nomes = (chaves: string[]) => chaves.map((k) => nomeColecao.get(k) ?? '(coleção desconhecida)')
+  const filtro = colecao === '*' ? null : comSubcolecoes(colecao, bib.colecoes)
+  const fichas = filtro ? bib.fichas.filter((f) => f.colecoes.some((k) => filtro.has(k))) : bib.fichas
 
   return (
     <>
       <section className="resumo">
         <p>
-          <strong>{bib.fichas.length}</strong> {bib.fichas.length === 1 ? 'ficha' : 'fichas'} ·{' '}
-          <strong>{bib.problemas.length}</strong> com problema · {bib.colecoes.length} coleções · versão
-          da biblioteca {bib.versao}
+          <strong>{fichas.length}</strong> {fichas.length === 1 ? 'ficha' : 'fichas'}
+          {filtro && ` em “${nomeColecao.get(colecao)}”`} · <strong>{bib.problemas.length}</strong> com
+          problema · {bib.colecoes.length} coleções · versão da biblioteca {bib.versao}
         </p>
-        <button className="btn" onClick={aoRecarregar}>
-          Recarregar do Zotero
-        </button>
       </section>
 
       {bib.problemas.length > 0 && (
@@ -41,8 +41,8 @@ export function Listagem({ bib, aoRecarregar }: { bib: Biblioteca; aoRecarregar:
 
       <section>
         <h2>Fichas</h2>
-        {bib.fichas.length === 0 && <p className="explica">Nenhuma ficha no formato certo ainda.</p>}
-        {bib.fichas.map((f) => (
+        {fichas.length === 0 && <p className="explica">Nenhuma ficha no formato certo aqui.</p>}
+        {fichas.map((f) => (
           <CartaoFicha key={f.chave} f={f} colecoes={nomes(f.colecoes)} />
         ))}
       </section>
