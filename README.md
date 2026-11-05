@@ -13,7 +13,7 @@ App para organizar visualmente fichas de leitura acadêmicas, como fichas de pap
 Precisa de [Node.js](https://nodejs.org) (versão LTS).
 
 ```bash
-git clone <endereço-do-repositório> mesa-de-fichas
+git clone https://github.com/ghsantosalves/mesa-de-fichas.git
 cd mesa-de-fichas
 npm install
 ```

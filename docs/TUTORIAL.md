@@ -48,10 +48,10 @@ Depois de instalar, feche e abra o PowerShell (ou o Terminal) de novo. Para conf
 **Com Git:**
 
 ```bash
-git clone <endereço-do-repositório> mesa-de-fichas
+git clone https://github.com/ghsantosalves/mesa-de-fichas.git
 ```
 
-**Sem Git:** na página do projeto no GitHub, clique em **Code → Download ZIP** e descompacte.
+**Sem Git:** em https://github.com/ghsantosalves/mesa-de-fichas, clique em **Code → Download ZIP** e descompacte.
 
 > Evite colocar a pasta dentro do OneDrive, Dropbox ou Google Drive: a instalação cria milhares de arquivos que essas ferramentas tentam sincronizar.
 
