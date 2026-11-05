@@ -11,6 +11,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { comSubcolecoes, type Biblioteca, type Ficha } from '../zotero/biblioteca.ts'
+import { alterarMesa, arredondar, mesa } from '../estado/mesa.ts'
 import { LARGURA_FICHA, NoFichaMemo, type NoFicha } from './NoFicha.tsx'
 import { VER_TUDO } from './opcoes.ts'
 
@@ -35,16 +36,18 @@ export function Mesa({ bib, colecao }: { bib: Biblioteca; colecao: string }) {
   const filtro = useMemo(() => filtroColecao(colecao, bib), [colecao, bib])
   const visiveis = bib.fichas.filter((f) => passa(f, filtro)).length
 
-  // Fichas vindas do Zotero: mantém a posição das que já estão na mesa.
+  // Fichas vindas do Zotero: mantém a posição das que já estão na mesa (nesta
+  // sessão ou salvas antes); só as que nunca tiveram lugar serão arrumadas.
   useEffect(() => {
     const posicoes = new Map(getNodes().map((n) => [n.id, n.position]))
     setNos(
       bib.fichas.map((f) => {
-        if (!posicoes.has(f.chave)) semLugar.current.add(f.chave)
+        const posicao = posicoes.get(f.chave) ?? mesa.fichas[f.chave]
+        if (!posicao) semLugar.current.add(f.chave)
         return {
           id: f.chave,
           type: 'ficha',
-          position: posicoes.get(f.chave) ?? { x: 0, y: 0 },
+          position: posicao ?? { x: 0, y: 0 },
           data: { ficha: f, colecoes: f.colecoes.map((k) => nomeColecao.get(k) ?? '?') },
           hidden: !passa(f, filtro),
         }
@@ -74,15 +77,21 @@ export function Mesa({ bib, colecao }: { bib: Biblioteca; colecao: string }) {
     }
     semLugar.current.clear()
     setNos((ns) => ns.map((n) => (lugar.has(n.id) ? { ...n, position: lugar.get(n.id)! } : n)))
-    requestAnimationFrame(() => fitView(VER_TUDO))
+    alterarMesa((e) => lugar.forEach((p, id) => (e.fichas[id] = arredondar(p))))
+    // Na primeira vez (sem vista salva), enquadra tudo; depois, respeita a vista guardada.
+    if (!mesa.vista) requestAnimationFrame(() => fitView(VER_TUDO))
   }, [medidos, getNodes, setNos, fitView])
 
   // Trocar a coleção: esconde as fichas de fora e enquadra as que ficaram.
+  // Ao abrir a mesa, não enquadra: a vista salva é que vale.
+  const colecaoAnterior = useRef(colecao)
   useEffect(() => {
     setNos((ns) => ns.map((n) => ({ ...n, hidden: !passa(n.data.ficha, filtro) })))
+    if (colecaoAnterior.current === colecao) return
+    colecaoAnterior.current = colecao
     const t = setTimeout(() => fitView(VER_TUDO), 60)
     return () => clearTimeout(t)
-  }, [filtro, setNos, fitView])
+  }, [filtro, colecao, setNos, fitView])
 
   return (
     <div className="mesa">
@@ -90,6 +99,15 @@ export function Mesa({ bib, colecao }: { bib: Biblioteca; colecao: string }) {
         nodes={nos}
         onNodesChange={aoMudarNos}
         nodeTypes={tiposDeNo}
+        defaultViewport={mesa.vista ?? undefined}
+        onNodeDragStop={(_, __, arrastados) =>
+          alterarMesa((e) => arrastados.forEach((n) => (e.fichas[n.id] = arredondar(n.position))))
+        }
+        onMoveEnd={(_, v) =>
+          alterarMesa((e) => {
+            e.vista = { x: Math.round(v.x), y: Math.round(v.y), zoom: Math.round(v.zoom * 1000) / 1000 }
+          })
+        }
         minZoom={0.2}
         maxZoom={2.2}
         panOnScroll

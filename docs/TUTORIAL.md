@@ -109,6 +109,12 @@ Abra no navegador o endereço que aparecer, normalmente http://localhost:5173.
 
 Para fechar o app, volte ao terminal e aperte `Ctrl + C`. Sempre que mudar o `.env.local`, feche e rode `npm run dev` de novo.
 
+**Onde a mesa fica salva.** A arrumação da mesa (posições, zoom, coleção escolhida) é salva sozinha **no navegador**, um instante depois de cada mudança; o aviso no canto inferior esquerdo diz "Mesa salva neste navegador". Por isso:
+
+- use sempre o mesmo navegador e o mesmo endereço (http://localhost:5173). Em outro navegador, a mesa começa vazia;
+- limpar os dados de navegação do navegador apaga a mesa (as fichas continuam seguras no Zotero);
+- o app sempre abre na porta 5173. Se aparecer um erro dizendo que a porta está em uso, é porque o app já está aberto em outro terminal: feche aquele (`Ctrl + C`) ou use o que já está rodando.
+
 ## 6. Instalar a skill de fichas no Claude
 
 A pasta `skill/ficha-academica/` tem uma *skill* do Claude: instruções que ensinam o Claude a escrever fichas exatamente no formato que a Mesa lê.
@@ -161,7 +167,7 @@ O app está sendo construído em etapas:
 | 1 | App abre e confere a conexão com o Zotero | ✅ pronta |
 | 2 | Lista coleções e fichas, com "Fichas com problema" | ✅ pronta |
 | 3 | Fichas na mesa: arrastar, zoom, "Ver tudo", filtro por coleção | ✅ pronta |
-| 4 | Salvar a mesa e reabrir de onde parou | em breve |
+| 4 | Salvar a mesa e reabrir de onde parou | ✅ pronta |
 | 5 | Áreas, cores, recolher fichas | em breve |
 | 6 | Associações entre fichas, com relação e anotação | em breve |
 | 7 | Tema, busca, exportar imagem e resumo em Markdown, salvar/abrir arquivo | em breve |

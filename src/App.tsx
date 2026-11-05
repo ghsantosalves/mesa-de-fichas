@@ -4,6 +4,7 @@ import { carregarBiblioteca, comSubcolecoes, type Biblioteca, type Colecao } fro
 import { Listagem } from './Listagem.tsx'
 import { Mesa } from './mesa/Mesa.tsx'
 import { BarraZoom } from './mesa/BarraZoom.tsx'
+import { alterarMesa, mesa, useSituacao } from './estado/mesa.ts'
 
 type Estado =
   | { tipo: 'carregando' }
@@ -20,8 +21,12 @@ function App() {
   const [estado, setEstado] = useState<Estado>({ tipo: 'carregando' })
   const [pedido, setPedido] = useState(0)
   const [modo, setModo] = useState<'mesa' | 'lista'>('mesa')
-  const [colecao, setColecao] = useState('*')
+  const [colecao, setColecao] = useState(mesa.colecao)
   const recarregar = useCallback(() => setPedido((n) => n + 1), [])
+  const escolherColecao = useCallback((c: string) => {
+    setColecao(c)
+    if (mesa.colecao !== c) alterarMesa((e) => (e.colecao = c))
+  }, [])
 
   useEffect(() => {
     if (FALTA_CONFIG.length) return
@@ -31,13 +36,13 @@ function App() {
         if (!valido) return
         setEstado({ tipo: 'pronto', bib })
         // Se a coleção escolhida sumiu do Zotero, volta para "todas".
-        setColecao((c) => (c === '*' || bib.colecoes.some((x) => x.chave === c) ? c : '*'))
+        if (mesa.colecao !== '*' && !bib.colecoes.some((x) => x.chave === mesa.colecao)) escolherColecao('*')
       })
       .catch((e: unknown) => valido && setEstado({ tipo: 'erro', motivo: e instanceof Error ? e.message : String(e) }))
     return () => {
       valido = false
     }
-  }, [pedido])
+  }, [pedido, escolherColecao])
 
   const bib = estado.tipo === 'pronto' ? estado.bib : null
 
@@ -48,7 +53,7 @@ function App() {
           <div className="marca">Mesa de fichas</div>
           {bib && (
             <div className="grupo">
-              <SeletorColecao bib={bib} valor={colecao} aoMudar={setColecao} />
+              <SeletorColecao bib={bib} valor={colecao} aoMudar={escolherColecao} />
               <button className="btn" aria-pressed={modo === 'mesa'} onClick={() => setModo('mesa')}>
                 Mesa
               </button>
@@ -95,6 +100,7 @@ function App() {
             )}
           </div>
         )}
+        <SituacaoSalvamento />
       </div>
     </ReactFlowProvider>
   )
@@ -110,6 +116,26 @@ function Aviso({ titulo, problema, children }: { titulo: string; problema?: bool
         </div>
       </div>
     </main>
+  )
+}
+
+/** Aviso discreto, no canto, de que a mesa está salva. */
+function SituacaoSalvamento() {
+  const s = useSituacao()
+  const texto =
+    s.tipo === 'salvo'
+      ? 'Mesa salva neste navegador'
+      : s.tipo === 'pendente'
+        ? 'Salvando…'
+        : s.tipo === 'nova'
+          ? 'Mesa nova: as mudanças serão salvas neste navegador'
+          : s.tipo === 'erro'
+            ? s.motivo
+            : 'A mesa salva estava ilegível e começou de novo. Uma cópia do conteúdo antigo foi guardada no navegador.'
+  return (
+    <div className={`situacao${s.tipo === 'erro' || s.tipo === 'recuperado' ? ' ruim' : ''}`} role="status">
+      {texto}
+    </div>
   )
 }
 

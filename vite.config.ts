@@ -17,6 +17,10 @@ export default defineConfig(({ mode }) => {
       __ZOTERO_CHAVE_CONFIGURADA__: JSON.stringify(apiKey.length > 0),
     },
     server: {
+      // Endereço fixo: a mesa fica salva no navegador por endereço, e mudar de
+      // porta faria parecer que ela sumiu. Se a porta estiver ocupada, o app avisa.
+      port: 5173,
+      strictPort: true,
       // A chave fica só aqui, no servidor local: o navegador chama
       // /zotero/... e o servidor repassa para api.zotero.org com a chave.
       proxy: {
