@@ -1,7 +1,7 @@
 // Exportações: imagem PNG da mesa visível, resumo das associações em Markdown
 // e download de arquivos.
 
-import { getNodesBounds, getViewportForBounds, type ReactFlowInstance } from '@xyflow/react'
+import { getNodesBounds, type ReactFlowInstance } from '@xyflow/react'
 import { toPng } from 'html-to-image'
 import { associacaoNaColecao, lugarNaColecao, mesa, type Associacao } from './estado/mesa.ts'
 import { comSubcolecoes, type Biblioteca, type Ficha } from './zotero/biblioteca.ts'
@@ -34,12 +34,42 @@ export function nomeArquivo(bib: Biblioteca, colecao: string, ext: string, prefi
 export async function imagemDaMesa(rf: ReactFlowInstance<NoMesa>): Promise<Blob> {
   const visiveis = rf.getNodes().filter((n) => !n.hidden)
   if (!visiveis.length) throw new Error(tr('exp.nadaVisivel'))
-  const limites = getNodesBounds(visiveis)
-  // Margem para os títulos das áreas e as caixas das associações.
-  const margem = 80
-  const largura = Math.min(6000, Math.round((limites.width + margem * 2) * 1.5))
-  const altura = Math.min(6000, Math.round((limites.height + margem * 2) * 1.5))
-  const vista = getViewportForBounds(limites, largura, altura, 0.2, 2, `${margem}px`)
+  // Enquadramento: as fichas e áreas, e também as caixas das associações e os
+  // desenhos (que podem passar das fichas e ficavam cortados).
+  const nos = getNodesBounds(visiveis)
+  let esq = nos.x
+  let cima = nos.y
+  let dir = nos.x + nos.width
+  let baixo = nos.y + nos.height
+  const incluir = (x1: number, y1: number, x2: number, y2: number) => {
+    esq = Math.min(esq, x1)
+    cima = Math.min(cima, y1)
+    dir = Math.max(dir, x2)
+    baixo = Math.max(baixo, y2)
+  }
+  for (const el of document.querySelectorAll<HTMLElement>('.mesa .assoc')) {
+    if (!el.offsetParent || el.classList.contains('apagada')) continue
+    const r = el.getBoundingClientRect()
+    const a = rf.screenToFlowPosition({ x: r.left, y: r.top })
+    const b = rf.screenToFlowPosition({ x: r.right, y: r.bottom })
+    incluir(a.x, a.y, b.x, b.y)
+  }
+  for (const el of document.querySelectorAll<SVGGraphicsElement>('.mesa svg.desenhos path')) {
+    try {
+      const c = el.getBBox()
+      if (c.width || c.height) incluir(c.x, c.y, c.x + c.width, c.y + c.height)
+    } catch {
+      /* traço sem medida: ignora */
+    }
+  }
+  const margem = 40
+  const limites = { x: esq - margem, y: cima - margem, width: dir - esq + margem * 2, height: baixo - cima + margem * 2 }
+  // Resolução: 2× o tamanho da mesa (texto nítido ao ampliar), com um limite seguro
+  // (cerca de 40 megapixels e 16 mil pixels por lado) para mesas muito grandes.
+  const escala = Math.min(2, 16000 / limites.width, 16000 / limites.height, Math.sqrt(40_000_000 / (limites.width * limites.height)))
+  const largura = Math.round(limites.width * escala)
+  const altura = Math.round(limites.height * escala)
+  const vista = { x: -limites.x * escala, y: -limites.y * escala, zoom: escala }
   const alvo = document.querySelector<HTMLElement>('.mesa .react-flow__viewport')
   if (!alvo) throw new Error('Mesa não encontrada.')
   const fundo = getComputedStyle(document.documentElement).getPropertyValue('--mesa').trim()
@@ -49,10 +79,10 @@ export async function imagemDaMesa(rf: ReactFlowInstance<NoMesa>): Promise<Blob>
   // ganha o tamanho exato da área exportada; depois volta ao que era.
   const svgs = [...alvo.querySelectorAll<SVGSVGElement>('.react-flow__edges svg, svg.desenhos')]
   const antes = svgs.map((s) => ['style', 'viewBox', 'width', 'height'].map((a) => s.getAttribute(a)))
-  const x0 = Math.floor(limites.x - margem * 2)
-  const y0 = Math.floor(limites.y - margem * 2)
-  const w0 = Math.ceil(limites.width + margem * 4)
-  const h0 = Math.ceil(limites.height + margem * 4)
+  const x0 = Math.floor(limites.x)
+  const y0 = Math.floor(limites.y)
+  const w0 = Math.ceil(limites.width)
+  const h0 = Math.ceil(limites.height)
   for (const s of svgs) {
     s.setAttribute('viewBox', `${x0} ${y0} ${w0} ${h0}`)
     s.setAttribute('width', String(w0))
