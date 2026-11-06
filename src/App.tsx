@@ -20,6 +20,7 @@ import { PainelAssoc } from './mesa/PainelAssoc.tsx'
 import { criarAssociacao, type ArestaAssoc, type DadosAresta } from './mesa/assoc.ts'
 import { Legenda } from './mesa/Legenda.tsx'
 import { chaveRelacao } from './mesa/relacoes.ts'
+import { CAIXA } from './mesa/recorte.ts'
 import { Contexto, normalizar, type ContextoMesa, type Ferramenta } from './mesa/contexto.ts'
 import type { NoMesa } from './mesa/operacoes.ts'
 import { alterarMesa, associacaoNaColecao, mesa, useSituacao, type Tema } from './estado/mesa.ts'
@@ -58,13 +59,16 @@ function Interior() {
   const [colecao, setColecao] = useState(mesa.colecao)
   /** Associação aberta no painel. */
   const [ativa, setAtiva] = useState<string | null>(null)
+  /** Texto no centro e o caminho feito até ele (para voltar). null = fora do recorte. */
+  const [recorte, setRecorte] = useState<{ centro: string; caminho: string[] } | null>(null)
   const ultimaLeitura = useRef(0)
   const anunciadas = useRef(new Set<string>())
   const recarregar = useCallback((completa = false) => setPedido((p) => ({ n: p.n + 1, completa })), [])
   const escolherColecao = useCallback((c: string) => {
     setColecao(c)
-    // Trocar de coleção fecha o painel da associação.
+    // Trocar de coleção fecha o painel da associação e sai do recorte.
     setAtiva(null)
+    setRecorte(null)
     if (mesa.colecao !== c) alterarMesa((e) => (e.colecao = c))
   }, [])
 
@@ -160,6 +164,49 @@ function Interior() {
   // --- Foco e legenda das relações ---
   const [foco, setFoco] = useState<string | null>(null)
   const [ocultas, setOcultas] = useState<string[]>([])
+
+  // --- Recorte: um texto no centro e os ligados a ele em volta; caminhar pelas relações ---
+  /** Itens do recorte na ordem de caminhar: caixa, texto, caixa, texto… */
+  const [itensRecorte, setItensRecorte] = useState<string[]>([])
+  const [marcado, setMarcado] = useState<string | null>(null)
+  const entrarNoRecorte = (centro: string) => {
+    setRecorte({ centro, caminho: [] })
+    setMarcado(null)
+    setFoco(centro)
+  }
+  const irPara = (centro: string) => {
+    setRecorte((r) => (r && r.centro !== centro ? { centro, caminho: [...r.caminho, r.centro] } : r))
+    setMarcado(null)
+    setFoco(centro)
+  }
+  const voltarNoRecorte = () => {
+    if (!recorte?.caminho.length) return
+    const anterior = recorte.caminho[recorte.caminho.length - 1]
+    setRecorte({ centro: anterior, caminho: recorte.caminho.slice(0, -1) })
+    setMarcado(null)
+    setFoco(anterior)
+  }
+  const sairDoRecorte = () => {
+    setRecorte(null)
+    setMarcado(null)
+  }
+  /** Leva a vista até o item marcado (ficha ou caixa da associação), para ler. */
+  const mostrarItem = (item: string) => {
+    let x: number
+    let y: number
+    if (item.startsWith(CAIXA)) {
+      const el = document.querySelector(`.assoc[data-assoc="${item.slice(CAIXA.length)}"]`)
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      ;({ x, y } = rf.screenToFlowPosition({ x: r.left + r.width / 2, y: r.top + r.height / 2 }))
+    } else {
+      const n = rf.getNode(item)
+      if (!n) return
+      x = n.position.x + (n.measured?.width ?? 300) / 2
+      y = n.position.y + (n.measured?.height ?? 200) / 2
+    }
+    rf.setCenter(x, y, { zoom: Math.max(rf.getZoom(), 0.9), duration: 350 })
+  }
   /** Fichas ligadas à ficha em foco (por associações não escondidas pela legenda). */
   const vizinhosTexto = useStore((s) => {
     if (!foco) return ''
@@ -196,6 +243,11 @@ function Interior() {
     }
   }
   const aoClicarFicha = (chave: string) => {
+    // No recorte, clicar num texto ligado o leva para o centro.
+    if (recorte && !ligando && !ferramenta) {
+      if (chave !== recorte.centro) irPara(chave)
+      return
+    }
     if (!ligando) {
       // Fora do modo de associar, clicar numa ficha põe o foco nela
       // (clicar de novo na mesma ficha mantém o foco: o clique duplo, que dá zoom, não o desfaz)
@@ -221,23 +273,49 @@ function Interior() {
   }
   const aoClicarFundo = () => {
     if (ligando) setEscolhida(null)
-    setFoco(null)
+    if (recorte) setMarcado(null)
+    else setFoco(null)
   }
 
-  // Esc sai do desenho, depois do modo de associar, depois fecha o painel.
+  // Esc sai do desenho, depois do modo de associar, depois fecha o painel, depois sai
+  // do recorte e por fim do foco. No recorte, ← → caminham pelas caixas e textos ligados,
+  // Enter leva o texto marcado para o centro (ou abre a associação marcada) e Backspace volta.
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return
-      if (ferramenta) setFerramenta(null)
-      else if (ligando) {
-        setLigando(false)
-        setEscolhida(null)
-      } else if (ativa) setAtiva(null)
-      else setFoco(null)
+      if (document.querySelector('dialog[open]')) return
+      if (e.key === 'Escape') {
+        if (ferramenta) setFerramenta(null)
+        else if (ligando) {
+          setLigando(false)
+          setEscolhida(null)
+        } else if (ativa) setAtiva(null)
+        else if (recorte) sairDoRecorte()
+        else setFoco(null)
+        return
+      }
+      if (!recorte || ferramenta || ligando) return
+      if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
+      const proximo = e.key === 'ArrowRight' || e.key === 'ArrowDown'
+      const anterior = e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+      if ((proximo || anterior) && itensRecorte.length) {
+        e.preventDefault()
+        const i = marcado ? itensRecorte.indexOf(marcado) : -1
+        const n = itensRecorte.length
+        const j = i < 0 ? (proximo ? 0 : n - 1) : (i + (proximo ? 1 : -1) + n) % n
+        setMarcado(itensRecorte[j])
+        mostrarItem(itensRecorte[j])
+      } else if (e.key === 'Enter' && marcado) {
+        e.preventDefault()
+        if (marcado.startsWith(CAIXA)) abrirAssoc(marcado.slice(CAIXA.length))
+        else irPara(marcado)
+      } else if (e.key === 'Backspace') {
+        e.preventDefault()
+        voltarNoRecorte()
+      }
     }
     addEventListener('keydown', aoTeclar)
     return () => removeEventListener('keydown', aoTeclar)
-  }, [ligando, ferramenta, ativa])
+  })
 
   const contexto: ContextoMesa = useMemo(
     () => ({
@@ -251,9 +329,11 @@ function Interior() {
       foco,
       vizinhos: vizinhosTexto ? vizinhosTexto.split('|') : [],
       ocultas,
+      recorte: recorte?.centro ?? null,
+      marcado,
       abrirAssoc: (id: string) => abrirAssoc(id),
     }),
-    [ligando, escolhida, ativa, pontasTexto, notas, busca, ferramenta, foco, vizinhosTexto, ocultas, abrirAssoc],
+    [ligando, escolhida, ativa, pontasTexto, notas, busca, ferramenta, foco, vizinhosTexto, ocultas, recorte, marcado, abrirAssoc],
   )
 
   return (
@@ -303,7 +383,7 @@ function Interior() {
                   <span className="divisor" aria-hidden="true" />
                   {/* Ferramentas da mesa. */}
                   <div className="grupo">
-                    <BarraMesa colecao={colecao} avisar={avisar} />
+                    <BarraMesa colecao={colecao} avisar={avisar} emRecorte={!!recorte} />
                     <button className="btn" aria-pressed={ligando} onClick={() => alternarLigando(!ligando)}>
                       {t('barra.associar')}
                     </button>
@@ -374,6 +454,9 @@ function Interior() {
               bib={bib}
               colecao={colecao}
               ligando={ligando}
+              recorte={recorte?.centro ?? null}
+              ocultas={ocultas}
+              aoMontarRecorte={setItensRecorte}
               notas={notas}
               aoClicarFicha={aoClicarFicha}
               aoClicarFundo={aoClicarFundo}
@@ -381,7 +464,16 @@ function Interior() {
               aoMudarFerramenta={mudarFerramenta}
             />
             {modo === 'mesa' && !ativa && (
-              <Legenda ocultas={ocultas} aoMudarOcultas={setOcultas} foco={foco} aoSairDoFoco={() => setFoco(null)} />
+              <Legenda
+                ocultas={ocultas}
+                aoMudarOcultas={setOcultas}
+                foco={foco}
+                aoSairDoFoco={() => setFoco(null)}
+                recorte={recorte}
+                aoEntrarNoRecorte={entrarNoRecorte}
+                aoVoltar={voltarNoRecorte}
+                aoSairDoRecorte={sairDoRecorte}
+              />
             )}
             {modo === 'mesa' && ativa && (
               // key: cada associação abre um painel novo (zera a confirmação de remover).

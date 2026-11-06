@@ -22,12 +22,14 @@ function retangulo(n: InternalNode<NoMesa>): Retangulo {
 function Aresta({ id, source, target, data }: EdgeProps<ArestaAssoc>) {
   const A = useInternalNode<NoMesa>(source)
   const B = useInternalNode<NoMesa>(target)
-  const { ativa, notas, foco, ocultas } = useContext(Contexto)
+  const { ativa, notas, foco, ocultas, recorte } = useContext(Contexto)
   /** Valores provisórios enquanto a caixa é arrastada ou redimensionada. */
   const [prov, setProv] = useState<Partial<Associacao> | null>(null)
   if (!A || !B || !data) return null
   // Relação escondida pela legenda: não desenha nada.
   if (ocultas.length && ocultas.includes(chaveRelacao(data.assoc.rel))) return null
+  // No recorte, só as setas que tocam o texto do centro.
+  if (recorte && source !== recorte && target !== recorte) return null
 
   const ra = retangulo(A)
   const rb = retangulo(B)
@@ -35,8 +37,9 @@ function Aresta({ id, source, target, data }: EdgeProps<ArestaAssoc>) {
   const { x: mx, y: my } = meioDaCurva(c)
   const assoc = data.assoc
   // Caixa tirada do meio (pelo usuário ou pelo Mapa): a seta passa por ela.
-  const dx = prov?.dx ?? assoc.dx ?? 0
-  const dy = prov?.dy ?? assoc.dy ?? 0
+  // No recorte, a caixa fica sempre no meio da seta.
+  const dx = recorte ? 0 : (prov?.dx ?? assoc.dx ?? 0)
+  const dy = recorte ? 0 : (prov?.dy ?? assoc.dy ?? 0)
   const d = dx || dy ? caminhoPorPonto(ra, rb, { x: mx + dx, y: my + dy }) : caminho(c)
   const ehAtiva = ativa === id
   const seta = `seta-${id}`
@@ -97,7 +100,7 @@ function Caixa({
   setProv: (p: Partial<Associacao> | null) => void
 }) {
   const rf = useReactFlow<NoMesa, ArestaAssoc>()
-  const { abrirAssoc } = useContext(Contexto)
+  const { abrirAssoc, recorte, marcado } = useContext(Contexto)
   const el = useRef<HTMLDivElement>(null)
   const arraste = useRef<{
     modo: 'mover' | 'tamanho'
@@ -111,8 +114,9 @@ function Caixa({
   } | null>(null)
 
   const v = { ...assoc, ...prov }
-  const dx = v.dx ?? 0
-  const dy = v.dy ?? 0
+  // No recorte, a caixa fica no meio da seta e não se arrasta (o recorte não muda a mesa).
+  const dx = recorte ? 0 : (v.dx ?? 0)
+  const dy = recorte ? 0 : (v.dy ?? 0)
 
   const aoApertar = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
@@ -134,6 +138,7 @@ function Caixa({
     const a = arraste.current
     if (!a) return
     if (!a.moveu && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) < 5) return
+    if (recorte) return
     a.moveu = true
     const z = rf.getZoom()
     const ox = (e.clientX - a.sx) / z
@@ -163,7 +168,7 @@ function Caixa({
       <div
         ref={el}
         data-assoc={assoc.id}
-        className={`assoc nodrag nopan${ativa ? ' ativo' : ''}${v.h ? ' fixa' : ''}${apagada ? ' apagada' : ''}`}
+        className={`assoc nodrag nopan${ativa ? ' ativo' : ''}${v.h ? ' fixa' : ''}${apagada ? ' apagada' : ''}${marcado === 'caixa:' + assoc.id ? ' marcada' : ''}`}
         role="button"
         tabIndex={0}
         aria-label={t('assoc.rotulo', { rel: v.rel.trim() || t('assoc.aDefinir') })}

@@ -1411,3 +1411,25 @@ section > .arvore {
 .leg-todas {
   margin-top: 6px;
 }
+
+/* Botões e dica no quadro do foco/recorte */
+.leg-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.leg-dica {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--tinta-2);
+}
+/* Recorte: desenhos da mesa ficam escondidos (estão na arrumação normal). */
+.mesa.em-recorte svg.desenhos {
+  display: none;
+}
+/* Item marcado ao caminhar pelo recorte com as teclas. */
+.ficha-mesa.marcada,
+.assoc.marcada {
+  outline: 3px solid var(--tinta);
+  outline-offset: 3px;
+}

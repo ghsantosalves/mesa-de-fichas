@@ -10,7 +10,14 @@ import { arrumarComoMapa, desfazerMapa } from './mapa.ts'
 import { VER_TUDO } from './opcoes.ts'
 import { t } from '../i18n.ts'
 
-export function BarraMesa({ colecao, avisar }: { colecao: string; avisar: (texto: string) => void }) {
+type Props = {
+  colecao: string
+  avisar: (texto: string) => void
+  /** No recorte, o Mapa e a volta ficam desligados (o recorte não mexe na arrumação). */
+  emRecorte: boolean
+}
+
+export function BarraMesa({ colecao, avisar, emRecorte }: Props) {
   const rf = useReactFlow<NoMesa>()
   // Força redesenhar depois de fazer ou desfazer o mapa (o mapa é guardado por coleção).
   const [, redesenhar] = useState(0)
@@ -52,12 +59,18 @@ export function BarraMesa({ colecao, avisar }: { colecao: string; avisar: (texto
       <button className="btn" onClick={alternarTodas}>
         {todasRecolhidas ? t('barra.expandirTodas') : t('barra.recolherTodas')}
       </button>
-      <button className="btn com-icone" title={t('barra.mapaDica')} onClick={mapa}>
+      <button className="btn com-icone" title={t('barra.mapaDica')} onClick={mapa} disabled={emRecorte}>
         <Waypoints size={16} aria-hidden="true" />
         {t('barra.mapa')}
       </button>
       {temMapa && (
-        <button className="btn icone" title={t('barra.desfazerMapa')} aria-label={t('barra.desfazerMapa')} onClick={voltar}>
+        <button
+          className="btn icone"
+          title={t('barra.desfazerMapa')}
+          aria-label={t('barra.desfazerMapa')}
+          onClick={voltar}
+          disabled={emRecorte}
+        >
           <Undo2 size={16} aria-hidden="true" />
         </button>
       )}

@@ -27,6 +27,10 @@ export type ContextoMesa = {
   vizinhos: string[]
   /** Relações escondidas pela legenda (chaves de chaveRelacao). */
   ocultas: string[]
+  /** Ficha no centro do recorte (null = fora do recorte). */
+  recorte: string | null
+  /** Item marcado ao caminhar pelo recorte com as teclas (id da ficha ou "caixa:" + id da associação). */
+  marcado: string | null
   abrirAssoc: (id: string) => void
 }
 
@@ -48,5 +52,7 @@ export const Contexto = createContext<ContextoMesa>({
   foco: null,
   vizinhos: [],
   ocultas: [],
+  recorte: null,
+  marcado: null,
   abrirAssoc: () => {},
 })

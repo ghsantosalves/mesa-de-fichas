@@ -124,7 +124,7 @@ function CartaoNaMesa(props: NodeProps<NoFicha>) {
 
 function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   const rf = useReactFlow<NoMesa>()
-  const { escolhida, pontas, busca, ferramenta, foco, vizinhos } = useContext(Contexto)
+  const { escolhida, pontas, busca, ferramenta, foco, vizinhos, marcado } = useContext(Contexto)
   const [menu, setMenu] = useState(false)
   const f = data.ficha
   // Busca em todos os campos, inclusive o uso, mesmo os ocultos.
@@ -164,7 +164,7 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
 
   return (
     <article
-      className={`ficha-mesa${data.recolhida ? ' recolhida' : ''}${selected ? ' selecionada' : ''}${dragging ? ' arrastando' : ''}${escolhida === id ? ' escolhida' : ''}${pontas.includes(id) ? ' ponta' : ''}${apagada ? ' apagada' : ''}${foco === id ? ' em-foco' : ''}`}
+      className={`ficha-mesa${data.recolhida ? ' recolhida' : ''}${selected ? ' selecionada' : ''}${dragging ? ' arrastando' : ''}${escolhida === id ? ' escolhida' : ''}${pontas.includes(id) ? ' ponta' : ''}${apagada ? ' apagada' : ''}${foco === id ? ' em-foco' : ''}${marcado === id ? ' marcada' : ''}`}
       style={{
         width: data.recolhida ? LARGURA_RECOLHIDA : LARGURA_FICHA,
         borderLeftColor: data.cor ? `var(--c-${data.cor})` : undefined,

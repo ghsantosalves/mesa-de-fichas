@@ -70,6 +70,18 @@ const TEXTOS = {
   'leg.mostrar': ['Clique para mostrar estas associações', 'Click to show these links'],
   'leg.mostrarTodas': ['Mostrar todas', 'Show all'],
   'leg.foco': ['Em foco: {f}', 'In focus: {f}'],
+  'rec.entrar': ['Recorte', 'Cutout'],
+  'rec.dica': [
+    'Mostra só este texto e os ligados a ele, para caminhar pelas relações',
+    'Shows only this text and the ones linked to it, to walk through the relations',
+  ],
+  'rec.titulo': ['Recorte: {f}', 'Cutout: {f}'],
+  'rec.teclas': [
+    '← → passam pelas associações e textos · Enter abre · clique num texto para ir até ele',
+    '← → step through links and texts · Enter opens · click a text to go to it',
+  ],
+  'rec.voltar': ['← Voltar', '← Back'],
+  'rec.sair': ['Sair do recorte (Esc)', 'Exit cutout (Esc)'],
   'leg.sairFoco': ['Sair do foco (Esc)', 'Exit focus (Esc)'],
   'barra.verTudo': ['Ver tudo', 'Fit all'],
   'barra.colecao': ['Coleção', 'Collection'],

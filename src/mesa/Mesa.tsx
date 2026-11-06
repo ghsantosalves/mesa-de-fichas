@@ -15,6 +15,7 @@ import {
 import { ArestaAssocMemo } from './ArestaAssoc.tsx'
 import { arestaDe, type ArestaAssoc, type DadosAresta } from './assoc.ts'
 import { acomodarMesa } from './mapa.ts'
+import { CAIXA, montarRecorte } from './recorte.ts'
 import '@xyflow/react/dist/style.css'
 import { comSubcolecoes, type Biblioteca, type Ficha } from '../zotero/biblioteca.ts'
 import {
@@ -70,6 +71,12 @@ type Props = {
   bib: Biblioteca
   colecao: string
   ligando: boolean
+  /** Ficha no centro do recorte (null = mesa normal). */
+  recorte: string | null
+  /** Relações escondidas pela legenda (também ficam fora do recorte). */
+  ocultas: string[]
+  /** Recebe os itens do recorte na ordem de caminhar (caixa, texto, caixa, texto…). */
+  aoMontarRecorte: (itens: string[]) => void
   notas: boolean
   ferramenta: Ferramenta | null
   aoMudarFerramenta: (f: Ferramenta | null) => void
@@ -77,7 +84,19 @@ type Props = {
   aoClicarFundo: () => void
 }
 
-export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramenta, aoClicarFicha, aoClicarFundo }: Props) {
+export function Mesa({
+  bib,
+  colecao,
+  ligando,
+  recorte,
+  ocultas,
+  aoMontarRecorte,
+  notas,
+  ferramenta,
+  aoMudarFerramenta,
+  aoClicarFicha,
+  aoClicarFundo,
+}: Props) {
   const [nos, setNos, aoMudarNos] = useNodesState<NoMesa>([])
   const [arestas, setArestas, aoMudarArestas] = useEdgesState<ArestaAssoc>([])
   const { fitView, getNodes } = useReactFlow<NoMesa, ArestaAssoc>()
@@ -311,7 +330,8 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
   )
   const tamanhosAntes = useRef(new Map<string, string>())
   useEffect(() => {
-    if (!tamanhos) return
+    // No recorte, nada é reajustado nem salvo.
+    if (!tamanhos || recorteAtual.current) return
     const agora = new Map(tamanhos.split('|').map((x) => x.split('=') as [string, string]))
     const fixas = [...agora]
       .filter(([id, tam]) => tamanhosAntes.current.has(id) && tamanhosAntes.current.get(id) !== tam)
@@ -320,6 +340,40 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
     const espera = setTimeout(() => acomodarMesa(rf, fixas), 200)
     return () => clearTimeout(espera)
   }, [tamanhos, textoCaixas, notas, rf])
+
+  // Recorte: monta a vista com o texto do centro e os ligados a ele; ao sair, devolve
+  // cada ficha (e a vista) ao lugar de antes. Nada disso é salvo.
+  const recorteAtual = useRef<string | null>(null)
+  const vistaAntes = useRef<{ x: number; y: number; zoom: number } | null>(null)
+  useEffect(() => {
+    recorteAtual.current = recorte
+    if (recorte) {
+      vistaAntes.current ??= rf.getViewport()
+      const naMesa = (id: string) => {
+        const n = rf.getNode(id)
+        return n?.type === 'ficha' && passa(n.data.ficha, filtro)
+      }
+      const itens = montarRecorte(rf, recorte, ocultas, naMesa)
+      aoMontarRecorte(itens)
+      const fichas = [recorte, ...itens.filter((i) => !i.startsWith(CAIXA))]
+      const espera = setTimeout(() => fitView({ nodes: fichas.map((id) => ({ id })), padding: 0.25, maxZoom: 1, duration: 300 }), 80)
+      return () => clearTimeout(espera)
+    }
+    if (!vistaAntes.current) return
+    const vista = vistaAntes.current
+    vistaAntes.current = null
+    aoMontarRecorte([])
+    setNos((ns) =>
+      ns.map((n) => {
+        if (n.type !== 'ficha') return { ...n, hidden: !areaPassa(n.data.area, colecao) }
+        const lugar = lugarNaColecao(mesa.fichas[n.id], colecao)
+        return { ...n, hidden: !passa(n.data.ficha, filtro), ...(lugar && { position: { x: lugar.x, y: lugar.y } }) }
+      }),
+    )
+    rf.setViewport(vista, { duration: 300 })
+    // Só reage à entrada, à troca de centro, à saída do recorte e à legenda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recorte, ocultas])
 
   // Arrastar uma área leva junto as fichas visíveis cujo topo-centro está dentro dela.
   const aoComecarArrastar: OnNodeDrag<NoMesa> = (_, no) => {
@@ -347,6 +401,8 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
     )
   }
   const aoSoltar: OnNodeDrag<NoMesa> = (_, __, arrastados) => {
+    // No recorte, mover fichas não muda a arrumação salva.
+    if (recorteAtual.current) return
     const d = levadas.current
     alterarMesa((e) => {
       for (const n of arrastados) {
@@ -374,7 +430,7 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
 
   return (
     <div
-      className={`mesa${ligando ? ' ligando' : ''}${notas ? '' : ' sem-notas'}${ferramenta === 'grifar' ? ' grifando' : ''}`}
+      className={`mesa${ligando ? ' ligando' : ''}${notas ? '' : ' sem-notas'}${ferramenta === 'grifar' ? ' grifando' : ''}${recorte ? ' em-recorte' : ''}`}
       onDragOver={aoPassarArrastando}
       onDrop={aoSoltarDaFaixa}
     >

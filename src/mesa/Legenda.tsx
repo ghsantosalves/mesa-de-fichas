@@ -14,15 +14,32 @@ type Props = {
   aoMudarOcultas: (o: string[]) => void
   foco: string | null
   aoSairDoFoco: () => void
+  /** Recorte aberto: texto do centro e o caminho até ele. */
+  recorte: { centro: string; caminho: string[] } | null
+  aoEntrarNoRecorte: (centro: string) => void
+  aoVoltar: () => void
+  aoSairDoRecorte: () => void
 }
 
-export function Legenda({ ocultas, aoMudarOcultas, foco, aoSairDoFoco }: Props) {
+export function Legenda({
+  ocultas,
+  aoMudarOcultas,
+  foco,
+  aoSairDoFoco,
+  recorte,
+  aoEntrarNoRecorte,
+  aoVoltar,
+  aoSairDoRecorte,
+}: Props) {
   const [aberta, setAberta] = useState(true)
+  const centro = recorte?.centro ?? null
   // Relações das associações visíveis, como texto (para não redesenhar a cada movimento).
+  // No recorte, só as que tocam o texto do centro (as outras não são desenhadas).
   const texto = useStore((s) => {
     const visiveis = new Set(s.nodes.filter((n) => !n.hidden).map((n) => n.id))
     return s.edges
       .filter((e) => visiveis.has(e.source) && visiveis.has(e.target))
+      .filter((e) => !centro || e.source === centro || e.target === centro)
       // '#' na frente: uma relação vazia ("a definir") também conta.
       .map((e) => '#' + ((e.data as DadosAresta | undefined)?.assoc.rel ?? '').trim())
       .join('\n')
@@ -46,13 +63,35 @@ export function Legenda({ ocultas, aoMudarOcultas, foco, aoSairDoFoco }: Props) 
 
   return (
     <aside className="legenda" aria-label={t('leg.rotulo')}>
-      {foco && (
+      {recorte ? (
         <div className="leg-foco">
-          <span>{t('leg.foco', { f: nomeFoco })}</span>
-          <button className="btn" onClick={aoSairDoFoco}>
-            {t('leg.sairFoco')}
-          </button>
+          <span>{t('rec.titulo', { f: nomeFoco })}</span>
+          <span className="leg-dica">{t('rec.teclas')}</span>
+          <div className="leg-botoes">
+            {recorte.caminho.length > 0 && (
+              <button className="btn" onClick={aoVoltar}>
+                {t('rec.voltar')}
+              </button>
+            )}
+            <button className="btn" onClick={aoSairDoRecorte}>
+              {t('rec.sair')}
+            </button>
+          </div>
         </div>
+      ) : (
+        foco && (
+          <div className="leg-foco">
+            <span>{t('leg.foco', { f: nomeFoco })}</span>
+            <div className="leg-botoes">
+              <button className="btn primario" title={t('rec.dica')} onClick={() => aoEntrarNoRecorte(foco)}>
+                {t('rec.entrar')}
+              </button>
+              <button className="btn" onClick={aoSairDoFoco}>
+                {t('leg.sairFoco')}
+              </button>
+            </div>
+          </div>
+        )
       )}
       {grupos.size > 0 && (
         <>

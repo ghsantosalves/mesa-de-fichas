@@ -37,8 +37,22 @@ const esperar = (ms: number) => new Promise((ok) => setTimeout(ok, ms))
 const raio = (p: Peca) => (p.w + p.h) / 4 + FOLGA / 2
 const comoAssoc = (rf: Mesa) => rf as unknown as ReactFlowInstance<NoMesa, ArestaAssoc>
 
+/**
+ * Tamanho de uma ficha: o medido pela mesa ou, se ela ainda não mediu, o da tela
+ * (sem o zoom); por último, o tamanho padrão.
+ */
+export function tamanhoDaFicha(rf: Mesa, id: string): { w: number; h: number } {
+  const n = rf.getNode(id)
+  const el = document.querySelector<HTMLElement>(`.react-flow__node[data-id="${id}"]`)
+  const recolhida = n?.type === 'ficha' && n.data.recolhida
+  return {
+    w: n?.measured?.width || el?.offsetWidth || (recolhida ? LARGURA_RECOLHIDA : LARGURA_FICHA),
+    h: n?.measured?.height || el?.offsetHeight || ALTURA_RECOLHIDA,
+  }
+}
+
 /** Tamanho da caixa de uma associação, medido na tela (sem o zoom). */
-function tamanhoDaCaixa(id: string): { w: number; h: number } {
+export function tamanhoDaCaixa(id: string): { w: number; h: number } {
   const el = document.querySelector<HTMLElement>(`.assoc[data-assoc="${id}"]`)
   if (el && el.offsetWidth) return { w: el.offsetWidth, h: el.offsetHeight }
   return mesa.notas ? CAIXA_COM_NOTA : CAIXA_SEM_NOTA
@@ -109,14 +123,7 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
   for (const a of fixadas) mudarAssociacao(comoAssoc(rf), a.id, {}, ['w', 'h'])
   if (fixadas.length) await esperar(150)
   /** Tamanho medido de cada ficha (aberta ou recolhida). */
-  const tamanho = (id: string) => {
-    const n = rf.getNode(id)
-    const recolhida = n?.type === 'ficha' && n.data.recolhida
-    return {
-      w: n?.measured?.width ?? (recolhida ? LARGURA_RECOLHIDA : LARGURA_FICHA),
-      h: n?.measured?.height ?? ALTURA_RECOLHIDA,
-    }
-  }
+  const tamanho = (id: string) => tamanhoDaFicha(rf, id)
 
   const ligadas = new Set(assocs.flatMap((a) => [a.a, a.b]))
   const noMapa = ids.filter((k) => ligadas.has(k))
