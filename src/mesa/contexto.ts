@@ -21,6 +21,12 @@ export type ContextoMesa = {
   busca: string
   /** Ferramenta de desenho ativa (null = nenhuma). */
   ferramenta: Ferramenta | null
+  /** Ficha em foco (clicada): só ela, as associações dela e as fichas ligadas ficam em destaque. */
+  foco: string | null
+  /** Fichas ligadas à ficha em foco. */
+  vizinhos: string[]
+  /** Relações escondidas pela legenda (chaves de chaveRelacao). */
+  ocultas: string[]
   abrirAssoc: (id: string) => void
 }
 
@@ -39,5 +45,8 @@ export const Contexto = createContext<ContextoMesa>({
   notas: true,
   busca: '',
   ferramenta: null,
+  foco: null,
+  vizinhos: [],
+  ocultas: [],
   abrirAssoc: () => {},
 })

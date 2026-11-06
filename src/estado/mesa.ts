@@ -81,6 +81,8 @@ export type EstadoMesa = {
   notas: boolean
   vista: Vista | null
   colecao: string
+  /** Arrumação das fichas antes do "Mapa" (para poder voltar). null = não há mapa. */
+  antesDoMapa: Record<string, { x: number; y: number; recolhida: boolean }> | null
 }
 
 export type Situacao =
@@ -104,6 +106,7 @@ function vazio(): EstadoMesa {
     notas: true,
     vista: null,
     colecao: '*',
+    antesDoMapa: null,
   }
 }
 
@@ -211,6 +214,13 @@ function validar(d: unknown): EstadoMesa {
   }
   const v = o.vista as Record<string, unknown> | null
   if (v && typeof v === 'object') e.vista = { x: numero(v.x, 0), y: numero(v.y, 0), zoom: numero(v.zoom, 1) }
+  if (o.antesDoMapa && typeof o.antesDoMapa === 'object') {
+    const antes: NonNullable<EstadoMesa['antesDoMapa']> = {}
+    for (const [k, q] of Object.entries(o.antesDoMapa as Record<string, Record<string, unknown> | null>)) {
+      if (q && typeof q === 'object') antes[k] = { x: numero(q.x, 0), y: numero(q.y, 0), recolhida: q.recolhida === true }
+    }
+    if (Object.keys(antes).length) e.antesDoMapa = antes
+  }
   if (typeof o.colecao === 'string') e.colecao = o.colecao
   return e
 }

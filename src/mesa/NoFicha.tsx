@@ -124,7 +124,7 @@ function CartaoNaMesa(props: NodeProps<NoFicha>) {
 
 function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   const rf = useReactFlow<NoMesa>()
-  const { escolhida, pontas, busca, ferramenta } = useContext(Contexto)
+  const { escolhida, pontas, busca, ferramenta, foco, vizinhos } = useContext(Contexto)
   const [menu, setMenu] = useState(false)
   const f = data.ficha
   // Busca em todos os campos, inclusive o uso, mesmo os ocultos.
@@ -135,7 +135,9 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
       ),
     [f],
   )
-  const apagada = busca !== '' && !textoBusca.includes(busca)
+  // Apagada: fora da busca, ou fora do foco (nem é a ficha em foco nem está ligada a ela).
+  const foraDoFoco = !!foco && foco !== id && !vizinhos.includes(id)
+  const apagada = (busca !== '' && !textoBusca.includes(busca)) || foraDoFoco
   const alternar = () => mudarFichas(rf, [id], { recolhida: !data.recolhida })
   const ve = (c: Campo) => !data.ocultos.includes(c)
   const alternarCampo = (c: Campo) =>
@@ -161,7 +163,7 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
 
   return (
     <article
-      className={`ficha-mesa${data.recolhida ? ' recolhida' : ''}${selected ? ' selecionada' : ''}${dragging ? ' arrastando' : ''}${escolhida === id ? ' escolhida' : ''}${pontas.includes(id) ? ' ponta' : ''}${apagada ? ' apagada' : ''}`}
+      className={`ficha-mesa${data.recolhida ? ' recolhida' : ''}${selected ? ' selecionada' : ''}${dragging ? ' arrastando' : ''}${escolhida === id ? ' escolhida' : ''}${pontas.includes(id) ? ' ponta' : ''}${apagada ? ' apagada' : ''}${foco === id ? ' em-foco' : ''}`}
       style={{
         width: data.recolhida ? LARGURA_RECOLHIDA : LARGURA_FICHA,
         borderLeftColor: data.cor ? `var(--c-${data.cor})` : undefined,

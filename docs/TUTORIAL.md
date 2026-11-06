@@ -120,7 +120,7 @@ Notas com a tag `ficha` que estiverem fora desse formato não somem: aparecem no
 
 ## Usando a mesa
 
-A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Associar fichas**, **✏ Desenhar**, **Anotações visíveis**) · zoom e **Menu**.
+A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Mapa**, **Associar fichas**, **✏ Desenhar**, **Anotações visíveis**) · zoom e **Menu**.
 
 - **Mover:** arraste uma ficha pelo cartão; arraste o fundo (ou role a roda do mouse) para andar pela mesa.
 - **Zoom:** Ctrl + roda do mouse, pinça no touchpad, ou os botões − e + da barra. **Ver tudo** enquadra as fichas.
@@ -133,6 +133,9 @@ A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa
 - **Associar fichas:** ligue **Associar fichas**, clique na ficha de onde parte a relação e depois na outra. Aparece uma seta da primeira para a segunda, com uma caixa no meio, e abre o painel da associação. Esc sai do modo de associar.
 - **Painel da associação:** mostra as duas fichas (autor, obra, tese). Escreva a **relação** (texto livre; os botões sugerem as já usadas) e a **anotação**. **Inverter direção**, **Recentralizar caixa** e **Remover associação** (pede um segundo clique). Fechar ou Esc fecha o painel.
 - **Caixa da associação:** clique para abrir o painel; arraste para tirá-la de cima de alguma coisa (um tracejado a liga à seta); puxe o canto para mudar o tamanho. **Anotações visíveis** mostra ou esconde as anotações nas caixas.
+- **Cores das relações e legenda:** cada tipo de relação tem uma cor ("apoia-se em" em verde, "critica" em vermelho, "dialoga com" em roxo, "amplia" em azul…). A legenda, no canto inferior direito, lista as relações da coleção com quantas associações cada uma tem. Clique numa relação para esconder ou mostrar essas setas; **Mostrar todas** volta tudo.
+- **Foco:** clique numa ficha (fora do modo de associar) para pôr ela em foco: ficam em destaque só ela, as associações dela e os textos ligados a ela; o resto fica apagado. Clique em outra ficha para mudar o foco; clique no fundo, em **Sair do foco** ou aperte Esc para sair.
+- **Mapa:** recolhe as fichas visíveis e as arruma pelas relações: os textos ligados ficam perto, os soltos ficam afastados, e aparecem os grupos. A arrumação anterior fica guardada: o botão **↶**, ao lado de **Mapa**, volta a ela (posições e fichas abertas como estavam). As áreas não se movem com o mapa.
 - **Desenhar (botão do lápis ✏):** abre uma paleta no alto da mesa:
   - **Caneta**: traços à mão (setas, círculos, sublinhados), em cinco cores e três espessuras (fina, média, grossa);
   - **Marcador**: traços largos e transparentes, como marca-texto, por cima de fichas ou da mesa, também em três espessuras;

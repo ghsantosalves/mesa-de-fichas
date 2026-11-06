@@ -17,7 +17,9 @@ import { Mesa } from './mesa/Mesa.tsx'
 import { BarraZoom } from './mesa/BarraZoom.tsx'
 import { BarraMesa } from './mesa/BarraMesa.tsx'
 import { PainelAssoc } from './mesa/PainelAssoc.tsx'
-import { criarAssociacao, type ArestaAssoc } from './mesa/assoc.ts'
+import { criarAssociacao, type ArestaAssoc, type DadosAresta } from './mesa/assoc.ts'
+import { Legenda } from './mesa/Legenda.tsx'
+import { chaveRelacao } from './mesa/relacoes.ts'
 import { Contexto, normalizar, type ContextoMesa, type Ferramenta } from './mesa/contexto.ts'
 import type { NoMesa } from './mesa/operacoes.ts'
 import { alterarMesa, mesa, useSituacao, type Tema } from './estado/mesa.ts'
@@ -155,6 +157,21 @@ function Interior() {
     setFocarRelacao(focar)
   }, [])
   const fecharAssoc = useCallback(() => setAtiva(null), [])
+  // --- Foco e legenda das relações ---
+  const [foco, setFoco] = useState<string | null>(null)
+  const [ocultas, setOcultas] = useState<string[]>([])
+  /** Fichas ligadas à ficha em foco (por associações não escondidas pela legenda). */
+  const vizinhosTexto = useStore((s) => {
+    if (!foco) return ''
+    const lista: string[] = []
+    for (const e of s.edges) {
+      const rel = (e.data as DadosAresta | undefined)?.assoc.rel ?? ''
+      if (ocultas.includes(chaveRelacao(rel))) continue
+      if (e.source === foco) lista.push(e.target)
+      else if (e.target === foco) lista.push(e.source)
+    }
+    return lista.join('|')
+  })
   const pontasTexto = useStore((s) => {
     const e = s.edges.find((x) => x.id === ativa)
     return e ? `${e.source}|${e.target}` : ''
@@ -179,7 +196,11 @@ function Interior() {
     }
   }
   const aoClicarFicha = (chave: string) => {
-    if (!ligando) return
+    if (!ligando) {
+      // Fora do modo de associar, clicar numa ficha liga/desliga o foco nela.
+      if (!ferramenta) setFoco((f) => (f === chave ? null : chave))
+      return
+    }
     if (!escolhida) {
       setEscolhida(chave)
       avisar(t('aviso.segunda'))
@@ -195,6 +216,7 @@ function Interior() {
   }
   const aoClicarFundo = () => {
     if (ligando) setEscolhida(null)
+    setFoco(null)
   }
 
   // Esc sai do desenho, depois do modo de associar, depois fecha o painel.
@@ -205,11 +227,12 @@ function Interior() {
       else if (ligando) {
         setLigando(false)
         setEscolhida(null)
-      } else setAtiva(null)
+      } else if (ativa) setAtiva(null)
+      else setFoco(null)
     }
     addEventListener('keydown', aoTeclar)
     return () => removeEventListener('keydown', aoTeclar)
-  }, [ligando, ferramenta])
+  }, [ligando, ferramenta, ativa])
 
   const contexto: ContextoMesa = useMemo(
     () => ({
@@ -220,9 +243,12 @@ function Interior() {
       notas,
       busca: normalizar(busca.trim()),
       ferramenta,
+      foco,
+      vizinhos: vizinhosTexto ? vizinhosTexto.split('|') : [],
+      ocultas,
       abrirAssoc: (id: string) => abrirAssoc(id),
     }),
-    [ligando, escolhida, ativa, pontasTexto, notas, busca, ferramenta, abrirAssoc],
+    [ligando, escolhida, ativa, pontasTexto, notas, busca, ferramenta, foco, vizinhosTexto, ocultas, abrirAssoc],
   )
 
   return (
@@ -272,7 +298,7 @@ function Interior() {
                   <span className="divisor" aria-hidden="true" />
                   {/* Ferramentas da mesa. */}
                   <div className="grupo">
-                    <BarraMesa colecao={colecao} />
+                    <BarraMesa colecao={colecao} avisar={avisar} />
                     <button className="btn" aria-pressed={ligando} onClick={() => alternarLigando(!ligando)}>
                       {t('barra.associar')}
                     </button>
@@ -349,6 +375,9 @@ function Interior() {
               ferramenta={modo === 'mesa' ? ferramenta : null}
               aoMudarFerramenta={mudarFerramenta}
             />
+            {modo === 'mesa' && !ativa && (
+              <Legenda ocultas={ocultas} aoMudarOcultas={setOcultas} foco={foco} aoSairDoFoco={() => setFoco(null)} />
+            )}
             {modo === 'mesa' && ativa && (
               // key: cada associação abre um painel novo (zera a confirmação de remover).
               <PainelAssoc

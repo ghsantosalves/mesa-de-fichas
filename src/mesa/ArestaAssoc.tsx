@@ -9,6 +9,7 @@ import { ALTURA_MIN_CAIXA, LARGURA_MIN_CAIXA, mudarAssociacao, type ArestaAssoc 
 import { Contexto } from './contexto.ts'
 import type { NoMesa } from './operacoes.ts'
 import { t } from '../i18n.ts'
+import { chaveRelacao, corDaRelacao } from './relacoes.ts'
 
 type Retangulo = { w: number; h: number; cx: number; cy: number }
 
@@ -31,8 +32,10 @@ function borda(c: Retangulo, tx: number, ty: number, folga: number) {
 function Aresta({ id, source, target, data }: EdgeProps<ArestaAssoc>) {
   const A = useInternalNode<NoMesa>(source)
   const B = useInternalNode<NoMesa>(target)
-  const { ativa, notas } = useContext(Contexto)
+  const { ativa, notas, foco, ocultas } = useContext(Contexto)
   if (!A || !B || !data) return null
+  // Relação escondida pela legenda: não desenha nada.
+  if (ocultas.length && ocultas.includes(chaveRelacao(data.assoc.rel))) return null
 
   const ra = retangulo(A)
   const rb = retangulo(B)
@@ -43,17 +46,26 @@ function Aresta({ id, source, target, data }: EdgeProps<ArestaAssoc>) {
   const assoc = data.assoc
   const ehAtiva = ativa === id
   const seta = `seta-${id}`
+  const cor = corDaRelacao(assoc.rel)
+  // Com uma ficha em foco, as associações que não tocam nela ficam quase invisíveis.
+  const fora = !!foco && source !== foco && target !== foco
+  const comFoco = !!foco && !fora
 
   return (
     <>
       <defs>
         <marker id={seta} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" className={`seta${ehAtiva ? ' ativa' : ''}`} />
+          <path d="M0,0 L10,5 L0,10 z" className={`seta${ehAtiva ? ' ativa' : ''}`} style={{ fill: cor }} />
         </marker>
       </defs>
-      <path className={`fio${ehAtiva ? ' ativo' : ''}`} d={`M${a.x},${a.y} L${b.x},${b.y}`} markerEnd={`url(#${seta})`} />
+      <path
+        className={`fio${ehAtiva ? ' ativo' : ''}${fora ? ' apagado' : ''}${comFoco ? ' em-foco' : ''}`}
+        style={{ stroke: cor }}
+        d={`M${a.x},${a.y} L${b.x},${b.y}`}
+        markerEnd={`url(#${seta})`}
+      />
       <EdgeLabelRenderer>
-        <Caixa assoc={assoc} mx={mx} my={my} ativa={ehAtiva} notas={notas} />
+        <Caixa assoc={assoc} mx={mx} my={my} ativa={ehAtiva} notas={notas} cor={cor} apagada={fora} />
       </EdgeLabelRenderer>
     </>
   )
@@ -65,12 +77,16 @@ function Caixa({
   my,
   ativa,
   notas,
+  cor,
+  apagada,
 }: {
   assoc: Associacao
   mx: number
   my: number
   ativa: boolean
   notas: boolean
+  cor: string
+  apagada: boolean
 }) {
   const rf = useReactFlow<NoMesa, ArestaAssoc>()
   const { abrirAssoc } = useContext(Contexto)
@@ -139,17 +155,18 @@ function Caixa({
   return (
     <>
       {(dx !== 0 || dy !== 0) && (
-        <svg className="guia-assoc" style={{ left: 0, top: 0 }}>
-          <line x1={mx} y1={my} x2={mx + dx} y2={my + dy} className="fio-guia" />
+        <svg className={`guia-assoc${apagada ? ' apagada' : ''}`} style={{ left: 0, top: 0 }}>
+          <line x1={mx} y1={my} x2={mx + dx} y2={my + dy} className="fio-guia" style={{ stroke: cor }} />
         </svg>
       )}
       <div
         ref={el}
-        className={`assoc nodrag nopan${ativa ? ' ativo' : ''}${v.h ? ' fixa' : ''}`}
+        className={`assoc nodrag nopan${ativa ? ' ativo' : ''}${v.h ? ' fixa' : ''}${apagada ? ' apagada' : ''}`}
         role="button"
         tabIndex={0}
         aria-label={t('assoc.rotulo', { rel: v.rel.trim() || t('assoc.aDefinir') })}
         style={{
+          ['--cor-rel' as string]: cor,
           transform: `translate(-50%, -50%) translate(${mx + dx}px, ${my + dy}px)`,
           width: v.w,
           maxWidth: v.w ? 'none' : undefined,

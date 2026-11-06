@@ -528,6 +528,23 @@ input {
   stroke-dasharray: 4 4;
   opacity: 0.7;
 }
+/* Modo foco: associações que não tocam a ficha em foco quase somem. */
+.fio.em-foco {
+  stroke-width: 2.8;
+  opacity: 1;
+}
+.fio.apagado,
+.guia-assoc.apagada {
+  opacity: 0.07;
+}
+.assoc.apagada {
+  opacity: 0.1;
+  pointer-events: none;
+}
+.ficha-mesa.em-foco {
+  outline: 3px solid var(--tinta);
+  outline-offset: 3px;
+}
 /* Caixas das associações por cima das fichas, como no protótipo. */
 .mesa .react-flow__edgelabel-renderer {
   z-index: 2000;
@@ -544,7 +561,7 @@ input {
   max-width: 240px;
   background: var(--cartao);
   color: var(--tinta);
-  border: 1.5px solid var(--linha);
+  border: 1.5px solid var(--cor-rel, var(--linha));
   border-radius: 8px;
   padding: 6px 10px 8px;
   box-shadow: var(--sombra);
@@ -554,13 +571,12 @@ input {
   pointer-events: all;
 }
 .assoc.ativo {
-  border-color: var(--linha-sel);
   border-width: 2.5px;
 }
 .assoc .rel {
   display: block;
   font: 600 12px/1.3 var(--sans);
-  color: var(--linha);
+  color: var(--cor-rel, var(--linha));
 }
 .assoc .nota {
   display: -webkit-box;
@@ -585,7 +601,7 @@ input {
   width: 14px;
   height: 14px;
   cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 50%, var(--linha) 50%);
+  background: linear-gradient(135deg, transparent 50%, var(--cor-rel, var(--linha)) 50%);
   opacity: 0.65;
 }
 
@@ -1308,4 +1324,91 @@ section > .arvore {
 }
 .arvore .vazia {
   color: var(--tinta-2);
+}
+
+/* Legenda das relações (canto inferior direito da mesa) */
+.legenda {
+  position: absolute;
+  right: 14px;
+  bottom: 28px;
+  z-index: 3;
+  width: 250px;
+  max-height: 55%;
+  overflow: auto;
+  background: var(--cartao);
+  color: var(--tinta);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  box-shadow: var(--sombra);
+  padding: 8px 10px;
+  font: 400 13px/1.3 var(--sans);
+}
+.leg-foco {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--borda);
+  font-weight: 600;
+}
+.leg-foco .btn {
+  align-self: flex-start;
+}
+.leg-titulo {
+  all: unset;
+  cursor: pointer;
+  font-weight: 600;
+  display: block;
+  width: 100%;
+}
+.leg-titulo:focus-visible {
+  outline: 2px solid var(--linha);
+}
+.leg-lista {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+.leg-item {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 3px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.leg-item:hover {
+  background: color-mix(in srgb, var(--tinta) 8%, transparent);
+}
+.leg-item:focus-visible {
+  outline: 2px solid var(--linha);
+}
+.leg-item.escondida {
+  opacity: 0.4;
+}
+.leg-item.escondida .leg-nome {
+  text-decoration: line-through;
+}
+.leg-cor {
+  flex: none;
+  width: 18px;
+  height: 4px;
+  border-radius: 2px;
+}
+.leg-nome {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.leg-n {
+  color: var(--tinta-2);
+  font-variant-numeric: tabular-nums;
+}
+.leg-todas {
+  margin-top: 6px;
 }

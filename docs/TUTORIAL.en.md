@@ -129,7 +129,7 @@ The tag is always `ficha`. Notes tagged `ficha` that don't follow the format don
 
 ## Using the table
 
-The top bar, left to right: **collection** and **search** · **Table | List** · table tools (**New area**, **Collapse all**, **Link cards**, **✏ Draw**, **Notes visible**) · zoom and **Menu**.
+The top bar, left to right: **collection** and **search** · **Table | List** · table tools (**New area**, **Collapse all**, **Map**, **Link cards**, **✏ Draw**, **Notes visible**) · zoom and **Menu**.
 
 - **Move:** drag a card; drag the background (or scroll) to move around the table.
 - **Zoom:** Ctrl + mouse wheel, pinch on a touchpad, or the − and + buttons. **Fit all** frames all cards.
@@ -142,6 +142,9 @@ The top bar, left to right: **collection** and **search** · **Table | List** ·
 - **Link cards:** turn on **Link cards**, click the card the relation starts from, then the other one. An arrow appears with a box in the middle, and the link panel opens. Esc leaves link mode.
 - **Link panel:** shows both cards (author, title, thesis). Write the **relation** (free text; the buttons suggest the ones already used) and the **note**. **Reverse direction**, **Re-center box** and **Remove link** (asks for a second click).
 - **Link box:** click it to open the panel; drag it out of the way (a dashed line ties it to the arrow); drag its corner to resize. **Notes visible** shows or hides the notes in the boxes.
+- **Relation colors and legend:** each kind of relation has a color ("builds on" green, "critiques" red, "dialogues with" purple, "extends" blue…). The legend, at the bottom right, lists the collection's relations and how many links each has. Click a relation to hide or show those arrows; **Show all** brings everything back.
+- **Focus:** click a card (outside link mode) to put it in focus: only that card, its links and the texts linked to it stand out; the rest fades. Click another card to move the focus; click the background, **Exit focus** or press Esc to leave.
+- **Map:** collapses the visible cards and arranges them by their links: linked texts end up close, unlinked ones far apart, and clusters appear. The previous layout is kept: the **↶** button next to **Map** restores it (positions and open cards as they were). Areas don't move with the map.
 - **Draw (pencil button ✏):** opens a palette at the top of the table:
   - **Pen**: freehand strokes, in five colors and three thicknesses;
   - **Highlighter**: wide translucent strokes over cards or the table;
