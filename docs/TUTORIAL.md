@@ -72,10 +72,12 @@ Nas próximas vezes, o site abre direto na mesa, como você deixou.
 
 O projeto traz duas *skills* do Claude (instruções que ensinam o Claude a fazer uma tarefa sempre do mesmo jeito):
 
-| Skill | O que faz | Baixar |
-| --- | --- | --- |
-| `ficha-academica` | Escreve fichas exatamente no formato que o Cordatril lê. | https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip |
-| `relacoes-entre-textos` | Sugere relações entre os textos do seu projeto, para importar no Cordatril (veja [Sugerir relações com o Claude](#sugerir-relações-com-o-claude)). | https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip |
+| Skill | O que faz | Português | Inglês |
+| --- | --- | --- | --- |
+| Fichas | Escreve fichas exatamente no formato que o Cordatril lê. | [ficha-academica.zip](https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip) | [reading-card.zip](https://ghsantosalves.github.io/mesa-de-fichas/reading-card.zip) |
+| Relações | Sugere relações entre os textos do seu projeto, para importar no Cordatril (veja [Sugerir relações com o Claude](#sugerir-relações-com-o-claude)). | [relacoes-entre-textos.zip](https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip) | [text-relations.zip](https://ghsantosalves.github.io/mesa-de-fichas/text-relations.zip) |
+
+Cada skill vem em duas versões, que fazem a mesma coisa. A versão em português escreve as fichas com rótulos em português (`FICHA ·`, `Tese:`…); a em inglês, com rótulos em inglês (`CARD ·`, `Thesis:`…). O Cordatril lê os dois. Instale a do idioma em que você trabalha (ou as duas).
 
 **No Claude (site ou app):** baixe o `.zip`, abra **Configurações → Capacidades** (ou **Skills**) e envie o arquivo. Não descompacte.
 
@@ -150,7 +152,7 @@ A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa
 
 ## Sugerir relações com o Claude
 
-Com a skill `relacoes-entre-textos` instalada (passo 4):
+Com a skill `relacoes-entre-textos` (ou `text-relations`, em inglês) instalada (passo 4):
 
 1. No Cordatril, escolha a coleção e abra **Menu → Exportar… → Fichas para o Claude → Baixar fichas para o Claude**. O arquivo traz cada ficha com um identificador, como `[ABCD1234]`, e as associações que já existem.
 2. No Claude, envie esse arquivo junto com o **contexto do projeto** (tema, pergunta de pesquisa, objetivos, capítulos ou eixos; pode ser o texto do projeto) e peça: **"sugira as relações entre esses textos para o Cordatril"**.

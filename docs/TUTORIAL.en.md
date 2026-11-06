@@ -24,7 +24,7 @@ To see the interface in English, open **Menu → English (idioma)**. It switches
 ## How it works
 
 ```
-text you read ──► Claude (ficha-academica skill) ──► Zotero note tagged "ficha" ──► Cordatril
+text you read ──► Claude (reading-card skill) ──► Zotero note tagged "ficha" ──► Cordatril
 ```
 
 1. You read a text and ask Claude for a short card, using the skill included in this project.
@@ -73,21 +73,21 @@ Next time, the website opens straight on the table, just as you left it.
 
 The project includes two Claude *skills* (instructions that teach Claude to do a task the same way every time):
 
-| Skill | What it does | Download |
-| --- | --- | --- |
-| `ficha-academica` | Writes cards exactly in the format Cordatril reads. | https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip |
-| `relacoes-entre-textos` | Suggests relations between the texts of your project, to import into Cordatril (see [Suggest relations with Claude](#suggest-relations-with-claude)). | https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip |
+| Skill | What it does | English | Portuguese |
+| --- | --- | --- | --- |
+| Cards | Writes cards exactly in the format Cordatril reads. | [reading-card.zip](https://ghsantosalves.github.io/mesa-de-fichas/reading-card.zip) | [ficha-academica.zip](https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip) |
+| Relations | Suggests relations between the texts of your project, to import into Cordatril (see [Suggest relations with Claude](#suggest-relations-with-claude)). | [text-relations.zip](https://ghsantosalves.github.io/mesa-de-fichas/text-relations.zip) | [relacoes-entre-textos.zip](https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip) |
 
-The skills are written in Portuguese and produce Portuguese labels; Claude still understands requests in English.
+Each skill comes in two versions that do the same thing. The English one writes cards with English labels (`CARD ·`, `Thesis:`…); the Portuguese one with Portuguese labels (`FICHA ·`, `Tese:`…). Cordatril reads both. Install the one for the language you work in (or both).
 
 **In Claude (website or app):** download the `.zip`, open **Settings → Capabilities** (or **Skills**) and upload the file. Don't unzip it.
 
-**In Claude Code:** unzip it and copy the folder (e.g. `relacoes-entre-textos`) to `~/.claude/skills/` (on Windows, `C:\Users\<your user>\.claude\skills\`).
+**In Claude Code:** unzip it and copy the folder (e.g. `text-relations`) to `~/.claude/skills/` (on Windows, `C:\Users\<your user>\.claude\skills\`).
 
 ## 5. Create cards and put them in Zotero
 
-1. In Claude, send the text (PDF, chapter) or reading notes you already have and ask: **"make the card (ficha) for this text"**.
-2. Claude returns a block starting with `FICHA ·`. Check it, especially the pages: `[p. ?]` means a page to check.
+1. In Claude, send the text (PDF, chapter) or reading notes you already have and ask: **"make the reading card for this text"**.
+2. Claude returns a block starting with `CARD ·`. Check it, especially the pages: `[p. ?]` means a page to check.
 3. In Zotero, right-click the text's item → **Add Note** (child note, attached to the item).
 4. Paste the card into the note.
 5. Add the tag **`ficha`** to the note (exactly like that, lowercase).
@@ -154,7 +154,7 @@ The top bar, left to right: **collection** and **search** · **Table | List** ·
 
 ## Suggest relations with Claude
 
-With the `relacoes-entre-textos` skill installed (step 4):
+With the `text-relations` skill (or `relacoes-entre-textos`, in Portuguese) installed (step 4):
 
 1. In Cordatril, choose the collection and open **Menu → Export… → Cards for Claude → Download cards for Claude**. The file lists each card with an identifier, like `[ABCD1234]`, and the existing links.
 2. In Claude, send that file along with your **project context** (topic, research question, goals, chapters) and ask: **"suggest the relations between these texts for Cordatril"**.

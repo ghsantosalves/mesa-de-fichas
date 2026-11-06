@@ -27,7 +27,7 @@ App para organizar visualmente fichas de leitura acadêmicas, como fichas físic
 5. Sincronização: guardar a versão da biblioteca (`Last-Modified-Version`) e, nas próximas buscas, usar `since=` para baixar só o que mudou.
 6. Validar cada passo com a API real antes de seguir; não presumir formatos sem ver uma resposta de verdade.
 
-## Formato da ficha (gerado pela skill ficha-academica, em `skill/ficha-academica/`)
+## Formato da ficha (gerado pela skill ficha-academica, em `skill/ficha-academica/`; versão em inglês: `skill/reading-card/`)
 ```
 FICHA · Autor (ano), Título, trecho
 Ref.: referência ABNT, cap./p. coberto
