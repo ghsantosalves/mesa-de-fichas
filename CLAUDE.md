@@ -62,7 +62,7 @@ Fichamento completo: link ou "—"
 - Mesa infinita com arrastar, zoom (Ctrl + roda, pinça, botões) e "Ver tudo".
 - Ficha completa (tese, conceitos, para lembrar, diálogos, uso no projeto como etiquetas, referência, coleções, links do vídeo e do fichamento) ou recolhida (só autor e título, mais estreita); "Recolher/Expandir todas".
 - Cores da ficha; áreas com título editável, redimensionáveis, que levam junto as fichas de dentro.
-- Associações: modo "Associar fichas", seta com direção (invertível), relação em texto livre com sugestões das já usadas, anotação; caixa da associação arrastável e redimensionável, ligada à linha por tracejado; "Recentralizar caixa"; mostrar/ocultar anotações.
+- Associações: modo "Associar fichas", seta com direção (invertível), relação em texto livre com sugestões das já usadas, anotação; caixa da associação arrastável e redimensionável, com a seta (curva) passando por ela; associações e arrumação próprias de cada coleção (as feitas em "Todas" são gerais); clique duplo numa ficha ou caixa dá zoom nela; botão "Mapa" espalha as fichas e caixas sem sobreposição; "Recentralizar caixa"; mostrar/ocultar anotações.
 - Painel da associação com as duas fichas (autor, obra, tese) visíveis e sem espremer.
 - Busca que destaca fichas por qualquer campo, inclusive uso.
 - Filtro por coleção.

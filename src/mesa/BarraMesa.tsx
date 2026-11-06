@@ -30,7 +30,8 @@ export function BarraMesa({ colecao, avisar }: { colecao: string; avisar: (texto
     )
   }
   // Espera as fichas serem redesenhadas (recolhidas) antes de enquadrar.
-  const enquadrar = () => setTimeout(() => rf.fitView({ ...VER_TUDO, duration: 300 }), 80)
+  // Margem maior: as caixas das associações ficam fora das fichas e também devem aparecer.
+  const enquadrar = () => setTimeout(() => rf.fitView({ ...VER_TUDO, padding: 0.22, duration: 300 }), 80)
   const mapa = async () => {
     if (!(await arrumarComoMapa(rf))) return avisar(t('aviso.mapaPoucas'))
     redesenhar((n) => n + 1)

@@ -197,8 +197,9 @@ function Interior() {
   }
   const aoClicarFicha = (chave: string) => {
     if (!ligando) {
-      // Fora do modo de associar, clicar numa ficha liga/desliga o foco nela.
-      if (!ferramenta) setFoco((f) => (f === chave ? null : chave))
+      // Fora do modo de associar, clicar numa ficha põe o foco nela
+      // (clicar de novo na mesma ficha mantém o foco: o clique duplo, que dá zoom, não o desfaz)
+      if (!ferramenta) setFoco(chave)
       return
     }
     if (!escolhida) {

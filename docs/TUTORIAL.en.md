@@ -132,19 +132,19 @@ The tag is always `ficha`. Notes tagged `ficha` that don't follow the format don
 The top bar, left to right: **collection** and **search** · **Table | List** · table tools (**New area**, **Collapse all**, **Map**, **Link cards**, **✏ Draw**, **Notes visible**) · zoom and **Menu**.
 
 - **Move:** drag a card; drag the background (or scroll) to move around the table.
-- **Zoom:** Ctrl + mouse wheel, pinch on a touchpad, or the − and + buttons. **Fit all** frames all cards.
+- **Zoom:** Ctrl + mouse wheel, pinch on a touchpad, or the − and + buttons. **Fit all** frames all cards. **Double-click** a card or a link box to zoom to it.
 - **Collection:** the bar menu shows only the cards in one collection (and its subcollections).
 - **Search:** the "Highlight concept, author…" field dims the cards that don't contain the typed text, in any field, ignoring accents and case.
 - **List:** shows the cards as text, to check how each note was read.
-- **Collapse a card:** the ▾ button on the card, or double-click it. Collapsed, it shows only author and title. **Collapse all / Expand all** acts on the visible cards.
+- **Collapse a card:** the ▾ button on the card. Collapsed, it shows only author and title. **Collapse all / Expand all** acts on the visible cards.
 - **Card color and fields:** the **⋯** button at the bottom of the card. Choose the border color and, under "Fields shown on this card", uncheck what you don't want to see on that card.
 - **Areas:** **New area** creates a rectangle in the middle of the screen, with the title ready to type. Drag it by the title (or ⠿) to move it: the cards inside go along. Drag the bottom-right corner to resize. The × removes the area (asks for a second click); the cards stay on the table.
 - **Link cards:** turn on **Link cards**, click the card the relation starts from, then the other one. An arrow appears with a box in the middle, and the link panel opens. Esc leaves link mode.
 - **Link panel:** shows both cards (author, title, thesis). Write the **relation** (free text; the buttons suggest the ones already used) and the **note**. **Reverse direction**, **Re-center box** and **Remove link** (asks for a second click).
-- **Link box:** click it to open the panel; drag it out of the way (a dashed line ties it to the arrow); drag its corner to resize. **Notes visible** shows or hides the notes in the boxes.
+- **Link box:** click it to open the panel; drag it out of the way (the arrow bends to pass through it); drag its corner to resize. **Notes visible** shows or hides the notes in the boxes.
 - **Relation colors and legend:** each kind of relation has a color ("builds on" green, "critiques" red, "dialogues with" purple, "extends" blue…). The legend, at the bottom right, lists the collection's relations and how many links each has. Click a relation to hide or show those arrows; **Show all** brings everything back.
 - **Focus:** click a card (outside link mode) to put it in focus: only that card, its links and the texts linked to it stand out; the rest fades. Click another card to move the focus; click the background, **Exit focus** or press Esc to leave.
-- **Map:** collapses the visible cards and arranges them as a flowchart, in columns from left to right, following the direction of the arrows (whoever builds on whom comes first). The order in each column is chosen to cross fewer arrows, link boxes sit in the space between columns and cards without links go in a grid below. The previous layout is kept: the **↶** button next to **Map** restores it. Areas don't move with the map.
+- **Map:** collapses the visible cards and spreads them over the table so that nothing sits on top of anything else: linked texts stay close, each link box sits between its two cards and each arrow goes through its own box, along its own path. Cards without links go in a grid below. The previous layout is kept: the **↶** button next to **Map** restores it. Areas don't move with the map.
 - **Each collection has its own table:** the layout (positions and collapsed cards) and the links belong to the collection chosen in the bar. So links made for an exam don't show up in your thesis collection, and the same pair of texts can have different relations in each. A new collection starts with the "All collections" layout. Links made in "All collections" are **general** and appear in every collection. In the link panel, the **Collection** field changes where a link applies. Card color, hidden fields and highlights apply to every collection.
 - **Draw (pencil button ✏):** opens a palette at the top of the table:
   - **Pen**: freehand strokes, in five colors and three thicknesses;

@@ -1,6 +1,6 @@
 // Desenho de uma associação: seta curva da borda da ficha A até a borda da ficha B e,
 // no meio, a caixa com a relação e a anotação. A caixa pode ser arrastada
-// (ligada à seta por um tracejado) e redimensionada pelo canto.
+// (a seta passa a fazer a curva por ela) e redimensionada pelo canto.
 
 import { memo, useContext, useRef, useState, type PointerEvent } from 'react'
 import { EdgeLabelRenderer, useInternalNode, useReactFlow, type EdgeProps, type InternalNode } from '@xyflow/react'
@@ -10,7 +10,7 @@ import { Contexto } from './contexto.ts'
 import type { NoMesa } from './operacoes.ts'
 import { t } from '../i18n.ts'
 import { chaveRelacao, corDaRelacao } from './relacoes.ts'
-import { caminho, curva, meioDaCurva, type Retangulo } from './geometria.ts'
+import { caminho, caminhoPorPonto, curva, meioDaCurva, type Retangulo } from './geometria.ts'
 
 function retangulo(n: InternalNode<NoMesa>): Retangulo {
   const w = n.measured.width ?? 300
@@ -23,13 +23,21 @@ function Aresta({ id, source, target, data }: EdgeProps<ArestaAssoc>) {
   const A = useInternalNode<NoMesa>(source)
   const B = useInternalNode<NoMesa>(target)
   const { ativa, notas, foco, ocultas } = useContext(Contexto)
+  /** Valores provisórios enquanto a caixa é arrastada ou redimensionada. */
+  const [prov, setProv] = useState<Partial<Associacao> | null>(null)
   if (!A || !B || !data) return null
   // Relação escondida pela legenda: não desenha nada.
   if (ocultas.length && ocultas.includes(chaveRelacao(data.assoc.rel))) return null
 
-  const c = curva(retangulo(A), retangulo(B))
+  const ra = retangulo(A)
+  const rb = retangulo(B)
+  const c = curva(ra, rb)
   const { x: mx, y: my } = meioDaCurva(c)
   const assoc = data.assoc
+  // Caixa tirada do meio (pelo usuário ou pelo Mapa): a seta passa por ela.
+  const dx = prov?.dx ?? assoc.dx ?? 0
+  const dy = prov?.dy ?? assoc.dy ?? 0
+  const d = dx || dy ? caminhoPorPonto(ra, rb, { x: mx + dx, y: my + dy }) : caminho(c)
   const ehAtiva = ativa === id
   const seta = `seta-${id}`
   const cor = corDaRelacao(assoc.rel)
@@ -47,11 +55,21 @@ function Aresta({ id, source, target, data }: EdgeProps<ArestaAssoc>) {
       <path
         className={`fio${ehAtiva ? ' ativo' : ''}${fora ? ' apagado' : ''}${comFoco ? ' em-foco' : ''}`}
         style={{ stroke: cor }}
-        d={caminho(c)}
+        d={d}
         markerEnd={`url(#${seta})`}
       />
       <EdgeLabelRenderer>
-        <Caixa assoc={assoc} mx={mx} my={my} ativa={ehAtiva} notas={notas} cor={cor} apagada={fora} />
+        <Caixa
+          assoc={assoc}
+          mx={mx}
+          my={my}
+          ativa={ehAtiva}
+          notas={notas}
+          cor={cor}
+          apagada={fora}
+          prov={prov}
+          setProv={setProv}
+        />
       </EdgeLabelRenderer>
     </>
   )
@@ -65,6 +83,8 @@ function Caixa({
   notas,
   cor,
   apagada,
+  prov,
+  setProv,
 }: {
   assoc: Associacao
   mx: number
@@ -73,12 +93,12 @@ function Caixa({
   notas: boolean
   cor: string
   apagada: boolean
+  prov: Partial<Associacao> | null
+  setProv: (p: Partial<Associacao> | null) => void
 }) {
   const rf = useReactFlow<NoMesa, ArestaAssoc>()
   const { abrirAssoc } = useContext(Contexto)
   const el = useRef<HTMLDivElement>(null)
-  /** Valores provisórios enquanto a caixa é arrastada ou redimensionada. */
-  const [prov, setProv] = useState<Partial<Associacao> | null>(null)
   const arraste = useRef<{
     modo: 'mover' | 'tamanho'
     sx: number
@@ -140,11 +160,6 @@ function Caixa({
 
   return (
     <>
-      {(dx !== 0 || dy !== 0) && (
-        <svg className={`guia-assoc${apagada ? ' apagada' : ''}`} style={{ left: 0, top: 0 }}>
-          <line x1={mx} y1={my} x2={mx + dx} y2={my + dy} className="fio-guia" style={{ stroke: cor }} />
-        </svg>
-      )}
       <div
         ref={el}
         className={`assoc nodrag nopan${ativa ? ' ativo' : ''}${v.h ? ' fixa' : ''}${apagada ? ' apagada' : ''}`}
@@ -162,6 +177,8 @@ function Caixa({
         onPointerMove={aoMover}
         onPointerUp={aoSoltar}
         onPointerCancel={aoSoltar}
+        // Clique duplo: aproxima a vista desta caixa.
+        onDoubleClick={() => rf.setCenter(mx + dx, my + dy, { zoom: Math.max(rf.getZoom(), 1.1), duration: 400 })}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()

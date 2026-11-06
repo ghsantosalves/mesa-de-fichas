@@ -169,7 +169,9 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
         borderLeftColor: data.cor ? `var(--c-${data.cor})` : undefined,
       }}
       onDoubleClick={(e) => {
-        if (!(e.target as HTMLElement).closest('button, a')) alternar()
+        // Clique duplo: aproxima a vista desta ficha (recolher fica no botão ▾).
+        if (!(e.target as HTMLElement).closest('button, a'))
+          rf.fitView({ nodes: [{ id }], padding: 0.4, maxZoom: 1.3, duration: 400 })
       }}
     >
       {/* Pontos de ligação invisíveis: as setas são calculadas de borda a borda. */}

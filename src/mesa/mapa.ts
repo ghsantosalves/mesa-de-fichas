@@ -1,28 +1,64 @@
-// "Mapa": recolhe as fichas visíveis e as arruma como um fluxograma, em colunas da
-// esquerda para a direita, seguindo a direção das setas (quem se apoia em quem vem
-// antes). A ordem dentro de cada coluna é escolhida para cruzar menos setas, e as
-// caixas das associações ficam no espaço entre as colunas, sem se sobrepor.
-// Fichas sem nenhuma associação ficam numa grade abaixo do fluxograma.
+// "Mapa": recolhe as fichas visíveis e as espalha pela mesa de modo que nada fique
+// por cima de nada. Fichas e caixas das associações são tratadas como peças: as
+// fichas ligadas se atraem, todas as peças se empurram, e cada caixa fica presa entre
+// as suas duas fichas. A seta de cada associação passa pela sua caixa, então cada
+// linha segue o seu próprio caminho. No fim, um afastamento garante que nenhuma peça
+// encoste em outra. Fichas sem associação ficam numa grade abaixo.
 // A arrumação de antes fica guardada (por coleção) para poder voltar a ela.
 
 import type { ReactFlowInstance } from '@xyflow/react'
+import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type SimulationNodeDatum } from 'd3-force'
 import { alterarMesa, associacaoNaColecao, mesa, posicionarFicha, type Posicao } from '../estado/mesa.ts'
 import { LARGURA_RECOLHIDA } from './NoFicha.tsx'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
 import { mudarAssociacao, type ArestaAssoc } from './assoc.ts'
-import { curva, meioDaCurva, type Retangulo } from './geometria.ts'
+import { curva, meioDaCurva } from './geometria.ts'
 
 type Mesa = ReactFlowInstance<NoMesa>
+/** Peça do mapa: ficha ou caixa de associação, com centro (x, y) e tamanho. */
+type Peca = SimulationNodeDatum & { id: string; w: number; h: number; caixa: boolean }
 
 /** Altura de uma ficha recolhida, se ainda não foi medida. */
 const ALTURA_RECOLHIDA = 80
-/** Largura e altura aproximadas das caixas das associações (com e sem anotação). */
+/** Tamanho aproximado das caixas das associações (com e sem anotação). */
 const CAIXA_COM_NOTA = { w: 240, h: 100 }
-const CAIXA_SEM_NOTA = { w: 140, h: 34 }
+const CAIXA_SEM_NOTA = { w: 150, h: 36 }
+/** Espaço livre mínimo entre duas peças. */
+const FOLGA = 28
 
 const esperar = (ms: number) => new Promise((ok) => setTimeout(ok, ms))
+const raio = (p: Peca) => Math.hypot(p.w, p.h) / 2
 
-/** Arruma as fichas visíveis como fluxograma. Devolve false se não há o que arrumar. */
+/** Afasta as peças que ainda se encostam (empurrando pelo lado em que entram menos uma na outra). */
+function afastar(pecas: Peca[]) {
+  for (let volta = 0; volta < 200; volta++) {
+    let mexeu = false
+    for (let i = 0; i < pecas.length; i++) {
+      for (let j = i + 1; j < pecas.length; j++) {
+        const a = pecas[i]
+        const b = pecas[j]
+        const dx = b.x! - a.x!
+        const dy = b.y! - a.y!
+        const ox = (a.w + b.w) / 2 + FOLGA - Math.abs(dx)
+        const oy = (a.h + b.h) / 2 + FOLGA - Math.abs(dy)
+        if (ox <= 0 || oy <= 0) continue
+        mexeu = true
+        if (ox < oy) {
+          const m = (ox / 2 + 0.5) * (dx >= 0 ? 1 : -1)
+          a.x! -= m
+          b.x! += m
+        } else {
+          const m = (oy / 2 + 0.5) * (dy >= 0 ? 1 : -1)
+          a.y! -= m
+          b.y! += m
+        }
+      }
+    }
+    if (!mexeu) return
+  }
+}
+
+/** Arruma as fichas visíveis como mapa. Devolve false se não há o que arrumar. */
 export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
   const fichas = rf.getNodes().filter((n) => n.type === 'ficha' && !n.hidden)
   if (fichas.length < 2) return false
@@ -43,137 +79,88 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
   mudarFichas(rf, ids, { recolhida: true })
   await esperar(120)
   const altura = (id: string) => rf.getNode(id)?.measured?.height ?? ALTURA_RECOLHIDA
-  const W = LARGURA_RECOLHIDA
 
   const assocs = mesa.associacoes.filter(
     (a) => naMesa.has(a.a) && naMesa.has(a.b) && a.a !== a.b && associacaoNaColecao(a, mesa.colecao),
   )
-  const caixa = mesa.notas ? CAIXA_COM_NOTA : CAIXA_SEM_NOTA
-  const vao = caixa.w + 100 // espaço entre colunas, onde ficam as caixas
-  const folgaVertical = mesa.notas ? 46 : 30
-
-  // --- 1. Grafo dirigido (sem repetir pares) e fichas soltas ---
-  const sai = new Map<string, Set<string>>(ids.map((k) => [k, new Set()]))
-  for (const a of assocs) sai.get(a.a)!.add(a.b)
+  const tamCaixa = mesa.notas ? CAIXA_COM_NOTA : CAIXA_SEM_NOTA
   const ligadas = new Set(assocs.flatMap((a) => [a.a, a.b]))
-  const noFluxo = ids.filter((k) => ligadas.has(k))
+  const noMapa = ids.filter((k) => ligadas.has(k))
   const soltas = ids.filter((k) => !ligadas.has(k))
 
-  // --- 2. Desfaz ciclos: setas que voltam (A→B→…→A) contam ao contrário só para as colunas ---
-  const estado = new Map<string, 1 | 2>()
-  const dag = new Map<string, Set<string>>(noFluxo.map((k) => [k, new Set()]))
-  const visitar = (u: string) => {
-    estado.set(u, 1)
-    for (const v of sai.get(u)!) {
-      if (estado.get(v) === 1) dag.get(v)!.add(u)
-      else {
-        dag.get(u)!.add(v)
-        if (!estado.has(v)) visitar(v)
-      }
-    }
-    estado.set(u, 2)
-  }
-  for (const k of noFluxo) if (!estado.has(k)) visitar(k)
-  const entra = new Map<string, Set<string>>(noFluxo.map((k) => [k, new Set()]))
-  dag.forEach((vs, u) => vs.forEach((v) => entra.get(v)!.add(u)))
-
-  // --- 3. Colunas: cada ficha fica depois de todas as que apontam para ela ---
-  const ordemTopo: string[] = []
-  const faltam = new Map(noFluxo.map((k) => [k, entra.get(k)!.size]))
-  const fila = noFluxo.filter((k) => faltam.get(k) === 0)
-  while (fila.length) {
-    const u = fila.shift()!
-    ordemTopo.push(u)
-    for (const v of dag.get(u)!) {
-      faltam.set(v, faltam.get(v)! - 1)
-      if (faltam.get(v) === 0) fila.push(v)
-    }
-  }
-  const coluna = new Map<string, number>()
-  for (const u of ordemTopo) coluna.set(u, Math.max(0, ...[...entra.get(u)!].map((p) => coluna.get(p)! + 1)))
-  // Quem só aponta para outras fica logo antes delas (e não lá no começo).
-  for (const u of [...ordemTopo].reverse()) {
-    const depois = [...dag.get(u)!].map((v) => coluna.get(v)!)
-    if (depois.length) coluna.set(u, Math.max(coluna.get(u)!, Math.min(...depois) - 1))
-  }
-  const nColunas = Math.max(0, ...[...coluna.values()]) + 1
-  const colunas: string[][] = Array.from({ length: nColunas }, () => [])
-  for (const u of ordemTopo) colunas[coluna.get(u)!].push(u)
-
-  // --- 4. Ordem dentro das colunas: média da posição dos vizinhos (cruza menos setas) ---
-  const indice = new Map<string, number>()
-  const numerar = () => colunas.forEach((c) => c.forEach((u, i) => indice.set(u, i / Math.max(1, c.length - 1))))
-  numerar()
-  const media = (u: string, vizinhos: Set<string>) => {
-    const v = [...vizinhos].map((x) => indice.get(x)!)
-    return v.length ? v.reduce((s, x) => s + x, 0) / v.length : indice.get(u)!
-  }
-  for (let volta = 0; volta < 8; volta++) {
-    const ida = volta % 2 === 0
-    const seq = ida ? colunas.slice(1) : colunas.slice(0, -1).reverse()
-    for (const c of seq) {
-      c.sort((x, y) => media(x, ida ? entra.get(x)! : dag.get(x)!) - media(y, ida ? entra.get(y)! : dag.get(y)!))
-      numerar()
-    }
-  }
-
-  // --- 5. Posições: colunas lado a lado, cada uma centrada na vertical ---
+  // Peças: começam num círculo (na ordem atual), o que dá resultados estáveis.
   const x0 = Math.min(...fichas.map((n) => n.position.x))
   const y0 = Math.min(...fichas.map((n) => n.position.y))
-  const alturaColuna = (c: string[]) => c.reduce((s, u) => s + altura(u) + folgaVertical, -folgaVertical)
-  const maior = Math.max(0, ...colunas.map(alturaColuna))
-  const lugar = new Map<string, Posicao>()
-  colunas.forEach((c, i) => {
-    let y = y0 + (maior - alturaColuna(c)) / 2
-    for (const u of c) {
-      lugar.set(u, { x: Math.round(x0 + i * (W + vao)), y: Math.round(y) })
-      y += altura(u) + folgaVertical
-    }
+  const r0 = Math.max(400, noMapa.length * 70)
+  const pecas = new Map<string, Peca>()
+  noMapa.forEach((k, i) => {
+    const ang = (i / noMapa.length) * 2 * Math.PI
+    pecas.set(k, { id: k, w: LARGURA_RECOLHIDA, h: altura(k), caixa: false, x: Math.cos(ang) * r0, y: Math.sin(ang) * r0 })
   })
-  // Fichas soltas: numa grade abaixo do fluxograma.
-  const porLinha = Math.max(3, nColunas * 2)
-  const yGrade = y0 + (noFluxo.length ? maior + 160 : 0)
-  soltas.forEach((u, i) => {
-    lugar.set(u, {
-      x: Math.round(x0 + (i % porLinha) * (W + 40)),
-      y: Math.round(yGrade + Math.floor(i / porLinha) * (ALTURA_RECOLHIDA + 60)),
+  for (const a of assocs) {
+    const pa = pecas.get(a.a)!
+    const pb = pecas.get(a.b)!
+    pecas.set(`caixa:${a.id}`, { id: `caixa:${a.id}`, ...tamCaixa, caixa: true, x: (pa.x! + pb.x!) / 2, y: (pa.y! + pb.y!) / 2 })
+  }
+  const lista = [...pecas.values()]
+  type Ligacao = { source: string; target: string; d: number; forca: number }
+  const distancia = (LARGURA_RECOLHIDA + tamCaixa.w) / 2 + 60
+  const ligacoes: Ligacao[] = assocs.flatMap((a) => [
+    { source: a.a, target: `caixa:${a.id}`, d: distancia, forca: 0.8 },
+    { source: `caixa:${a.id}`, target: a.b, d: distancia, forca: 0.8 },
+  ])
+
+  if (lista.length) {
+    const simulacao = forceSimulation<Peca>(lista)
+      .force(
+        'ligacoes',
+        forceLink<Peca, Ligacao>(ligacoes)
+          .id((p) => p.id)
+          .distance((l) => l.d)
+          .strength((l) => l.forca),
+      )
+      .force('repulsao', forceManyBody<Peca>().strength((p) => (p.caixa ? -500 : -2000)))
+      .force('colisao', forceCollide<Peca>((p) => raio(p) + FOLGA / 2).strength(0.9).iterations(3))
+      .force('x', forceX(0).strength(0.03))
+      .force('y', forceY(0).strength(0.05))
+      .stop()
+    for (let i = 0; i < 700; i++) simulacao.tick()
+    afastar(lista)
+  }
+
+  // Posições finais das fichas (o mapa começa onde começava a arrumação de antes).
+  const minX = Math.min(0, ...lista.map((p) => p.x! - p.w / 2))
+  const minY = Math.min(0, ...lista.map((p) => p.y! - p.h / 2))
+  const lugar = new Map<string, Posicao>()
+  for (const k of noMapa) {
+    const p = pecas.get(k)!
+    lugar.set(k, { x: Math.round(x0 + p.x! - p.w / 2 - minX), y: Math.round(y0 + p.y! - p.h / 2 - minY) })
+  }
+  // Fichas soltas: numa grade abaixo do mapa.
+  const fundo = noMapa.length ? Math.max(...noMapa.map((k) => lugar.get(k)!.y + altura(k))) + 160 : y0
+  const porLinha = Math.max(3, Math.ceil(Math.sqrt(soltas.length * 2)))
+  soltas.forEach((k, i) => {
+    lugar.set(k, {
+      x: Math.round(x0 + (i % porLinha) * (LARGURA_RECOLHIDA + 40)),
+      y: Math.round(fundo + Math.floor(i / porLinha) * (ALTURA_RECOLHIDA + 50)),
     })
   })
-
   rf.setNodes((ns) => ns.map((n) => (lugar.has(n.id) ? { ...n, position: lugar.get(n.id)! } : n)))
   alterarMesa((e) => lugar.forEach((p, id) => posicionarFicha(e, id, p)))
 
-  // --- 6. Caixas das associações: no vão entre colunas, sem se sobrepor ---
-  const ret = (u: string): Retangulo => {
-    const h = altura(u)
-    return { cx: lugar.get(u)!.x + W / 2, cy: lugar.get(u)!.y + h / 2, w: W, h }
-  }
-  const porVao = new Map<number, { id: string; meio: { x: number; y: number }; x: number; y: number }[]>()
-  for (const a of assocs) {
-    const c = curva(ret(a.a), ret(a.b))
-    const meio = meioDaCurva(c)
-    const ca = coluna.get(a.a)!
-    const cb = coluna.get(a.b)!
-    // O vão logo depois da coluna mais à esquerda das duas fichas.
-    const v = Math.min(ca, cb)
-    const x = x0 + v * (W + vao) + W + vao / 2
-    // Altura da curva nesse ponto (aproximada pela reta entre as pontas).
-    const t = c.e.x === c.s.x ? 0.5 : Math.min(1, Math.max(0, (x - c.s.x) / (c.e.x - c.s.x)))
-    const y = ca === cb ? meio.y : c.s.y + (c.e.y - c.s.y) * t
-    if (!porVao.has(v)) porVao.set(v, [])
-    porVao.get(v)!.push({ id: a.id, meio, x, y })
-  }
-  for (const lista of porVao.values()) {
-    lista.sort((p, q) => p.y - q.y)
-    // Empurra para baixo as que encostam na de cima e depois recentraliza o grupo.
-    const desejado = lista.map((p) => p.y)
-    for (let i = 1; i < lista.length; i++) lista[i].y = Math.max(lista[i].y, lista[i - 1].y + caixa.h + 14)
-    const desvio = lista.reduce((s, p, i) => s + (p.y - desejado[i]), 0) / lista.length
-    for (const p of lista) p.y -= desvio
+  // Caixas: onde o mapa as deixou. A posição é guardada como deslocamento a partir do
+  // meio da curva entre as duas fichas (o mesmo ponto que a mesa usa para desenhar).
+  const ret = (k: string) => {
+    const h = altura(k)
+    return { cx: lugar.get(k)!.x + LARGURA_RECOLHIDA / 2, cy: lugar.get(k)!.y + h / 2, w: LARGURA_RECOLHIDA, h }
   }
   const rfAssoc = rf as unknown as ReactFlowInstance<NoMesa, ArestaAssoc>
-  for (const lista of porVao.values()) {
-    for (const p of lista) mudarAssociacao(rfAssoc, p.id, { dx: p.x - p.meio.x, dy: p.y - p.meio.y }, ['w', 'h'])
+  for (const a of assocs) {
+    const p = pecas.get(`caixa:${a.id}`)!
+    const meio = meioDaCurva(curva(ret(a.a), ret(a.b)))
+    const cx = x0 + p.x! - minX
+    const cy = y0 + p.y! - minY
+    mudarAssociacao(rfAssoc, a.id, { dx: cx - meio.x, dy: cy - meio.y }, ['w', 'h'])
   }
   return true
 }

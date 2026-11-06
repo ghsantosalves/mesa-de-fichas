@@ -32,6 +32,28 @@ export function curva(a: Retangulo, b: Retangulo): { s: Ponto; c1: Ponto; c2: Po
   return { s, c1: { x: s.x, y: s.y + lado * k }, c2: { x: e.x, y: e.y - lado * k }, e }
 }
 
+/** Ponto onde a reta do centro de `r` até `alvo` sai do retângulo, com uma folga. */
+function borda(r: Retangulo, alvo: Ponto, folga: number): Ponto {
+  const dx = alvo.x - r.cx
+  const dy = alvo.y - r.cy
+  if (!dx && !dy) return { x: r.cx, y: r.cy }
+  const s = Math.min((r.w / 2 + folga) / Math.abs(dx || 1e-9), (r.h / 2 + folga) / Math.abs(dy || 1e-9))
+  return { x: r.cx + dx * s, y: r.cy + dy * s }
+}
+
+/**
+ * Caminho SVG de A até B passando pelo ponto `p` (o centro da caixa da associação,
+ * quando ela foi tirada do meio da seta). Cada seta segue o seu próprio caminho,
+ * pela sua caixa, e não fica por cima das outras.
+ */
+export function caminhoPorPonto(a: Retangulo, b: Retangulo, p: Ponto): string {
+  const s = borda(a, p, FOLGA_INICIO)
+  const e = borda(b, p, FOLGA_FIM)
+  // Controle da curva quadrática escolhido para ela passar exatamente por p no meio.
+  const q = { x: 2 * p.x - (s.x + e.x) / 2, y: 2 * p.y - (s.y + e.y) / 2 }
+  return `M${s.x},${s.y} Q${q.x},${q.y} ${e.x},${e.y}`
+}
+
 /** Caminho SVG da curva. */
 export const caminho = ({ s, c1, c2, e }: ReturnType<typeof curva>) =>
   `M${s.x},${s.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${e.x},${e.y}`
