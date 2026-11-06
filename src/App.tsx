@@ -192,21 +192,49 @@ function Interior() {
     setMarcado(null)
   }
   /** Leva a vista até o item marcado (ficha ou caixa da associação), para ler. */
-  const mostrarItem = (item: string) => {
-    let x: number
-    let y: number
+  /** Centro de um item do recorte (ficha ou caixa), nas coordenadas da mesa. */
+  const posicaoDoItem = (item: string): { x: number; y: number } | null => {
     if (item.startsWith(CAIXA)) {
       const el = document.querySelector(`.assoc[data-assoc="${item.slice(CAIXA.length)}"]`)
-      if (!el) return
+      if (!el) return null
       const r = el.getBoundingClientRect()
-      ;({ x, y } = rf.screenToFlowPosition({ x: r.left + r.width / 2, y: r.top + r.height / 2 }))
-    } else {
-      const n = rf.getNode(item)
-      if (!n) return
-      x = n.position.x + (n.measured?.width ?? 300) / 2
-      y = n.position.y + (n.measured?.height ?? 200) / 2
+      return rf.screenToFlowPosition({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
     }
-    rf.setCenter(x, y, { zoom: Math.max(rf.getZoom(), 0.9), duration: 350 })
+    const n = rf.getNode(item)
+    if (!n) return null
+    return { x: n.position.x + (n.measured?.width ?? 300) / 2, y: n.position.y + (n.measured?.height ?? 200) / 2 }
+  }
+  const mostrarItem = (item: string) => {
+    const p = posicaoDoItem(item)
+    if (p) rf.setCenter(p.x, p.y, { zoom: Math.max(rf.getZoom(), 0.9), duration: 350 })
+  }
+  /**
+   * Próximo item na direção da seta apertada (dx, dy), a partir do item marcado (ou
+   * do texto do centro): o mais perto que esteja mais ou menos naquela direção.
+   * Assim ↓ desce pela seta até a caixa e depois até o texto, e ↑ volta ao centro.
+   */
+  const itemNaDirecao = (centro: string, dx: number, dy: number): string | null => {
+    const atual = marcado ?? centro
+    const de = posicaoDoItem(atual)
+    if (!de) return null
+    let melhor: string | null = null
+    let menor = Infinity
+    for (const item of [centro, ...itensRecorte]) {
+      if (item === atual) continue
+      const p = posicaoDoItem(item)
+      if (!p) continue
+      const vx = p.x - de.x
+      const vy = p.y - de.y
+      const adiante = vx * dx + vy * dy // quanto anda na direção da seta
+      const lado = Math.abs(vx * dy - vy * dx) // quanto se afasta dela, para o lado
+      if (adiante <= 1 || lado > adiante * 1.3) continue
+      const custo = adiante + lado * 2
+      if (custo < menor) {
+        menor = custo
+        melhor = item
+      }
+    }
+    return melhor
   }
   /** Fichas ligadas à ficha em foco (por associações não escondidas pela legenda). */
   const vizinhosTexto = useStore((s) => {
@@ -296,15 +324,19 @@ function Interior() {
       }
       if (!recorte || ferramenta || ligando) return
       if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
-      const proximo = e.key === 'ArrowRight' || e.key === 'ArrowDown'
-      const anterior = e.key === 'ArrowLeft' || e.key === 'ArrowUp'
-      if ((proximo || anterior) && itensRecorte.length) {
+      const direcoes: Record<string, [number, number]> = {
+        ArrowRight: [1, 0],
+        ArrowLeft: [-1, 0],
+        ArrowDown: [0, 1],
+        ArrowUp: [0, -1],
+      }
+      if (direcoes[e.key]) {
         e.preventDefault()
-        const i = marcado ? itensRecorte.indexOf(marcado) : -1
-        const n = itensRecorte.length
-        const j = i < 0 ? (proximo ? 0 : n - 1) : (i + (proximo ? 1 : -1) + n) % n
-        setMarcado(itensRecorte[j])
-        mostrarItem(itensRecorte[j])
+        const proximo = itemNaDirecao(recorte.centro, ...direcoes[e.key])
+        if (proximo) {
+          setMarcado(proximo === recorte.centro ? null : proximo)
+          mostrarItem(proximo)
+        }
       } else if (e.key === 'Enter' && marcado) {
         e.preventDefault()
         if (marcado.startsWith(CAIXA)) abrirAssoc(marcado.slice(CAIXA.length))

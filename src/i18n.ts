@@ -127,8 +127,8 @@ const TEXTOS = {
   ],
   'rec.titulo': ['Recorte: {f}', 'Cutout: {f}'],
   'rec.teclas': [
-    '← → passam pelas associações e textos · Enter abre · clique num texto para ir até ele',
-    '← → step through links and texts · Enter opens · click a text to go to it',
+    'As setas do teclado andam na direção da seta (até a associação, depois até o texto; no sentido contrário, voltam ao centro) · Enter leva o texto ao centro ou abre a associação · Backspace volta',
+    'Arrow keys move in that direction (to the link, then to the text; the opposite way goes back to the center) · Enter brings the text to the center or opens the link · Backspace goes back',
   ],
   'rec.voltar': ['← Voltar', '← Back'],
   'rec.sair': ['Sair do recorte (Esc)', 'Exit cutout (Esc)'],
