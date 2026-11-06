@@ -226,7 +226,7 @@ function Interior() {
       const vy = p.y - de.y
       const adiante = vx * dx + vy * dy // quanto anda na direção da seta
       const lado = Math.abs(vx * dy - vy * dx) // quanto se afasta dela, para o lado
-      if (adiante <= 1 || lado > adiante * 1.3) continue
+      if (adiante <= 1 || lado > adiante * 2) continue
       const custo = adiante + lado * 2
       if (custo < menor) {
         menor = custo
@@ -250,6 +250,24 @@ function Interior() {
     return arestas
       .filter((e) => (e.source === atual || e.target === atual) && desenhada(e.id))
       .flatMap((e) => [CAIXA + e.id, e.source === atual ? e.target : e.source])
+  }
+  /**
+   * Tab: a próxima caixa de associação em volta de `centro`, no sentido horário a partir
+   * do topo (Shift+Tab: no sentido contrário). Garante que toda associação seja alcançável,
+   * mesmo as que ficam na diagonal, entre duas outras.
+   */
+  const caixaSeguinte = (centro: string, caixas: string[], voltar: boolean): string | null => {
+    const c = posicaoDoItem(centro)
+    if (!c || !caixas.length) return null
+    const angulo = (item: string) => {
+      const p = posicaoDoItem(item)
+      return p ? (Math.atan2(p.y - c.y, p.x - c.x) + Math.PI * 2.5) % (Math.PI * 2) : 0
+    }
+    const ordem = [...caixas].sort((a, b) => angulo(a) - angulo(b))
+    const i = marcado ? ordem.indexOf(marcado) : -1
+    const n = ordem.length
+    if (i < 0) return voltar ? ordem[n - 1] : ordem[0]
+    return ordem[(i + (voltar ? -1 : 1) + n) % n]
   }
   /** Fichas ligadas à ficha em foco (por associações não escondidas pela legenda). */
   const vizinhosTexto = useStore((s) => {
@@ -351,10 +369,21 @@ function Interior() {
         ArrowDown: [0, 1],
         ArrowUp: [0, -1],
       }
+      const tab = e.key === 'Tab' && !e.ctrlKey && !e.altKey && !e.metaKey
       // Mesa geral: anda a partir da ficha em foco, pelas associações dela.
       if (!recorte) {
         if (!foco) return
         const atual = marcado ?? foco
+        if (tab) {
+          e.preventDefault()
+          const caixas = vizinhancaNaMesa(foco).filter((x) => x.startsWith(CAIXA))
+          const proxima = caixaSeguinte(foco, caixas, e.shiftKey)
+          if (proxima) {
+            setMarcado(proxima)
+            mostrarItem(proxima)
+          }
+          return
+        }
         if (direcoes[e.key]) {
           e.preventDefault()
           const proximo = itemNaDirecao(atual, vizinhancaNaMesa(atual), ...direcoes[e.key])
@@ -372,7 +401,14 @@ function Interior() {
         }
         return
       }
-      if (direcoes[e.key]) {
+      if (tab) {
+        e.preventDefault()
+        const proxima = caixaSeguinte(recorte.centro, itensRecorte.filter((x) => x.startsWith(CAIXA)), e.shiftKey)
+        if (proxima) {
+          setMarcado(proxima)
+          mostrarItem(proxima)
+        }
+      } else if (direcoes[e.key]) {
         e.preventDefault()
         const atual = marcado ?? recorte.centro
         const proximo = itemNaDirecao(atual, [recorte.centro, ...itensRecorte], ...direcoes[e.key])

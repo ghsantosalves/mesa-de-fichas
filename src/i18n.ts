@@ -127,14 +127,14 @@ const TEXTOS = {
   ],
   'rec.titulo': ['Recorte: {f}', 'Cutout: {f}'],
   'rec.teclas': [
-    'As setas do teclado andam na direção da seta (até a associação, depois até o texto; no sentido contrário, voltam ao centro) · Enter leva o texto ao centro ou abre a associação · Backspace volta',
-    'Arrow keys move in that direction (to the link, then to the text; the opposite way goes back to the center) · Enter brings the text to the center or opens the link · Backspace goes back',
+    'As setas do teclado andam na direção da seta (até a associação, depois até o texto; no sentido contrário, voltam ao centro) · Tab passa por todas as associações · Enter leva o texto ao centro ou abre a associação · Backspace volta',
+    'Arrow keys move in that direction (to the link, then to the text; the opposite way goes back to the center) · Tab goes through all links · Enter brings the text to the center or opens the link · Backspace goes back',
   ],
   'rec.voltar': ['← Voltar', '← Back'],
   'rec.sair': ['Sair do recorte (Esc)', 'Exit cutout (Esc)'],
   'leg.teclas': [
-    'Setas do teclado: andam pelas associações desta ficha, na direção apertada · Enter abre a associação',
-    'Arrow keys: walk through this card’s links, in the direction pressed · Enter opens the link',
+    'Setas do teclado: andam pelas associações desta ficha, na direção apertada · Tab passa por todas, uma a uma · Enter abre a associação',
+    'Arrow keys: walk through this card’s links, in the direction pressed · Tab goes through all of them, one by one · Enter opens the link',
   ],
   'leg.sairFoco': ['Sair do foco (Esc)', 'Exit focus (Esc)'],
   'barra.verTudo': ['Ver tudo', 'Fit all'],
