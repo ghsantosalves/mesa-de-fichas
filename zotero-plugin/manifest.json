@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Cordatril",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Abre o Cordatril (fichas de leitura numa mesa visual) a partir do Zotero. Opens Cordatril (reading cards on a visual table) from Zotero.",
   "icons": { "48": "icon.svg", "96": "icon.svg" },
   "author": "ghsantosalves",
