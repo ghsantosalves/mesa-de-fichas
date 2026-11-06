@@ -9,7 +9,7 @@ An app to visually organize academic reading cards, like paper index cards sprea
 **Open:** https://ghsantosalves.github.io/mesa-de-fichas/
 
 - It is a website: nothing to install besides Zotero. The first time, you connect your Zotero account with a read-only key.
-- It reads the cards from Zotero and never changes or deletes anything there. The only write is optional: the **New card** button creates the card note on the chosen text (requires a key with write permission).
+- It reads the cards from Zotero and never changes or deletes anything there. The only writes are optional and require a key with write permission: the **New card** button creates the card note on the chosen text, and the **table backup** is kept in a note of the app's own (so the layout is never lost and reaches other computers).
 - Your Zotero user ID and key, and the table layout, stay in your browser only.
 - The interface is available in Portuguese and English (**Menu → English / Português**). It starts in the language of your browser.
 - Optional Zotero plugin: **Tools → Open Cordatril**.

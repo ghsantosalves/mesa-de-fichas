@@ -17,7 +17,7 @@ App para organizar visualmente fichas de leitura acadêmicas, como fichas físic
 - Em `npm run dev`, as credenciais podem vir de `.env.local` (`ZOTERO_USER_ID`, `ZOTERO_API_KEY`); a chave fica no proxy do Vite e nunca vai para o navegador nem para o build. Nunca versionar esse arquivo; incluir no `.gitignore`.
 - `zotero-plugin/` é um plugin do Zotero que só abre o site (menu Ferramentas); é empacotado e publicado junto com o site.
 - Cabeçalhos: `Zotero-API-Key` e `Zotero-API-Version: 3`. Paginar com `limit=100` e `start`; respeitar `Backoff` e `Retry-After`.
-- O app só escreve no Zotero numa situação: "Nova ficha" cria uma nota filha nova, com a tag `ficha`, no texto escolhido pelo usuário (`src/zotero/cadastro.ts`). Nunca altera nem apaga itens ou notas existentes. Isso exige uma chave com "Allow write access"; com chave só de leitura, o app avisa e oferece copiar o texto. O Zotero é a fonte de verdade do conteúdo das fichas.
+- O app só escreve no Zotero em duas situações: (1) "Nova ficha" cria uma nota filha nova, com a tag `ficha`, no texto escolhido pelo usuário (`src/zotero/cadastro.ts`); (2) a cópia da mesa: uma nota do próprio app, com a tag `cordatril-mesa`, criada e atualizada com a arrumação inteira (`src/zotero/copiaMesa.ts`). Nunca altera nem apaga outros itens ou notas. Isso exige uma chave com "Allow write access"; com chave só de leitura, o app avisa e oferece copiar o texto. O Zotero é a fonte de verdade do conteúdo das fichas.
 
 ### Como achar as fichas
 1. Fichas são notas filhas (`itemType=note`) com a tag `ficha`: `GET /users/{id}/items?itemType=note&tag=ficha`.

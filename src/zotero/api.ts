@@ -1,6 +1,7 @@
-// Comunicação com a Zotero Web API v3. O app só lê, com UMA exceção: criarNotaFilha
+// Comunicação com a Zotero Web API v3. O app só lê, com DUAS exceções: criarNotaFilha
 // (em cadastro.ts) cria uma nota nova com a tag "ficha" num texto escolhido pelo
-// usuário. Nada aqui altera nem apaga o que já existe na biblioteca.
+// usuário, e copiaMesa.ts cria/atualiza a nota de cópia da mesa (tag "cordatril-mesa").
+// Nada aqui altera nem apaga outras coisas da biblioteca.
 // O endereço e a chave vêm de credenciais.ts (servidor local ou direto do navegador).
 
 import { destino, lerCredenciais, MODO_LOCAL } from './credenciais.ts'
@@ -24,13 +25,19 @@ export function caminhoUsuario(): string {
   return `/users/${encodeURIComponent(c.userId)}`
 }
 
-type Opcoes = { method?: 'GET' | 'POST'; body?: string; headers?: Record<string, string> }
+type Opcoes = {
+  method?: 'GET' | 'POST' | 'PATCH'
+  body?: string
+  headers?: Record<string, string>
+  /** Respostas que não são erro para quem chamou (ex.: 412 = a nota mudou em outro lugar). */
+  aceitar?: number[]
+}
 
 async function pedir(caminho: string, opcoes: Opcoes = {}): Promise<Response> {
   const c = lerCredenciais()
   if (!c) throw new ErroAcesso(t('api.faltaConectar'))
   const { base, cabecalhos } = destino(c)
-  const escrita = opcoes.method === 'POST'
+  const escrita = opcoes.method === 'POST' || opcoes.method === 'PATCH'
   for (let tentativa = 0; ; tentativa++) {
     const falta = liberadoEm - Date.now()
     if (falta > 0) await esperar(falta)
@@ -56,6 +63,7 @@ async function pedir(caminho: string, opcoes: Opcoes = {}): Promise<Response> {
       await esperar((retryAfter > 0 ? retryAfter : 2 ** (tentativa + 1)) * 1000)
       continue
     }
+    if (opcoes.aceitar?.includes(r.status)) return r
     // Ao escrever, 403 quer dizer que a chave é só de leitura (não que ela sumiu).
     if (r.status === 403 && escrita) throw new ErroZotero(t('nova.semEscrita'))
     if (r.status === 403) {
@@ -101,6 +109,20 @@ export async function enviarJson<T>(caminho: string, corpo: unknown, cabecalhos:
     headers: { 'Content-Type': 'application/json', ...cabecalhos },
   })
   return (await r.json()) as T
+}
+
+/**
+ * Atualiza um item (PATCH) só se ele ainda estiver na versão dada. Devolve false se
+ * ele mudou nesse meio-tempo (outro computador atualizou primeiro).
+ */
+export async function atualizarItem(caminho: string, corpo: unknown, versao: number): Promise<boolean> {
+  const r = await pedir(caminho, {
+    method: 'PATCH',
+    body: JSON.stringify(corpo),
+    headers: { 'Content-Type': 'application/json', 'If-Unmodified-Since-Version': String(versao) },
+    aceitar: [412],
+  })
+  return r.status !== 412
 }
 
 /** Um pedido só, com resposta em texto (ex.: format=keys, uma chave por linha). */

@@ -1,6 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ReactFlowProvider, useReactFlow, useStore } from '@xyflow/react'
-import { FilePlus2, Pencil } from 'lucide-react'
+import {
+  Archive,
+  FileDown,
+  FilePlus2,
+  FileUp,
+  Languages,
+  LogOut,
+  Palette,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Pencil,
+  RefreshCw,
+  RotateCcw,
+  Save,
+} from 'lucide-react'
+import { MenuLateral, type GrupoMenu } from './MenuLateral.tsx'
 import { NOME_APP, idioma, mudarIdioma, t, tn } from './i18n.ts'
 import {
   carregarBiblioteca,
@@ -23,13 +38,21 @@ import { chaveRelacao } from './mesa/relacoes.ts'
 import { CAIXA } from './mesa/recorte.ts'
 import { Contexto, normalizar, type ContextoMesa, type Ferramenta } from './mesa/contexto.ts'
 import type { NoMesa } from './mesa/operacoes.ts'
-import { alterarMesa, associacaoNaColecao, mesa, useSituacao, type Tema } from './estado/mesa.ts'
+import { alterarMesa, associacaoNaColecao, mesa, mesaEraNova, useSituacao, type Tema } from './estado/mesa.ts'
 import { aoMudarSistema, aplicarTema } from './tema.ts'
 import { DialogoTema } from './dialogos/DialogoTema.tsx'
 import { DialogoExportar } from './dialogos/DialogoExportar.tsx'
 import { DialogoArquivo } from './dialogos/DialogoArquivo.tsx'
 import { DialogoImportar } from './dialogos/DialogoImportar.tsx'
 import { DialogoNovaFicha } from './dialogos/DialogoNovaFicha.tsx'
+import { DialogoCopiaZotero } from './dialogos/DialogoCopiaZotero.tsx'
+import {
+  buscarCopia,
+  iniciarCopiaAutomatica,
+  liberarCopiaAutomatica,
+  precisaLembrar,
+  useCopiaZotero,
+} from './zotero/copiaMesa.ts'
 
 // Aplica o tema salvo antes de desenhar qualquer coisa.
 aplicarTema(mesa.tema)
@@ -143,7 +166,43 @@ function Interior() {
   // --- Tema, busca e janelas ---
   const [tema, setTema] = useState<Tema>(mesa.tema)
   const [busca, setBusca] = useState('')
-  const [janela, setJanela] = useState<'tema' | 'exportar' | 'arquivo' | 'importar' | 'nova' | null>(null)
+  const [janela, setJanela] = useState<'tema' | 'exportar' | 'arquivo' | 'importar' | 'nova' | 'copia' | null>(null)
+  // Menu lateral: aberto ou recolhido (lembrado entre visitas).
+  const [menuAberto, setMenuAberto] = useState(() => {
+    try {
+      return localStorage.getItem('mesa-de-fichas:menu-aberto') !== 'false'
+    } catch {
+      return true
+    }
+  })
+  const alternarMenu = () => {
+    setMenuAberto(!menuAberto)
+    try {
+      localStorage.setItem('mesa-de-fichas:menu-aberto', String(!menuAberto))
+    } catch {
+      /* sem espaço: só não lembra */
+    }
+  }
+  /** A janela da cópia no Zotero foi aberta sozinha (navegador sem mesa, cópia no Zotero). */
+  const [ofertaCopia, setOfertaCopia] = useState(false)
+  // Depois de ler o Zotero: liga a cópia automática da mesa. Se este navegador não tinha
+  // mesa e há uma cópia no Zotero, oferece recuperá-la (uma vez).
+  const ofertaFeita = useRef(false)
+  useEffect(() => {
+    if (!bib) return
+    iniciarCopiaAutomatica()
+    if (!mesaEraNova || ofertaFeita.current) return
+    ofertaFeita.current = true
+    buscarCopia()
+      .then((c) => {
+        if (!c) return liberarCopiaAutomatica()
+        setOfertaCopia(true)
+        setJanela('copia')
+      })
+      .catch(() => {
+        /* sem resposta: a cópia automática fica parada nesta sessão, por segurança */
+      })
+  }, [bib])
   const mudarTema = (t: Tema) => {
     setTema(t)
     aplicarTema(t)
@@ -471,10 +530,49 @@ function Interior() {
     [ligando, escolhida, ativa, pontasTexto, notas, busca, ferramenta, foco, vizinhosTexto, ocultas, recorte, marcado, abrirAssoc],
   )
 
+  // Itens do menu lateral, em grupos.
+  const gruposDoMenu: GrupoMenu[] = [
+    {
+      titulo: t('menu.grupoZotero'),
+      itens: [
+        { icone: RefreshCw, nome: t('menu.novidades'), acao: () => recarregar() },
+        { icone: RotateCcw, nome: t('menu.lerTudo'), acao: () => recarregar(true) },
+        ...(MODO_LOCAL ? [] : [{ icone: LogOut, nome: t('menu.desconectar'), acao: desconectar }]),
+      ],
+    },
+    {
+      titulo: t('menu.grupoMesa'),
+      itens: [
+        { icone: FileDown, nome: t('menu.exportar'), acao: () => setJanela('exportar') },
+        { icone: FileUp, nome: t('menu.importar'), acao: () => setJanela('importar') },
+        { icone: Save, nome: t('menu.arquivo'), acao: () => setJanela('arquivo') },
+        { icone: Archive, nome: t('menu.copia'), acao: () => setJanela('copia') },
+      ],
+    },
+    {
+      titulo: t('menu.grupoAparencia'),
+      itens: [
+        { icone: Palette, nome: t('menu.tema'), acao: () => setJanela('tema') },
+        { icone: Languages, nome: t('menu.idioma'), acao: () => mudarIdioma(idioma === 'en' ? 'pt-BR' : 'en') },
+      ],
+    },
+  ]
+
   return (
     <Contexto.Provider value={contexto}>
-      <div className="app">
+      <div className="app" style={{ ['--menu-w' as string]: bib ? (menuAberto ? '232px' : '50px') : '0px' }}>
         <header className="barra">
+          {bib && (
+            <button
+              className="btn icone"
+              aria-expanded={menuAberto}
+              aria-label={menuAberto ? t('menu.fechar') : t('menu.abrir')}
+              title={menuAberto ? t('menu.fechar') : t('menu.abrir')}
+              onClick={alternarMenu}
+            >
+              {menuAberto ? <PanelLeftClose size={18} aria-hidden="true" /> : <PanelLeftOpen size={18} aria-hidden="true" />}
+            </button>
+          )}
           <div className="marca">
             <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="24" height="24" />
             {NOME_APP}
@@ -550,23 +648,14 @@ function Interior() {
               )}
               <div className="grupo direita">
                 {modo === 'mesa' && <BarraZoom />}
-                <MenuMais
-                  itens={[
-                    [t('menu.novidades'), () => recarregar()],
-                    [t('menu.lerTudo'), () => recarregar(true)],
-                    [t('menu.tema'), () => setJanela('tema')],
-                    [t('menu.exportar'), () => setJanela('exportar')],
-                    [t('menu.importar'), () => setJanela('importar')],
-                    [t('menu.arquivo'), () => setJanela('arquivo')],
-                    [t('menu.idioma'), () => mudarIdioma(idioma === 'en' ? 'pt-BR' : 'en')],
-                    ...(MODO_LOCAL ? [] : [[t('menu.desconectar'), desconectar] as [string, () => void]]),
-                  ]}
-                />
               </div>
             </>
           )}
         </header>
 
+        <div className="corpo">
+        {conectado && bib && <MenuLateral aberto={menuAberto} grupos={gruposDoMenu} rotulo={t('menu.rotulo')} />}
+        <div className="corpo-principal">
         {!conectado ? (
           <Conectar
             motivo={motivoConexao}
@@ -634,7 +723,9 @@ function Interior() {
             )}
           </div>
         )}
-        {conectado && bib && <SituacaoSalvamento />}
+        </div>
+        </div>
+        {conectado && bib && <SituacaoSalvamento aoSalvarArquivo={() => setJanela('arquivo')} />}
         {janela === 'tema' && <DialogoTema tema={tema} aoMudar={mudarTema} aoFechar={() => setJanela(null)} />}
         {janela === 'exportar' && bib && (
           <DialogoExportar bib={bib} colecao={colecao} aoFechar={() => setJanela(null)} />
@@ -642,6 +733,15 @@ function Interior() {
         {janela === 'arquivo' && <DialogoArquivo aoFechar={() => setJanela(null)} />}
         {janela === 'nova' && bib && (
           <DialogoNovaFicha bib={bib} colecaoInicial={colecao} aoFechar={() => setJanela(null)} aoSalvar={() => recarregar()} />
+        )}
+        {janela === 'copia' && (
+          <DialogoCopiaZotero
+            oferta={ofertaCopia}
+            aoFechar={() => {
+              setJanela(null)
+              setOfertaCopia(false)
+            }}
+          />
         )}
         {janela === 'importar' && bib && (
           <DialogoImportar bib={bib} aoFechar={() => setJanela(null)} avisar={avisar} />
@@ -691,51 +791,13 @@ function registrarMudancas(bib: Biblioteca): { novas: string[]; sumiram: number 
   return { novas, sumiram: sumiram.length }
 }
 
-/** Botão "Menu" com as ações menos usadas. Fecha ao escolher, ao clicar fora ou com Esc. */
-function MenuMais({ itens }: { itens: [string, () => void][] }) {
-  const [aberto, setAberto] = useState(false)
-  const caixa = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!aberto) return
-    const fora = (e: PointerEvent) => {
-      if (!caixa.current?.contains(e.target as Node)) setAberto(false)
-    }
-    const tecla = (e: KeyboardEvent) => e.key === 'Escape' && setAberto(false)
-    addEventListener('pointerdown', fora)
-    addEventListener('keydown', tecla)
-    return () => {
-      removeEventListener('pointerdown', fora)
-      removeEventListener('keydown', tecla)
-    }
-  }, [aberto])
-  return (
-    <div className="menu-mais" ref={caixa}>
-      <button className="btn" aria-haspopup="menu" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>
-        {t('menu.botao')}
-      </button>
-      {aberto && (
-        <div className="menu-lista" role="menu">
-          {itens.map(([nome, acao]) => (
-            <button
-              key={nome}
-              role="menuitem"
-              onClick={() => {
-                setAberto(false)
-                acao()
-              }}
-            >
-              {nome}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 /** Aviso discreto, no canto, de que a mesa está salva. */
-function SituacaoSalvamento() {
+function SituacaoSalvamento({ aoSalvarArquivo }: { aoSalvarArquivo: () => void }) {
   const s = useSituacao()
+  const copia = useCopiaZotero()
+  const hora = (iso: string) => new Date(iso).toLocaleTimeString(idioma === 'en' ? 'en' : 'pt-BR', { hour: '2-digit', minute: '2-digit' })
+  // Com chave só de leitura não há cópia no Zotero: lembra de salvar em arquivo.
+  const lembrar = copia.escrita === false && precisaLembrar(copia.diasSemCopia)
   const texto =
     s.tipo === 'salvo'
       ? t('salvo.ok')
@@ -749,6 +811,18 @@ function SituacaoSalvamento() {
   return (
     <div className={`situacao${s.tipo === 'erro' || s.tipo === 'recuperado' ? ' ruim' : ''}`} role="status">
       {texto}
+      {copia.guardando
+        ? ` · ${t('copia.guardandoCurto')}`
+        : copia.erro
+          ? ` · ${t('copia.erroCurto')}`
+          : copia.escrita && copia.copiaEm
+            ? ` · ${t('copia.emCurto', { hora: hora(copia.copiaEm) })}`
+            : ''}
+      {lembrar && (
+        <button className="situacao-lembrete" onClick={aoSalvarArquivo}>
+          {t('copia.lembrete', { n: copia.diasSemCopia })}
+        </button>
+      )}
     </div>
   )
 }

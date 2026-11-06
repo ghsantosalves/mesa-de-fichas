@@ -43,7 +43,7 @@ A chave é o que deixa o Cordatril ler suas notas.
 3. Clique em **Create new private key** e marque **apenas**:
    - Personal Library → **Allow library access**
    - Personal Library → **Allow notes access**
-   - **Allow write access**: deixe desmarcado se quiser que o app só leia. Marque apenas se quiser usar o botão **Nova ficha** para criar as fichas pelo app (veja [Cadastrar uma ficha pelo app](#cadastrar-uma-ficha-pelo-app)).
+   - **Allow write access**: deixe desmarcado se quiser que o app só leia. Marque se quiser usar o botão **Nova ficha** para criar as fichas pelo app e ter a **cópia da mesa no Zotero** (veja [Cadastrar uma ficha pelo app](#cadastrar-uma-ficha-pelo-app)).
    - Default Group Permissions → **None**.
 4. Dê um nome (ex.: "Cordatril"), clique em **Save Key** e copie a chave que aparece. Guarde-a num lugar seguro: o site do Zotero só a mostra uma vez.
 
@@ -131,12 +131,13 @@ O app nunca altera nem apaga notas que já existem: para corrigir uma ficha, edi
 
 ## Usando a mesa
 
-A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Mapa**, **Associar fichas**, **✏ Desenhar**, **Anotações visíveis**) · zoom e **Menu**.
+A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Mapa**, **Associar fichas**, **✏ Desenhar**, **Anotações visíveis**) · zoom. À esquerda fica o **Menu**, que se recolhe e abre pelo botão ao lado do nome do app (recolhido, mostra só os ícones; o nome aparece ao passar o mouse).
 
 - **Mover:** arraste uma ficha pelo cartão; arraste o fundo (ou role a roda do mouse) para andar pela mesa.
 - **Zoom:** Ctrl + roda do mouse, pinça no touchpad, ou os botões − e + da barra. **Ver tudo** enquadra as fichas. **Clique duplo** numa ficha ou numa caixa de associação aproxima a vista dela.
 - **Coleção:** o menu da barra mostra só as fichas de uma coleção (e de suas subcoleções).
 - **Busca:** o campo "Destacar conceito, autor…" apaga as fichas que não têm o texto digitado, em qualquer campo (inclusive uso e campos ocultos), sem diferenciar acentos nem maiúsculas.
+- **Páginas:** nas fichas, os números de página entre colchetes, como "[p. 66-77]", são clicáveis: abrem o PDF do texto no Zotero, naquela página. O Zotero abre pela posição no PDF; para capítulos e artigos, o app usa o campo **Páginas** do texto no Zotero (ex.: "65-119") ou, se ele estiver vazio, o intervalo da linha **Ref.** da ficha (ex.: "cap. II, p. 65-119"), pensando num PDF só daquele trecho: assim "[p. 66]" abre a 2ª folha. Se o PDF for o livro inteiro, ou tiver capa ou folhas extras, a página aberta pode ficar antes ou depois; nesse caso, me avise.
 - **Lista:** mostra as fichas em texto, para conferir como cada nota foi lida.
 - **Recolher uma ficha:** botão ▾ no canto da ficha. Recolhida, mostra só autor e obra. **Recolher todas / Expandir todas** age sobre as fichas visíveis. Sempre que uma ficha ou caixa muda de tamanho (ao expandir fichas, abrir a mesa, trocar de coleção, mostrar as anotações), a mesa se reajusta sozinha: o que estiver encostando se afasta o necessário para nada ficar por cima de nada, e a ficha que cresceu fica parada.
 - **Cor e campos de uma ficha:** botão **⋯** no rodapé da ficha. Ali você escolhe a cor da borda e, em "Campos visíveis nesta ficha", desmarca o que não quer ver naquela ficha. O rodapé avisa quantos campos estão ocultos.
@@ -157,12 +158,13 @@ A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa
   - **Desfazer** (ou Ctrl+Z) e **✕** (ou Esc) para parar de desenhar.
 
   Os desenhos acompanham a mesa ao arrastar e dar zoom, aparecem na coleção em que foram feitos, ficam salvos e saem na imagem exportada. Grifos e desenhos não mudam nada no Zotero.
-- **Menu:**
+- **Menu** (à esquerda), em três grupos — **Zotero**, **Mesa** e **Aparência**:
   - **Buscar novidades no Zotero** (o Cordatril também faz isso sozinho ao voltar para a aba) e **Ler tudo do Zotero de novo** (se algo parecer desatualizado).
   - **Tema:** claro, escuro ou igual ao sistema, com cinco cores editáveis, guardadas separadamente para o claro e o escuro.
   - **Exportar:** imagem PNG do que está visível na coleção escolhida; **resumo das associações** em Markdown (copiar ou baixar `.md`); **fichas para o Claude** (veja abaixo).
   - **Importar associações:** coloca na mesa as relações sugeridas pelo Claude.
   - **Salvar ou abrir:** baixa um `.json` com toda a arrumação ou abre um salvo antes (a mesa anterior fica como cópia de segurança no navegador).
+  - **Cópia da mesa no Zotero:** veja [Onde ficam os dados](#onde-ficam-os-dados).
   - **English (idioma):** mostra a interface em inglês (e **Português (language)** volta).
   - **Desconectar do Zotero:** esquece o número e a chave neste navegador.
 
@@ -188,8 +190,9 @@ As associações importadas são iguais às feitas à mão: dá para editar a re
 - **Fichas:** no Zotero. O Cordatril lê; só escreve quando você cadastra uma ficha nova pelo **Nova ficha**.
 - **Número e chave do Zotero:** só no seu navegador; são enviados só para o Zotero (api.zotero.org).
 - **Arrumação da mesa:** salva sozinha **no navegador**, um instante depois de cada mudança ("Mesa salva neste navegador", no canto). Por isso:
-  - em outro navegador ou computador, a mesa começa vazia. Para levar a arrumação, use **Menu → Salvar ou abrir**: salve o arquivo num e abra no outro;
-  - limpar os dados de navegação apaga a arrumação (as fichas continuam seguras no Zotero). De vez em quando, salve a mesa em arquivo.
+  - limpar os dados de navegação apaga a arrumação do navegador (as fichas continuam seguras no Zotero);
+  - por isso existe a **cópia da mesa no Zotero**: com uma chave com **Allow write access**, o app guarda a arrumação inteira numa nota dele no Zotero (título "Cordatril — cópia da mesa", tag `cordatril-mesa`; não edite nem apague essa nota). Ela é atualizada sozinha uns minutos depois de cada mudança, e o aviso do canto mostra a hora da última cópia. Como o Zotero sincroniza, a cópia chega aos outros computadores: num navegador sem mesa, o app oferece **usar a cópia**. Também dá para guardar ou recuperar a qualquer hora em **Menu → Cópia da mesa no Zotero**;
+  - com a chave só de leitura não há cópia no Zotero: use **Menu → Salvar ou abrir** para salvar a mesa em arquivo (e abrir em outro computador). Se passar duas semanas sem nenhuma cópia, o aviso do canto lembra.
 
 ## Problemas comuns
 

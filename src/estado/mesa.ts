@@ -281,6 +281,14 @@ function ler(): { estado: EstadoMesa; situacao: Situacao } {
 const inicial = ler()
 /** O estado atual da mesa. Para mudar, use `alterarMesa`. */
 export const mesa: EstadoMesa = inicial.estado
+/** Este navegador ainda não tinha mesa guardada (primeira vez aqui, ou dados apagados). */
+export const mesaEraNova = inicial.situacao.tipo === 'nova'
+/** Quem quer saber quando a mesa foi gravada (ex.: a cópia no Zotero). */
+const aoGravar = new Set<() => void>()
+export function aoGravarMesa(f: () => void) {
+  aoGravar.add(f)
+  return () => aoGravar.delete(f)
+}
 let situacao: Situacao = inicial.situacao
 let temporizador: ReturnType<typeof setTimeout> | null = null
 const ouvintes = new Set<() => void>()
@@ -296,6 +304,7 @@ function gravar() {
   try {
     localStorage.setItem(CHAVE, JSON.stringify(mesa))
     avisar({ tipo: 'salvo' })
+    aoGravar.forEach((f) => f())
   } catch {
     avisar({ tipo: 'erro', motivo: tr('salvo.erro') })
   }

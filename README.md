@@ -9,7 +9,7 @@ App para organizar visualmente fichas de leitura acadêmicas, como fichas de pap
 **Abrir:** https://ghsantosalves.github.io/mesa-de-fichas/
 
 - É um site: não precisa instalar nada além do Zotero. Na primeira vez, você conecta sua conta do Zotero com uma chave só de leitura.
-- Lê as fichas do Zotero e nunca altera nem apaga nada lá. A única escrita é opcional: o botão **Nova ficha** cria a nota da ficha no texto escolhido (exige uma chave com permissão de escrita).
+- Lê as fichas do Zotero e nunca altera nem apaga nada lá. As únicas escritas são opcionais e exigem uma chave com permissão de escrita: o botão **Nova ficha** cria a nota da ficha no texto escolhido, e a **cópia da mesa** fica guardada numa nota do próprio app (para não perder a arrumação e levá-la a outros computadores).
 - Número e chave do Zotero e a arrumação da mesa ficam só no seu navegador.
 - Interface em português e em inglês (**Menu → English**). Começa no idioma do navegador.
 - Plugin opcional para o Zotero: **Ferramentas → Abrir Cordatril**.

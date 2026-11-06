@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { arquivoDaMesa, lerArquivoDaMesa, substituirMesa, type EstadoMesa } from '../estado/mesa.ts'
 import { baixar } from '../exportar.ts'
 import { Dialogo } from './Dialogo.tsx'
+import { marcarArquivoSalvo } from '../zotero/copiaMesa.ts'
 import { t } from '../i18n.ts'
 
 export function DialogoArquivo({ aoFechar }: { aoFechar: () => void }) {
@@ -12,6 +13,7 @@ export function DialogoArquivo({ aoFechar }: { aoFechar: () => void }) {
 
   const salvar = () => {
     baixar(`cordatril-${new Date().toISOString().slice(0, 10)}.json`, arquivoDaMesa(), 'application/json')
+    marcarArquivoSalvo()
     setMsg({ texto: t('jan.baixado') })
   }
   const escolher = async (arquivo: File | undefined) => {

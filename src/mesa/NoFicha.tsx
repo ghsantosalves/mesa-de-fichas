@@ -4,6 +4,7 @@ import { memo, useContext, useMemo, useState } from 'react'
 import { Handle, Position, useReactFlow, type Node, type NodeProps } from '@xyflow/react'
 import { Contexto, normalizar } from './contexto.ts'
 import { linkZotero, type Ficha } from '../zotero/biblioteca.ts'
+import { abrirPagina, separarPaginas } from '../zotero/pdf.ts'
 import { CAMPOS, CORES, nomeCampo, type Campo, type CampoGrifo, type Cor, type Grifo } from '../estado/mesa.ts'
 import { data as dataNoIdioma, t, tn, type Chave } from '../i18n.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
@@ -37,18 +38,55 @@ function link(url: string, texto: string) {
  * Mostra um texto com trechos grifados. Se o texto mudou no Zotero, o grifo é
  * procurado pelo trecho; se o trecho não existe mais, o grifo não aparece.
  */
+/**
+ * Texto com as referências de página clicáveis: "[p. 66]" abre o PDF do texto no
+ * Zotero, naquela página. (Ao grifar, o texto fica comum, para a seleção funcionar.)
+ */
+function ComPaginas({ texto, chavePai, refDaFicha }: { texto: string; chavePai: string | null; refDaFicha: string }) {
+  if (!chavePai) return <>{texto}</>
+  return (
+    <>
+      {separarPaginas(texto).map((p, i) =>
+        p.pagina ? (
+          <a
+            key={i}
+            href={`zotero://select/library/items/${chavePai}`}
+            className="pagina nodrag nopan"
+            title={t('ficha.abrirPagina', { p: p.pagina })}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              abrirPagina(chavePai, p.pagina!, refDaFicha)
+            }}
+          >
+            {p.texto}
+          </a>
+        ) : (
+          p.texto
+        ),
+      )}
+    </>
+  )
+}
+
 function TextoGrifado({
   texto,
   grifos,
   grifando,
   aoTirar,
+  chavePai,
+  refDaFicha,
 }: {
   texto: string
   grifos: Grifo[]
   grifando: boolean
   aoTirar: (g: Grifo) => void
+  chavePai: string | null
+  refDaFicha: string
 }) {
-  if (!grifos.length) return <>{texto}</>
+  const comum = (s: string, key?: string) =>
+    grifando ? s : <ComPaginas key={key} texto={s} chavePai={chavePai} refDaFicha={refDaFicha} />
+  if (!grifos.length) return <>{comum(texto)}</>
   const posicionados = grifos
     .map((g) => {
       if (texto.slice(g.inicio, g.fim) === g.trecho) return { g, i: g.inicio, f: g.fim }
@@ -61,7 +99,7 @@ function TextoGrifado({
   let pos = 0
   for (const { g, i, f } of posicionados) {
     if (i < pos) continue // sobreposto a outro: ignora
-    if (i > pos) partes.push(texto.slice(pos, i))
+    if (i > pos) partes.push(comum(texto.slice(pos, i), `t${pos}`))
     partes.push(
       <mark
         key={`${i}-${f}`}
@@ -79,7 +117,7 @@ function TextoGrifado({
     )
     pos = f
   }
-  if (pos < texto.length) partes.push(texto.slice(pos))
+  if (pos < texto.length) partes.push(comum(texto.slice(pos), `t${pos}`))
   return <>{partes}</>
 }
 
@@ -149,7 +187,14 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   const tirarGrifo = (g: Grifo) => mudarFichas(rf, [id], { grifos: grifos.filter((x) => x !== g) })
   /** Texto de um campo com os trechos grifados. */
   const comGrifos = (c: CampoGrifo, texto: string) => (
-    <TextoGrifado texto={texto} grifos={grifos.filter((g) => g.campo === c)} grifando={ferramenta === 'grifar'} aoTirar={tirarGrifo} />
+    <TextoGrifado
+      texto={texto}
+      grifos={grifos.filter((g) => g.campo === c)}
+      grifando={ferramenta === 'grifar'}
+      aoTirar={tirarGrifo}
+      chavePai={f.chavePai}
+      refDaFicha={f.ref}
+    />
   )
   const campo = (c: Campo & CampoGrifo, v: string) =>
     v &&

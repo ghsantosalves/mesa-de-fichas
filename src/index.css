@@ -1547,3 +1547,96 @@ a.btn {
   font: 400 13.5px/1.4 var(--sans);
   padding: 3px 2px;
 }
+
+/* Número de página clicável nas fichas: abre o PDF no Zotero */
+.ficha-mesa a.pagina {
+  color: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.ficha-mesa a.pagina:hover {
+  color: var(--linha);
+  text-decoration-style: solid;
+}
+
+/* Lembrete de cópia da mesa (no aviso do canto) */
+.situacao-lembrete {
+  all: unset;
+  pointer-events: auto;
+  cursor: pointer;
+  display: block;
+  margin-top: 4px;
+  color: var(--linha);
+  text-decoration: underline;
+}
+
+/* Corpo: menu lateral (à esquerda, retrátil) + mesa/lista */
+.corpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.corpo-principal {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.menu-lateral {
+  flex: none;
+  width: var(--menu-w, 50px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 7px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--barra);
+  border-right: 1px solid var(--barra-borda);
+  z-index: 4;
+  transition: width 0.15s ease;
+}
+.ml-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ml-titulo {
+  margin: 2px 9px 4px;
+  font: 600 11px/1 var(--sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-2);
+}
+.ml-item {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 9px;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--tinta);
+  font: 500 13.5px/1.2 var(--sans);
+  white-space: nowrap;
+}
+.menu-lateral:not(.aberto) .ml-item {
+  justify-content: center;
+  padding: 8px 0;
+}
+.ml-item:hover,
+.ml-item:focus-visible {
+  background: var(--mesa);
+}
+.ml-item:focus-visible {
+  outline: 2px solid var(--linha);
+}
+/* O aviso do canto fica à direita do menu lateral. */
+.situacao {
+  left: calc(var(--menu-w, 0px) + 14px);
+}

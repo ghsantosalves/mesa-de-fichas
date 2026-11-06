@@ -44,7 +44,7 @@ The key is what lets Cordatril read your notes.
 3. Click **Create new private key** and check **only**:
    - Personal Library → **Allow library access**
    - Personal Library → **Allow notes access**
-   - **Allow write access**: leave it unchecked if you want the app to only read. Check it only if you want to use the **New card** button to create cards from the app (see [Create a card from the app](#create-a-card-from-the-app)).
+   - **Allow write access**: leave it unchecked if you want the app to only read. Check it if you want to use the **New card** button to create cards from the app and have the **table backup in Zotero** (see [Create a card from the app](#create-a-card-from-the-app)).
    - Default Group Permissions → **None**.
 4. Give it a name (e.g. "Cordatril"), click **Save Key** and copy the key shown. Keep it somewhere safe: Zotero shows it only once.
 
@@ -140,12 +140,13 @@ The app never changes or deletes existing notes: to fix a card, edit the note in
 
 ## Using the table
 
-The top bar, left to right: **collection** and **search** · **Table | List** · table tools (**New area**, **Collapse all**, **Map**, **Link cards**, **✏ Draw**, **Notes visible**) · zoom and **Menu**.
+The top bar, left to right: **collection** and **search** · **Table | List** · table tools (**New area**, **Collapse all**, **Map**, **Link cards**, **✏ Draw**, **Notes visible**) · zoom. On the left is the **Menu**, which collapses and opens with the button next to the app name (collapsed, it shows only icons; the name appears on hover).
 
 - **Move:** drag a card; drag the background (or scroll) to move around the table.
 - **Zoom:** Ctrl + mouse wheel, pinch on a touchpad, or the − and + buttons. **Fit all** frames all cards. **Double-click** a card or a link box to zoom to it.
 - **Collection:** the bar menu shows only the cards in one collection (and its subcollections).
 - **Search:** the "Highlight concept, author…" field dims the cards that don't contain the typed text, in any field, ignoring accents and case.
+- **Pages:** in the cards, page numbers in brackets, like "[p. 66-77]", are clickable: they open the text's PDF in Zotero at that page. Zotero opens by position in the PDF; for chapters and articles, the app uses the text's **Pages** field in Zotero (e.g. "65-119") or, if it is empty, the range in the card's **Ref.** line (e.g. "ch. 2, p. 65-119"), assuming a PDF of just that excerpt: so "[p. 66]" opens the 2nd sheet. If the PDF is the whole book, or has a cover or extra sheets, the page opened may be before or after.
 - **List:** shows the cards as text, to check how each note was read.
 - **Collapse a card:** the ▾ button on the card. Collapsed, it shows only author and title. **Collapse all / Expand all** acts on the visible cards. Whenever a card or box changes size (expanding cards, opening the table, switching collection, showing notes), the table readjusts by itself: whatever is touching moves aside just enough so nothing overlaps, and the card that grew stays put.
 - **Card color and fields:** the **⋯** button at the bottom of the card. Choose the border color and, under "Fields shown on this card", uncheck what you don't want to see on that card.
@@ -166,7 +167,7 @@ The top bar, left to right: **collection** and **search** · **Table | List** ·
   - **Undo** (or Ctrl+Z) and **✕** (or Esc) to stop drawing.
 
   Drawings follow the table when you pan and zoom, are saved and appear in the exported image. Nothing here changes Zotero.
-- **Menu:** **Check Zotero for updates**, **Reload everything from Zotero**, **Theme…** (light, dark or system, with editable colors), **Export…** (PNG image, links summary in Markdown, cards for Claude), **Import links…**, **Save or open…** (a `.json` file with the whole layout), **English / Português**, **Disconnect from Zotero…**.
+- **Menu** (on the left), in three groups — **Zotero**, **Table** and **Appearance**: **Check Zotero for updates**, **Reload everything from Zotero**, **Theme…** (light, dark or system, with editable colors), **Export…** (PNG image, links summary in Markdown, cards for Claude), **Import links…**, **Save or open…** (a `.json` file with the whole layout), **Table backup in Zotero…** (see [Where your data lives](#where-your-data-lives)), **English / Português**, **Disconnect from Zotero…**.
 
 ## Suggest relations with Claude
 
@@ -190,8 +191,9 @@ Imported links are just like the ones made by hand: you can edit, reverse, move 
 - **Cards:** in Zotero. Cordatril reads them; it only writes when you create a new card with **New card**.
 - **Zotero user ID and key:** only in your browser; sent only to Zotero (api.zotero.org).
 - **Table layout:** saved automatically **in the browser** shortly after each change ("Table saved in this browser", in the corner). So:
-  - in another browser or computer, the table starts empty. To move the layout, use **Menu → Save or open…**;
-  - clearing browsing data erases the layout (cards stay safe in Zotero). Save the table to a file now and then.
+  - clearing browsing data erases the browser's layout (cards stay safe in Zotero);
+  - that is why there is the **table backup in Zotero**: with a key with **Allow write access**, the app keeps the whole layout in a note of its own in Zotero (title "Cordatril — table backup", tag `cordatril-mesa`; don't edit or delete that note). It updates by itself a few minutes after each change, and the corner notice shows the time of the last backup. Since Zotero syncs, the backup reaches your other computers: in a browser with no table, the app offers to **use the backup**. You can also save or restore at any time in **Menu → Table backup in Zotero**;
+  - with a read-only key there is no Zotero backup: use **Menu → Save or open…** to save the table to a file (and open it on another computer). After two weeks without any backup, the corner notice reminds you.
 
 ## Common problems
 
