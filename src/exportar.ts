@@ -23,8 +23,8 @@ export function baixar(nome: string, conteudo: Blob | string, tipo = 'text/plain
 
 const hoje = () => new Date().toISOString().slice(0, 10)
 
-/** Nome de arquivo com a coleção e a data, ex.: marginalia-leituras-2026-11-05.png */
-export function nomeArquivo(bib: Biblioteca, colecao: string, ext: string, prefixo = 'marginalia') {
+/** Nome de arquivo com a coleção e a data, ex.: cordatril-leituras-2026-11-05.png */
+export function nomeArquivo(bib: Biblioteca, colecao: string, ext: string, prefixo = 'cordatril') {
   const nome = colecao === '*' ? tr('md.todas') : (bib.colecoes.find((c) => c.chave === colecao)?.nome ?? 'colecao')
   const slug = normalizar(nome).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
   return `${prefixo}-${slug}-${hoje()}.${ext}`

@@ -1,13 +1,13 @@
 ---
 name: ficha-academica
-description: Gera fichas curtas de leitura acadêmica (referência, tese, conceitos, para lembrar, diálogos, uso, vídeo, link) no formato lido pela Marginália, prontas para colar como nota no Zotero com a tag "ficha". Use quando o usuário pedir "ficha", "ficha curta", "ficha acadêmica", "/ficha-academica" ou fichas para organizar na mesa/Zotero, a partir de um texto (PDF, capítulo, artigo) ou de um fichamento já pronto. Também use quando ele pedir fichas de vários textos de uma vez.
+description: Gera fichas curtas de leitura acadêmica (referência, tese, conceitos, para lembrar, diálogos, uso, vídeo, link) no formato lido pelo Cordatril, prontas para colar como nota no Zotero com a tag "ficha". Use quando o usuário pedir "ficha", "ficha curta", "ficha acadêmica", "/ficha-academica" ou fichas para organizar na mesa/Zotero, a partir de um texto (PDF, capítulo, artigo) ou de um fichamento já pronto. Também use quando ele pedir fichas de vários textos de uma vez.
 ---
 
 # Ficha acadêmica (versão curta)
 
 A ficha é um índice de recuperação: ao bater o olho, o pesquisador deve lembrar do que o texto trata, onde está cada coisa, com quem ele conversa e para que serve no trabalho. O detalhe fica num fichamento completo, se houver.
 
-O formato é fixo porque as fichas são lidas pela Marginália, que as transforma em cartões. Não mudar rótulos, ordem nem separadores. A finalidade (disciplina, prova, projeto) não entra na ficha: ela é dada pela coleção do Zotero onde o item fica.
+O formato é fixo porque as fichas são lidas pelo Cordatril, que as transforma em cartões. Não mudar rótulos, ordem nem separadores. A finalidade (disciplina, prova, projeto) não entra na ficha: ela é dada pela coleção do Zotero onde o item fica.
 
 ## Entrada
 1. **Fichamento completo já pronto** (preferencial): extrair dele, sem reler o texto original. Não criar conteúdo novo; tudo vem do fichamento, com as páginas que ele já traz.

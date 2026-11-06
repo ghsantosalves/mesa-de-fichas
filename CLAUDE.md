@@ -1,4 +1,4 @@
-# Marginália
+# Cordatril
 
 App para organizar visualmente fichas de leitura acadêmicas, como fichas físicas numa mesa: arrastar, agrupar, associar e anotar relações entre textos. As fichas vêm do Zotero do usuário.
 

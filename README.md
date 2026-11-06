@@ -1,6 +1,8 @@
-# Marginália
+# Cordatril
 
 **Português** · [English](README.en.md)
+
+*Cordatril* = **cordel** + **atril**. Na feira, os folhetos de cordel ficam pendurados num barbante; no atril, o livro fica aberto para a leitura. Aqui as fichas de leitura ficam abertas na mesa e ligadas por fios, para contar a história de uma pesquisa.
 
 App para organizar visualmente fichas de leitura acadêmicas, como fichas de papel espalhadas numa mesa: arrastar, agrupar em áreas, associar textos entre si e anotar essas relações. As fichas vêm do seu **Zotero**: são notas com a tag `ficha`, escritas num formato fixo (gerado pela skill do Claude que vem neste projeto).
 
@@ -10,7 +12,7 @@ App para organizar visualmente fichas de leitura acadêmicas, como fichas de pap
 - **Só lê** o Zotero; nunca altera nada lá.
 - Número e chave do Zotero e a arrumação da mesa ficam só no seu navegador.
 - Interface em português e em inglês (**Menu → English**). Começa no idioma do navegador.
-- Plugin opcional para o Zotero: **Ferramentas → Abrir Marginália**.
+- Plugin opcional para o Zotero: **Ferramentas → Abrir Cordatril**.
 
 O passo a passo completo, com a chave do Zotero, o plugin e a skill do Claude, está em **[docs/TUTORIAL.md](docs/TUTORIAL.md)**.
 
@@ -21,7 +23,7 @@ O passo a passo completo, com a chave do Zotero, o plugin e a skill do Claude, e
 | `src/` | Código do app (React + TypeScript + React Flow). |
 | `zotero-plugin/` | Plugin do Zotero que abre o site pelo menu Ferramentas. |
 | `skill/ficha-academica/` | Skill do Claude que gera fichas no formato que o app lê. |
-| `skill/relacoes-entre-textos/` | Skill do Claude que sugere relações entre os textos do projeto, para importar na Marginália. |
+| `skill/relacoes-entre-textos/` | Skill do Claude que sugere relações entre os textos do projeto, para importar no Cordatril. |
 | `docs/TUTORIAL.md` | Tutorial de instalação e uso. |
 | `.github/workflows/site.yml` | Publica o site e o plugin no GitHub Pages a cada envio. |
 | `.env.example` | Modelo do `.env.local`, para rodar no computador com `npm run dev`. |

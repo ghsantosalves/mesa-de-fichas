@@ -11,7 +11,7 @@ export function DialogoArquivo({ aoFechar }: { aoFechar: () => void }) {
   const [msg, setMsg] = useState<{ texto: string; erro?: boolean } | null>(null)
 
   const salvar = () => {
-    baixar(`marginalia-${new Date().toISOString().slice(0, 10)}.json`, arquivoDaMesa(), 'application/json')
+    baixar(`cordatril-${new Date().toISOString().slice(0, 10)}.json`, arquivoDaMesa(), 'application/json')
     setMsg({ texto: t('jan.baixado') })
   }
   const escolher = async (arquivo: File | undefined) => {

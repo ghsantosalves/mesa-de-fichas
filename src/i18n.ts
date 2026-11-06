@@ -30,8 +30,8 @@ export function mudarIdioma(novo: Idioma) {
   location.reload()
 }
 
-/** Nome do app (o mesmo nos dois idiomas, só com acento diferente). */
-export const NOME_APP = idioma === 'en' ? 'Marginalia' : 'Marginália'
+/** Nome do app (o mesmo nos dois idiomas). */
+export const NOME_APP = 'Cordatril'
 document.title = NOME_APP
 
 // Cada texto: [português, inglês]. {nome} é trocado pelo valor passado em t().
@@ -381,7 +381,7 @@ const TEXTOS = {
   'md.resumoTitulo': ['# Associações entre textos ({col})', '# Links between texts ({col})'],
   'md.todas': ['todas as coleções', 'all collections'],
   'md.resumoIntro': [
-    'Exportado da {app} em {data}. Cada item liga dois textos: a relação e a anotação foram escritas pelo pesquisador; os resumos vêm das fichas de leitura, com páginas entre colchetes ([p. ?] = página a conferir).',
+    'Exportado do {app} em {data}. Cada item liga dois textos: a relação e a anotação foram escritas pelo pesquisador; os resumos vêm das fichas de leitura, com páginas entre colchetes ([p. ?] = página a conferir).',
     'Exported from {app} on {data}. Each item links two texts: the relation and the note were written by the researcher; the summaries come from the reading cards, with pages in brackets ([p. ?] = page to check).',
   ],
   'md.referencia': ['Referência', 'Reference'],
@@ -402,7 +402,7 @@ const TEXTOS = {
   'md.claudeTitulo': ['# Fichas para o Claude — {app}', '# Cards for Claude — {app}'],
   'md.claudeLinha': ['Coleção: {col} · {n} fichas · exportado em {data}', 'Collection: {col} · {n} cards · exported on {data}'],
   'md.claudeIntro': [
-    'Use com a skill "relacoes-entre-textos". Cada ficha tem um identificador entre colchetes, como [ABCD1234]; as associações sugeridas devem usar esses identificadores para que a Marginália as coloque nas fichas certas.',
+    'Use com a skill "relacoes-entre-textos". Cada ficha tem um identificador entre colchetes, como [ABCD1234]; as associações sugeridas devem usar esses identificadores para que o Cordatril as coloque nas fichas certas.',
     'Use with the "relacoes-entre-textos" skill. Each card has an identifier in brackets, like [ABCD1234]; suggested links must use these identifiers so the app places them on the right cards.',
   ],
   'md.fichas': ['## Fichas', '## Cards'],

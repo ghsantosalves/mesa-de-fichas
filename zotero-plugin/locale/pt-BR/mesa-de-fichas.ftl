@@ -1,2 +1,2 @@
 mesa-de-fichas-abrir =
-    .label = Abrir Marginália
+    .label = Abrir Cordatril

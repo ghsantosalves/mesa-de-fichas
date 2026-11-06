@@ -1,2 +1,2 @@
 mesa-de-fichas-abrir =
-    .label = Open Marginalia
+    .label = Open Cordatril

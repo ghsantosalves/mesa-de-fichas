@@ -1,8 +1,8 @@
-# Marginalia tutorial
+# Cordatril tutorial
 
 [Português](TUTORIAL.md) · **English**
 
-This guide is for non-programmers. Follow it in order; each step says what you should see. You don't need to install anything besides Zotero: Marginalia is a website.
+This guide is for non-programmers. Follow it in order; each step says what you should see. You don't need to install anything besides Zotero: Cordatril is a website.
 
 **Website:** https://ghsantosalves.github.io/mesa-de-fichas/
 
@@ -24,20 +24,20 @@ To see the interface in English, open **Menu → English (idioma)**. It switches
 ## How it works
 
 ```
-text you read ──► Claude (ficha-academica skill) ──► Zotero note tagged "ficha" ──► Marginalia
+text you read ──► Claude (ficha-academica skill) ──► Zotero note tagged "ficha" ──► Cordatril
 ```
 
 1. You read a text and ask Claude for a short card, using the skill included in this project.
 2. You paste the card as a **child note** of the item in Zotero and add the tag `ficha`.
-3. Marginalia fetches those notes from Zotero and shows each one as a card on a table where you drag, group into areas and link texts to each other.
+3. Cordatril fetches those notes from Zotero and shows each one as a card on a table where you drag, group into areas and link texts to each other.
 
-Card contents live in Zotero (to fix a card, edit the note there). The table layout (positions, colors, areas, links, notes, drawings) lives in your browser. Marginalia **only reads** Zotero: it never changes anything there.
+Card contents live in Zotero (to fix a card, edit the note there). The table layout (positions, colors, areas, links, notes, drawings) lives in your browser. Cordatril **only reads** Zotero: it never changes anything there.
 
 You need a **Zotero** account with your library synced to the cloud (in Zotero: Edit → Settings → Sync).
 
 ## 1. Create the Zotero key
 
-The key is what lets Marginalia read your notes.
+The key is what lets Cordatril read your notes.
 
 1. Go to https://www.zotero.org/settings/keys (signed in).
 2. Write down the number in **"Your user ID for use in API calls is …"**.
@@ -46,24 +46,24 @@ The key is what lets Marginalia read your notes.
    - Personal Library → **Allow notes access**
    - Leave **Allow write access** unchecked.
    - Default Group Permissions → **None**.
-4. Give it a name (e.g. "Marginalia"), click **Save Key** and copy the key shown. Keep it somewhere safe: Zotero shows it only once.
+4. Give it a name (e.g. "Cordatril"), click **Save Key** and copy the key shown. Keep it somewhere safe: Zotero shows it only once.
 
 A read-only key means that even if it leaks, nobody can change your library.
 
 ## 2. Install the button in Zotero
 
-The plugin adds **Open Marginalia** to Zotero's **Tools** menu (and to the right-click menu of items). It only opens the website; it does not read or change anything in your library.
+The plugin adds **Open Cordatril** to Zotero's **Tools** menu (and to the right-click menu of items). It only opens the website; it does not read or change anything in your library.
 
 1. Download the plugin: https://ghsantosalves.github.io/mesa-de-fichas/mesa-de-fichas.xpi (if the browser asks, choose to save the file).
 2. In Zotero, open **Tools → Plugins**.
 3. Click the gear ⚙ at the top of the window → **Install Plugin From File…** and choose the downloaded `mesa-de-fichas.xpi`.
-4. Close the plugins window. **Tools** should now show **Open Marginalia**.
+4. Close the plugins window. **Tools** should now show **Open Cordatril**.
 
-Without the plugin, Marginalia works the same: just open the website in your browser (worth bookmarking).
+Without the plugin, Cordatril works the same: just open the website in your browser (worth bookmarking).
 
 ## 3. Open the table and connect
 
-1. In Zotero, **Tools → Open Marginalia** (or open the website in your browser).
+1. In Zotero, **Tools → Open Cordatril** (or open the website in your browser).
 2. The first time, you see **Connect to your Zotero**. Paste the user ID and the key from step 1 and click **Connect**.
 3. The website checks the key with Zotero. If all is well, your cards appear, arranged in columns.
 
@@ -75,8 +75,8 @@ The project includes two Claude *skills* (instructions that teach Claude to do a
 
 | Skill | What it does | Download |
 | --- | --- | --- |
-| `ficha-academica` | Writes cards exactly in the format Marginalia reads. | https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip |
-| `relacoes-entre-textos` | Suggests relations between the texts of your project, to import into Marginalia (see [Suggest relations with Claude](#suggest-relations-with-claude)). | https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip |
+| `ficha-academica` | Writes cards exactly in the format Cordatril reads. | https://ghsantosalves.github.io/mesa-de-fichas/ficha-academica.zip |
+| `relacoes-entre-textos` | Suggests relations between the texts of your project, to import into Cordatril (see [Suggest relations with Claude](#suggest-relations-with-claude)). | https://ghsantosalves.github.io/mesa-de-fichas/relacoes-entre-textos.zip |
 
 The skills are written in Portuguese and produce Portuguese labels; Claude still understands requests in English.
 
@@ -91,8 +91,8 @@ The skills are written in Portuguese and produce Portuguese labels; Claude still
 3. In Zotero, right-click the text's item → **Add Note** (child note, attached to the item).
 4. Paste the card into the note.
 5. Add the tag **`ficha`** to the note (exactly like that, lowercase).
-6. Put the **item** (not the note) in any collections you want. In Marginalia, collections work as filters: e.g. one collection per course or per thesis chapter.
-7. Wait for Zotero to sync. When you return to the Marginalia tab, it checks for updates by itself.
+6. Put the **item** (not the note) in any collections you want. In Cordatril, collections work as filters: e.g. one collection per course or per thesis chapter.
+7. Wait for Zotero to sync. When you return to the Cordatril tab, it checks for updates by itself.
 
 The format, for anyone who wants to write cards by hand. Labels can be in Portuguese or in English:
 
@@ -156,10 +156,10 @@ The top bar, left to right: **collection** and **search** · **Table | List** ·
 
 With the `relacoes-entre-textos` skill installed (step 4):
 
-1. In Marginalia, choose the collection and open **Menu → Export… → Cards for Claude → Download cards for Claude**. The file lists each card with an identifier, like `[ABCD1234]`, and the existing links.
-2. In Claude, send that file along with your **project context** (topic, research question, goals, chapters) and ask: **"suggest the relations between these texts for Marginalia"**.
+1. In Cordatril, choose the collection and open **Menu → Export… → Cards for Claude → Download cards for Claude**. The file lists each card with an identifier, like `[ABCD1234]`, and the existing links.
+2. In Claude, send that file along with your **project context** (topic, research question, goals, chapters) and ask: **"suggest the relations between these texts for Cordatril"**.
 3. Claude answers with an overview, a readable list and a code block at the end.
-4. In Marginalia, **Menu → Import links…**: paste the whole answer (or just the block). Check the ones you want and click **Place on the table**.
+4. In Cordatril, **Menu → Import links…**: paste the whole answer (or just the block). Check the ones you want and click **Place on the table**.
 
 Imported links are just like the ones made by hand: you can edit, reverse, move or remove them.
 
@@ -167,11 +167,11 @@ Imported links are just like the ones made by hand: you can edit, reverse, move 
 
 - **New cards:** cards that arrive from Zotero after the first time appear in the **New cards** strip, at the bottom left. Drag each one where you want, click **Place** (it goes to an empty spot on screen) or **Place all**.
 - **Removed cards:** if a card on the table disappears from Zotero (note deleted, in the trash or without the `ficha` tag), it stays on the table marked **Removed from Zotero**, showing its last known content. Its links **are not deleted**. If the note comes back, the card returns to normal. To get rid of it, click **Remove from table** (asks for a second click).
-- **Sync:** Marginalia keeps a copy of what it has downloaded and afterwards asks Zotero only for what changed, so it opens quickly even with many cards.
+- **Sync:** Cordatril keeps a copy of what it has downloaded and afterwards asks Zotero only for what changed, so it opens quickly even with many cards.
 
 ## Where your data lives
 
-- **Cards:** in Zotero. Marginalia only reads them.
+- **Cards:** in Zotero. Cordatril only reads them.
 - **Zotero user ID and key:** only in your browser; sent only to Zotero (api.zotero.org).
 - **Table layout:** saved automatically **in the browser** shortly after each change ("Table saved in this browser", in the corner). So:
   - in another browser or computer, the table starts empty. To move the layout, use **Menu → Save or open…**;
@@ -183,7 +183,7 @@ Imported links are just like the ones made by hand: you can edit, reverse, move 
 - **"This key belongs to user X, not Y"**: the user ID doesn't match the key; copy the number from the same page as the key.
 - **"The key needs permission…"**: edit the key at zotero.org/settings/keys and check *Allow library access* and *Allow notes access*.
 - **A new card doesn't show up:** check that Zotero synced, that the note has the `ficha` tag and that the collection chosen in the bar is the item's. Then use **Menu → Check Zotero for updates**.
-- **"Open Marginalia" is missing in Zotero:** in Tools → Plugins, check that the plugin is enabled.
+- **"Open Cordatril" is missing in Zotero:** in Tools → Plugins, check that the plugin is enabled.
 
 ## For developers
 

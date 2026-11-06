@@ -1,18 +1,18 @@
 ---
 name: relacoes-entre-textos
-description: Sugere relações entre os textos de um projeto de pesquisa a partir das fichas exportadas pela Marginália (arquivo "Fichas para o Claude") e do contexto do projeto, e entrega as associações num bloco pronto para "Importar associações" na Marginália. Use quando o usuário enviar o arquivo fichas-para-o-claude, pedir "relações entre os textos", "associações para a mesa", "como esses textos conversam", "ligar as fichas" ou quiser saber quais leituras dialogam entre si no projeto.
+description: Sugere relações entre os textos de um projeto de pesquisa a partir das fichas exportadas pelo Cordatril (arquivo "Fichas para o Claude") e do contexto do projeto, e entrega as associações num bloco pronto para "Importar associações" no Cordatril. Use quando o usuário enviar o arquivo fichas-para-o-claude, pedir "relações entre os textos", "associações para a mesa", "como esses textos conversam", "ligar as fichas" ou quiser saber quais leituras dialogam entre si no projeto.
 ---
 
-# Relações entre textos (para a Marginália)
+# Relações entre textos (para o Cordatril)
 
-O objetivo é ajudar o pesquisador a ver como as leituras do projeto conversam entre si: quem se apoia em quem, quem critica, quem amplia, quem oferece o conceito que outro texto aplica. As sugestões viram setas na Marginália, onde ele decide quais ficam. Por isso, cada sugestão precisa ser justificável pelo conteúdo das fichas e útil para o projeto, não um exercício de associação livre.
+O objetivo é ajudar o pesquisador a ver como as leituras do projeto conversam entre si: quem se apoia em quem, quem critica, quem amplia, quem oferece o conceito que outro texto aplica. As sugestões viram setas no Cordatril, onde ele decide quais ficam. Por isso, cada sugestão precisa ser justificável pelo conteúdo das fichas e útil para o projeto, não um exercício de associação livre.
 
 ## Entrada
 
-1. **O arquivo "Fichas para o Claude"**, exportado pela Marginália (Exportar → Fichas para o Claude). Cada ficha vem com um identificador entre colchetes, como `[ABCD1234]`, e o arquivo lista também as associações que já existem.
+1. **O arquivo "Fichas para o Claude"**, exportado pelo Cordatril (Exportar → Fichas para o Claude). Cada ficha vem com um identificador entre colchetes, como `[ABCD1234]`, e o arquivo lista também as associações que já existem.
 2. **O contexto do projeto**: tema, pergunta de pesquisa, objetivos, hipóteses, capítulos ou eixos, conceitos centrais, fontes. Pode vir colado, num documento ou já conhecido da conversa.
 
-Se o arquivo não vier, peça que o usuário o exporte da Marginália (não monte identificadores de cabeça). Se faltar o contexto do projeto, faça no máximo duas perguntas curtas (tema e pergunta de pesquisa; eixos ou capítulos). Se ele preferir seguir sem, trabalhe só com as fichas e diga isso em uma linha.
+Se o arquivo não vier, peça que o usuário o exporte do Cordatril (não monte identificadores de cabeça). Se faltar o contexto do projeto, faça no máximo duas perguntas curtas (tema e pergunta de pesquisa; eixos ou capítulos). Se ele preferir seguir sem, trabalhe só com as fichas e diga isso em uma linha.
 
 ## Como trabalhar
 
@@ -60,7 +60,7 @@ Se o arquivo não vier, peça que o usuário o exporte da Marginália (não mont
 }
 ```
 
-4. Uma linha final: **"Na Marginália: Menu → Importar associações, e cole esta resposta (ou só o bloco acima)."**
+4. Uma linha final: **"No Cordatril: Menu → Importar associações, e cole esta resposta (ou só o bloco acima)."**
 
 ## Exemplo (trecho)
 
