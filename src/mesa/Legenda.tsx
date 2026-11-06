@@ -82,6 +82,7 @@ export function Legenda({
         foco && (
           <div className="leg-foco">
             <span>{t('leg.foco', { f: nomeFoco })}</span>
+            <span className="leg-dica">{t('leg.teclas')}</span>
             <div className="leg-botoes">
               <button className="btn primario" title={t('rec.dica')} onClick={() => aoEntrarNoRecorte(foco)}>
                 {t('rec.entrar')}

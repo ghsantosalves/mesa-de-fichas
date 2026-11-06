@@ -213,13 +213,12 @@ function Interior() {
    * do texto do centro): o mais perto que esteja mais ou menos naquela direção.
    * Assim ↓ desce pela seta até a caixa e depois até o texto, e ↑ volta ao centro.
    */
-  const itemNaDirecao = (centro: string, dx: number, dy: number): string | null => {
-    const atual = marcado ?? centro
+  const itemNaDirecao = (atual: string, candidatos: string[], dx: number, dy: number): string | null => {
     const de = posicaoDoItem(atual)
     if (!de) return null
     let melhor: string | null = null
     let menor = Infinity
-    for (const item of [centro, ...itensRecorte]) {
+    for (const item of candidatos) {
       if (item === atual) continue
       const p = posicaoDoItem(item)
       if (!p) continue
@@ -235,6 +234,22 @@ function Interior() {
       }
     }
     return melhor
+  }
+  /**
+   * Na mesa geral: para onde dá para andar a partir do item atual. De uma ficha, para as
+   * caixas das associações dela e para as fichas ligadas; de uma caixa, para as duas
+   * fichas que ela liga. (Só o que está desenhado: a legenda pode esconder relações.)
+   */
+  const vizinhancaNaMesa = (atual: string): string[] => {
+    const arestas = rf.getEdges() as { id: string; source: string; target: string }[]
+    const desenhada = (id: string) => !!document.querySelector(`.assoc[data-assoc="${id}"]`)
+    if (atual.startsWith(CAIXA)) {
+      const e = arestas.find((x) => x.id === atual.slice(CAIXA.length))
+      return e ? [e.source, e.target] : []
+    }
+    return arestas
+      .filter((e) => (e.source === atual || e.target === atual) && desenhada(e.id))
+      .flatMap((e) => [CAIXA + e.id, e.source === atual ? e.target : e.source])
   }
   /** Fichas ligadas à ficha em foco (por associações não escondidas pela legenda). */
   const vizinhosTexto = useStore((s) => {
@@ -280,7 +295,10 @@ function Interior() {
     if (!ligando) {
       // Fora do modo de associar, clicar numa ficha põe o foco nela
       // (clicar de novo na mesma ficha mantém o foco: o clique duplo, que dá zoom, não o desfaz)
-      if (!ferramenta) setFoco(chave)
+      if (!ferramenta) {
+        setFoco(chave)
+        setMarcado(null)
+      }
       return
     }
     if (!escolhida) {
@@ -302,8 +320,8 @@ function Interior() {
   }
   const aoClicarFundo = () => {
     if (ligando) setEscolhida(null)
-    if (recorte) setMarcado(null)
-    else setFoco(null)
+    setMarcado(null)
+    if (!recorte) setFoco(null)
   }
 
   // Esc sai do desenho, depois do modo de associar, depois fecha o painel, depois sai
@@ -319,10 +337,13 @@ function Interior() {
           setEscolhida(null)
         } else if (ativa) setAtiva(null)
         else if (recorte) sairDoRecorte()
-        else setFoco(null)
+        else {
+          setFoco(null)
+          setMarcado(null)
+        }
         return
       }
-      if (!recorte || ferramenta || ligando) return
+      if (ferramenta || ligando || modo !== 'mesa') return
       if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
       const direcoes: Record<string, [number, number]> = {
         ArrowRight: [1, 0],
@@ -330,9 +351,31 @@ function Interior() {
         ArrowDown: [0, 1],
         ArrowUp: [0, -1],
       }
+      // Mesa geral: anda a partir da ficha em foco, pelas associações dela.
+      if (!recorte) {
+        if (!foco) return
+        const atual = marcado ?? foco
+        if (direcoes[e.key]) {
+          e.preventDefault()
+          const proximo = itemNaDirecao(atual, vizinhancaNaMesa(atual), ...direcoes[e.key])
+          if (!proximo) return
+          // Chegando a uma ficha, ela vira o foco (e mostra as associações dela).
+          if (proximo.startsWith(CAIXA)) setMarcado(proximo)
+          else {
+            setFoco(proximo)
+            setMarcado(null)
+          }
+          mostrarItem(proximo)
+        } else if (e.key === 'Enter' && marcado?.startsWith(CAIXA)) {
+          e.preventDefault()
+          abrirAssoc(marcado.slice(CAIXA.length))
+        }
+        return
+      }
       if (direcoes[e.key]) {
         e.preventDefault()
-        const proximo = itemNaDirecao(recorte.centro, ...direcoes[e.key])
+        const atual = marcado ?? recorte.centro
+        const proximo = itemNaDirecao(atual, [recorte.centro, ...itensRecorte], ...direcoes[e.key])
         if (proximo) {
           setMarcado(proximo === recorte.centro ? null : proximo)
           mostrarItem(proximo)

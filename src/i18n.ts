@@ -132,6 +132,10 @@ const TEXTOS = {
   ],
   'rec.voltar': ['← Voltar', '← Back'],
   'rec.sair': ['Sair do recorte (Esc)', 'Exit cutout (Esc)'],
+  'leg.teclas': [
+    'Setas do teclado: andam pelas associações desta ficha, na direção apertada · Enter abre a associação',
+    'Arrow keys: walk through this card’s links, in the direction pressed · Enter opens the link',
+  ],
   'leg.sairFoco': ['Sair do foco (Esc)', 'Exit focus (Esc)'],
   'barra.verTudo': ['Ver tudo', 'Fit all'],
   'barra.colecao': ['Coleção', 'Collection'],
