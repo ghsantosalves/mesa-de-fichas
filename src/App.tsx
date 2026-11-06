@@ -226,8 +226,9 @@ function Interior() {
       const vy = p.y - de.y
       const adiante = vx * dx + vy * dy // quanto anda na direção da seta
       const lado = Math.abs(vx * dy - vy * dx) // quanto se afasta dela, para o lado
-      if (adiante <= 1 || lado > adiante * 2) continue
-      const custo = adiante + lado * 2
+      // Vale tudo o que está daquele lado da tela; o mais alinhado com a seta ganha.
+      if (adiante <= 1 || lado > adiante * 3) continue
+      const custo = adiante + lado * 2.5
       if (custo < menor) {
         menor = custo
         melhor = item
@@ -240,16 +241,20 @@ function Interior() {
    * caixas das associações dela e para as fichas ligadas; de uma caixa, para as duas
    * fichas que ela liga. (Só o que está desenhado: a legenda pode esconder relações.)
    */
-  const vizinhancaNaMesa = (atual: string): string[] => {
+  const vizinhancaNaMesa = (atual: string, centro: string): string[] => {
     const arestas = rf.getEdges() as { id: string; source: string; target: string }[]
     const desenhada = (id: string) => !!document.querySelector(`.assoc[data-assoc="${id}"]`)
+    /** Caixas (desenhadas) das associações de uma ficha. */
+    const caixasDe = (k: string) =>
+      arestas.filter((e) => (e.source === k || e.target === k) && desenhada(e.id)).map((e) => CAIXA + e.id)
     if (atual.startsWith(CAIXA)) {
+      // De uma caixa: as duas fichas que ela liga e as caixas vizinhas em volta da
+      // ficha do centro (as setas para os lados "giram" em volta dela).
       const e = arestas.find((x) => x.id === atual.slice(CAIXA.length))
-      return e ? [e.source, e.target] : []
+      return [...(e ? [e.source, e.target] : []), ...caixasDe(centro).filter((c) => c !== atual)]
     }
-    return arestas
-      .filter((e) => (e.source === atual || e.target === atual) && desenhada(e.id))
-      .flatMap((e) => [CAIXA + e.id, e.source === atual ? e.target : e.source])
+    // De uma ficha: as caixas das associações dela (a seta sempre passa pela caixa).
+    return caixasDe(atual)
   }
   /**
    * Tab: a próxima caixa de associação em volta de `centro`, no sentido horário a partir
@@ -268,6 +273,42 @@ function Interior() {
     const n = ordem.length
     if (i < 0) return voltar ? ordem[n - 1] : ordem[0]
     return ordem[(i + (voltar ? -1 : 1) + n) % n]
+  }
+  /**
+   * Um passo com as setas, a partir de `atual`, em volta da ficha `centro`:
+   * - da ficha do centro: até a caixa de associação mais alinhada com a seta;
+   * - de uma caixa dessa ficha: a seta para fora leva ao texto ligado, a seta para
+   *   dentro volta ao centro, e as setas para os lados passam à caixa seguinte em volta
+   *   do centro (como andar num relógio), de modo que toda associação seja alcançável;
+   * - de outra ficha (no recorte): até a caixa que a liga ao centro.
+   */
+  const passoComSeta = (atual: string, centro: string, dx: number, dy: number): string | null => {
+    const arestas = rf.getEdges() as { id: string; source: string; target: string }[]
+    const caixasDoCentro = vizinhancaNaMesa(centro, centro)
+    if (!atual.startsWith(CAIXA) || !caixasDoCentro.includes(atual)) {
+      return itemNaDirecao(atual, vizinhancaNaMesa(atual, centro), dx, dy)
+    }
+    const c = posicaoDoItem(centro)
+    const p = posicaoDoItem(atual)
+    const e = arestas.find((x) => x.id === atual.slice(CAIXA.length))
+    if (!c || !p || !e) return null
+    const tam = Math.hypot(p.x - c.x, p.y - c.y) || 1
+    const rx = (p.x - c.x) / tam
+    const ry = (p.y - c.y) / tam
+    // Direções possíveis: para fora, para dentro, girar no sentido do relógio, girar ao contrário.
+    const fora = dx * rx + dy * ry
+    const horario = dx * -ry + dy * rx
+    const maior = Math.max(fora, -fora, horario, -horario)
+    if (maior === fora) return e.source === centro ? e.target : e.source
+    if (maior === -fora) return centro
+    const angulo = (item: string) => {
+      const q = posicaoDoItem(item)
+      return q ? (Math.atan2(q.y - c.y, q.x - c.x) + Math.PI * 2.5) % (Math.PI * 2) : 0
+    }
+    const ordem = [...caixasDoCentro].sort((a, b) => angulo(a) - angulo(b))
+    if (ordem.length < 2) return null
+    const i = ordem.indexOf(atual)
+    return ordem[(i + (maior === horario ? 1 : -1) + ordem.length) % ordem.length]
   }
   /** Fichas ligadas à ficha em foco (por associações não escondidas pela legenda). */
   const vizinhosTexto = useStore((s) => {
@@ -376,7 +417,7 @@ function Interior() {
         const atual = marcado ?? foco
         if (tab) {
           e.preventDefault()
-          const caixas = vizinhancaNaMesa(foco).filter((x) => x.startsWith(CAIXA))
+          const caixas = vizinhancaNaMesa(foco, foco)
           const proxima = caixaSeguinte(foco, caixas, e.shiftKey)
           if (proxima) {
             setMarcado(proxima)
@@ -386,7 +427,7 @@ function Interior() {
         }
         if (direcoes[e.key]) {
           e.preventDefault()
-          const proximo = itemNaDirecao(atual, vizinhancaNaMesa(atual), ...direcoes[e.key])
+          const proximo = passoComSeta(atual, foco, ...direcoes[e.key])
           if (!proximo) return
           // Chegando a uma ficha, ela vira o foco (e mostra as associações dela).
           if (proximo.startsWith(CAIXA)) setMarcado(proximo)
@@ -411,7 +452,7 @@ function Interior() {
       } else if (direcoes[e.key]) {
         e.preventDefault()
         const atual = marcado ?? recorte.centro
-        const proximo = itemNaDirecao(atual, [recorte.centro, ...itensRecorte], ...direcoes[e.key])
+        const proximo = passoComSeta(atual, recorte.centro, ...direcoes[e.key])
         if (proximo) {
           setMarcado(proximo === recorte.centro ? null : proximo)
           mostrarItem(proximo)
