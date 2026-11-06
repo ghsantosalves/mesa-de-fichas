@@ -58,8 +58,8 @@ const TEXTOS = {
   'aviso.assocMovida': ['Associação movida para “{col}”', 'Link moved to “{col}”'],
   'barra.mapa': ['Mapa', 'Map'],
   'barra.mapaDica': [
-    'Recolhe as fichas visíveis e as arruma pelas relações: as ligadas ficam perto, as soltas ficam longe',
-    'Collapses the visible cards and arranges them by their links: linked cards end up close, unlinked ones far apart',
+    'Arruma as fichas visíveis pelas relações, sem nada sobreposto: as ligadas ficam perto, as soltas ficam embaixo',
+    'Arranges the visible cards by their links with nothing overlapping: linked cards end up close, unlinked ones below',
   ],
   'barra.desfazerMapa': ['Voltar à arrumação anterior', 'Back to the previous layout'],
   'aviso.mapa': ['Mesa arrumada pelas relações. A seta ↶ volta à arrumação anterior.', 'Table arranged by links. The ↶ arrow restores the previous layout.'],

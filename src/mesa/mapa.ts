@@ -1,6 +1,7 @@
 // Arrumação automática da mesa.
 //
-// "Mapa": recolhe as fichas visíveis e as espalha pela mesa de modo que nada fique
+// "Mapa": espalha as fichas visíveis pela mesa (abertas ou recolhidas, como estiverem)
+// de modo que nada fique
 // por cima de nada. Fichas e caixas das associações são tratadas como peças: as
 // fichas ligadas se atraem, todas as peças se empurram, e cada caixa fica presa entre
 // as suas duas fichas. A seta de cada associação passa pela sua caixa, então cada
@@ -14,7 +15,7 @@
 import type { Edge, InternalNode, ReactFlowInstance } from '@xyflow/react'
 import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type SimulationNodeDatum } from 'd3-force'
 import { alterarMesa, associacaoNaColecao, mesa, posicionarFicha, type Associacao, type Posicao } from '../estado/mesa.ts'
-import { LARGURA_RECOLHIDA } from './opcoes.ts'
+import { LARGURA_FICHA, LARGURA_RECOLHIDA } from './opcoes.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
 import { mudarAssociacao, type ArestaAssoc, type DadosAresta } from './assoc.ts'
 import { curva, meioDaCurva, type Retangulo } from './geometria.ts'
@@ -32,7 +33,8 @@ const CAIXA_SEM_NOTA = { w: 150, h: 36 }
 const FOLGA = 28
 
 const esperar = (ms: number) => new Promise((ok) => setTimeout(ok, ms))
-const raio = (p: Peca) => Math.hypot(p.w, p.h) / 2
+/** Raio do círculo usado na simulação (o afastamento final usa o retângulo exato). */
+const raio = (p: Peca) => (p.w + p.h) / 4 + FOLGA / 2
 const comoAssoc = (rf: Mesa) => rf as unknown as ReactFlowInstance<NoMesa, ArestaAssoc>
 
 /** Tamanho da caixa de uma associação, medido na tela (sem o zoom). */
@@ -101,12 +103,20 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
       if (n.data.recolhida) antes[n.id].recolhida = true
     }
   })
-  // Recolhe as fichas e devolve às caixas o tamanho natural (para caber o texto todo);
-  // depois espera a mesa medir tudo de novo.
-  mudarFichas(rf, ids, { recolhida: true })
-  for (const a of assocs) if (a.w || a.h) mudarAssociacao(comoAssoc(rf), a.id, {}, ['w', 'h'])
-  await esperar(150)
-  const altura = (id: string) => rf.getNode(id)?.measured?.height ?? ALTURA_RECOLHIDA
+  // As fichas ficam como estão (abertas ou recolhidas). As caixas voltam ao tamanho
+  // natural (para caber o texto todo); depois espera a mesa medir tudo de novo.
+  const fixadas = assocs.filter((a) => a.w || a.h)
+  for (const a of fixadas) mudarAssociacao(comoAssoc(rf), a.id, {}, ['w', 'h'])
+  if (fixadas.length) await esperar(150)
+  /** Tamanho medido de cada ficha (aberta ou recolhida). */
+  const tamanho = (id: string) => {
+    const n = rf.getNode(id)
+    const recolhida = n?.type === 'ficha' && n.data.recolhida
+    return {
+      w: n?.measured?.width ?? (recolhida ? LARGURA_RECOLHIDA : LARGURA_FICHA),
+      h: n?.measured?.height ?? ALTURA_RECOLHIDA,
+    }
+  }
 
   const ligadas = new Set(assocs.flatMap((a) => [a.a, a.b]))
   const noMapa = ids.filter((k) => ligadas.has(k))
@@ -115,11 +125,11 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
   // Peças: começam num círculo (na ordem atual), o que dá resultados estáveis.
   const x0 = Math.min(...fichas.map((n) => n.position.x))
   const y0 = Math.min(...fichas.map((n) => n.position.y))
-  const r0 = Math.max(400, noMapa.length * 70)
+  const r0 = Math.max(400, noMapa.reduce((s, k) => s + tamanho(k).w + tamanho(k).h, 0) / 6)
   const pecas = new Map<string, Peca>()
   noMapa.forEach((k, i) => {
     const ang = (i / noMapa.length) * 2 * Math.PI
-    pecas.set(k, { id: k, w: LARGURA_RECOLHIDA, h: altura(k), caixa: false, x: Math.cos(ang) * r0, y: Math.sin(ang) * r0 })
+    pecas.set(k, { id: k, ...tamanho(k), caixa: false, x: Math.cos(ang) * r0, y: Math.sin(ang) * r0 })
   })
   for (const a of assocs) {
     const pa = pecas.get(a.a)!
@@ -131,10 +141,10 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
   type Ligacao = { source: string; target: string; d: number; forca: number }
   const ligacoes: Ligacao[] = assocs.flatMap((a) => {
     const c = pecas.get(`caixa:${a.id}`)!
-    const d = (LARGURA_RECOLHIDA + Math.max(c.w, c.h)) / 2 + 60
+    const d = (k: string) => raio(pecas.get(k)!) + raio(c) + 30
     return [
-      { source: a.a, target: c.id, d, forca: 0.8 },
-      { source: c.id, target: a.b, d, forca: 0.8 },
+      { source: a.a, target: c.id, d: d(a.a), forca: 0.8 },
+      { source: c.id, target: a.b, d: d(a.b), forca: 0.8 },
     ]
   })
 
@@ -164,21 +174,21 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
     const p = pecas.get(k)!
     lugar.set(k, { x: Math.round(x0 + p.x! - p.w / 2 - minX), y: Math.round(y0 + p.y! - p.h / 2 - minY) })
   }
-  // Fichas soltas: numa grade abaixo do mapa.
-  const fundo = noMapa.length ? Math.max(...noMapa.map((k) => lugar.get(k)!.y + altura(k))) + 160 : y0
+  // Fichas soltas: numa grade abaixo do mapa (cada linha tão alta quanto a maior ficha dela).
+  let y = noMapa.length ? Math.max(...noMapa.map((k) => lugar.get(k)!.y + tamanho(k).h)) + 160 : y0
   const porLinha = Math.max(3, Math.ceil(Math.sqrt(soltas.length * 2)))
-  soltas.forEach((k, i) => {
-    lugar.set(k, {
-      x: Math.round(x0 + (i % porLinha) * (LARGURA_RECOLHIDA + 40)),
-      y: Math.round(fundo + Math.floor(i / porLinha) * (ALTURA_RECOLHIDA + 50)),
-    })
-  })
+  const largCol = Math.max(LARGURA_RECOLHIDA, ...soltas.map((k) => tamanho(k).w)) + 40
+  for (let i = 0; i < soltas.length; i += porLinha) {
+    const linha = soltas.slice(i, i + porLinha)
+    linha.forEach((k, j) => lugar.set(k, { x: Math.round(x0 + j * largCol), y: Math.round(y) }))
+    y += Math.max(...linha.map((k) => tamanho(k).h)) + 50
+  }
   rf.setNodes((ns) => ns.map((n) => (lugar.has(n.id) ? { ...n, position: lugar.get(n.id)! } : n)))
   alterarMesa((e) => lugar.forEach((p, id) => posicionarFicha(e, id, p)))
 
   // Caixas: onde o mapa as deixou. A posição é guardada como deslocamento a partir do
   // meio da curva entre as duas fichas (o mesmo ponto que a mesa usa para desenhar).
-  const ret = (k: string) => retangulo(lugar.get(k)!, LARGURA_RECOLHIDA, altura(k))
+  const ret = (k: string) => retangulo(lugar.get(k)!, tamanho(k).w, tamanho(k).h)
   for (const a of assocs) {
     const p = pecas.get(`caixa:${a.id}`)!
     const meio = meioDaCurva(curva(ret(a.a), ret(a.b)))
