@@ -6,7 +6,7 @@ import { useReactFlow, useStore } from '@xyflow/react'
 import { Undo2, Waypoints } from 'lucide-react'
 import { mesa } from '../estado/mesa.ts'
 import { mudarFichas, novaArea, type NoMesa } from './operacoes.ts'
-import { arrumarComoMapa, desfazerMapa } from './mapa.ts'
+import { acomodarMesa, arrumarComoMapa, desfazerMapa } from './mapa.ts'
 import { VER_TUDO } from './opcoes.ts'
 import { t } from '../i18n.ts'
 
@@ -28,6 +28,8 @@ export function BarraMesa({ colecao, avisar }: { colecao: string; avisar: (texto
       visiveis.map((n) => n.id),
       { recolhida: !todasRecolhidas },
     )
+    // Ao expandir todas, as fichas crescem: afasta o necessário para nada ficar sobreposto.
+    if (todasRecolhidas) setTimeout(() => acomodarMesa(rf), 150)
   }
   // Espera as fichas serem redesenhadas (recolhidas) antes de enquadrar.
   // Margem maior: as caixas das associações ficam fora das fichas e também devem aparecer.

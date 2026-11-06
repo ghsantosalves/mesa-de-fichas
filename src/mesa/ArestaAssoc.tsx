@@ -162,6 +162,7 @@ function Caixa({
     <>
       <div
         ref={el}
+        data-assoc={assoc.id}
         className={`assoc nodrag nopan${ativa ? ' ativo' : ''}${v.h ? ' fixa' : ''}${apagada ? ' apagada' : ''}`}
         role="button"
         tabIndex={0}

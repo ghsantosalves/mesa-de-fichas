@@ -558,7 +558,7 @@ input {
 }
 .assoc {
   position: absolute;
-  max-width: 240px;
+  max-width: 260px;
   background: var(--cartao);
   color: var(--tinta);
   border: 1.5px solid var(--cor-rel, var(--linha));
@@ -578,17 +578,16 @@ input {
   font: 600 12px/1.3 var(--sans);
   color: var(--cor-rel, var(--linha));
 }
+/* A anotação aparece inteira (a caixa cresce para caber o texto). */
 .assoc .nota {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  display: block;
   font: 400 13px/1.4 var(--serifa);
   margin-top: 3px;
+  white-space: pre-wrap;
 }
-.assoc.fixa .nota {
-  display: block;
-  -webkit-line-clamp: unset;
+/* Caixa com tamanho fixado pelo usuário: rola se o texto não couber. */
+.assoc.fixa {
+  overflow: auto;
 }
 .assoc .vazia {
   font-style: italic;
