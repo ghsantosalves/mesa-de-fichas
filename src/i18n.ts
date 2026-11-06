@@ -127,14 +127,14 @@ const TEXTOS = {
   ],
   'rec.titulo': ['Recorte: {f}', 'Cutout: {f}'],
   'rec.teclas': [
-    'As setas do teclado andam na direção apertada: até a associação, dela para as vizinhas (para os lados) ou até o texto (para fora); no sentido contrário, voltam ao centro · Enter leva o texto ao centro ou abre a associação · Backspace volta',
-    'Arrow keys move in the direction pressed: to the link, from it to neighboring links (sideways) or to the text (outward); the opposite way goes back to the center · Enter brings the text to the center or opens the link · Backspace goes back',
+    'Setas do teclado: do texto à associação naquela direção, e da associação ao texto naquela direção (o contrário volta ao centro) · Shift+seta passa à associação vizinha · Enter leva o texto ao centro ou abre a associação · Backspace volta',
+    'Arrow keys: from a text to the link in that direction, and from the link to the text in that direction (the opposite way goes back to the center) · Shift+arrow moves to the neighboring link · Enter brings the text to the center or opens the link · Backspace goes back',
   ],
   'rec.voltar': ['← Voltar', '← Back'],
   'rec.sair': ['Sair do recorte (Esc)', 'Exit cutout (Esc)'],
   'leg.teclas': [
-    'Setas do teclado: vão até a associação mais próxima naquela direção; dela, as setas para os lados passam às associações vizinhas e a seta para fora leva ao texto · Enter abre a associação',
-    'Arrow keys: go to the nearest link in that direction; from there, sideways arrows move to neighboring links and the outward arrow leads to the text · Enter opens the link',
+    'Setas do teclado: da ficha vão à associação naquela direção; da associação, ao texto naquela direção · Shift+seta passa à associação vizinha · Enter abre a associação',
+    'Arrow keys: from the card to the link in that direction; from the link to the text in that direction · Shift+arrow moves to the neighboring link · Enter opens the link',
   ],
   'leg.sairFoco': ['Sair do foco (Esc)', 'Exit focus (Esc)'],
   'barra.verTudo': ['Ver tudo', 'Fit all'],
