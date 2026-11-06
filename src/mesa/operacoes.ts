@@ -2,7 +2,7 @@
 // e o estado salvo. Usadas pelos cartões, pelas áreas e pela barra.
 
 import type { ReactFlowInstance } from '@xyflow/react'
-import { alterarMesa, arredondar, type Area, type Campo, type Cor, type Grifo } from '../estado/mesa.ts'
+import { alterarMesa, arredondar, recolherFicha, type Area, type Campo, type Cor, type Grifo } from '../estado/mesa.ts'
 import type { NoFicha } from './NoFicha.tsx'
 import { t } from '../i18n.ts'
 import type { NoArea } from './NoArea.tsx'
@@ -32,14 +32,13 @@ export function mudarFichas(
   )
   alterarMesa((e) => {
     for (const chave of chaves) {
-      const f = { ...(e.fichas[chave] ?? arredondar(rf.getNode(chave)?.position ?? { x: 0, y: 0 })) }
+      const posicao = rf.getNode(chave)?.position ?? { x: 0, y: 0 }
+      // Recolher é da arrumação da coleção atual; o resto vale para todas.
+      if ('recolhida' in m) recolherFicha(e, chave, !!m.recolhida, posicao)
+      const f = { ...(e.fichas[chave] ?? arredondar(posicao)) }
       if ('cor' in m) {
         if (m.cor) f.cor = m.cor
         else delete f.cor
-      }
-      if ('recolhida' in m) {
-        if (m.recolhida) f.recolhida = true
-        else delete f.recolhida
       }
       if (m.ocultos) {
         if (m.ocultos.length) f.ocultos = [...m.ocultos]

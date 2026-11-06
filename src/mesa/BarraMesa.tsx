@@ -12,7 +12,9 @@ import { t } from '../i18n.ts'
 
 export function BarraMesa({ colecao, avisar }: { colecao: string; avisar: (texto: string) => void }) {
   const rf = useReactFlow<NoMesa>()
-  const [temMapa, setTemMapa] = useState(() => !!mesa.antesDoMapa)
+  // Força redesenhar depois de fazer ou desfazer o mapa (o mapa é guardado por coleção).
+  const [, redesenhar] = useState(0)
+  const temMapa = !!mesa.mapas[colecao]
   // Só redesenha quando muda a resposta, não a cada movimento na mesa.
   const todasRecolhidas = useStore((s) => {
     const vis = s.nodes.filter((n) => n.type === 'ficha' && !n.hidden)
@@ -29,15 +31,15 @@ export function BarraMesa({ colecao, avisar }: { colecao: string; avisar: (texto
   }
   // Espera as fichas serem redesenhadas (recolhidas) antes de enquadrar.
   const enquadrar = () => setTimeout(() => rf.fitView({ ...VER_TUDO, duration: 300 }), 80)
-  const mapa = () => {
-    if (!arrumarComoMapa(rf)) return avisar(t('aviso.mapaPoucas'))
-    setTemMapa(true)
+  const mapa = async () => {
+    if (!(await arrumarComoMapa(rf))) return avisar(t('aviso.mapaPoucas'))
+    redesenhar((n) => n + 1)
     enquadrar()
     avisar(t('aviso.mapa'))
   }
   const voltar = () => {
     desfazerMapa(rf)
-    setTemMapa(false)
+    redesenhar((n) => n + 1)
     enquadrar()
   }
 

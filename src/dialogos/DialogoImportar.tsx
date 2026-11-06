@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from 'react'
 import { useReactFlow } from '@xyflow/react'
-import { mesa } from '../estado/mesa.ts'
+import { associacaoNaColecao, mesa, type Associacao } from '../estado/mesa.ts'
 import { importarAssociacoes, type ArestaAssoc } from '../mesa/assoc.ts'
 import type { NoMesa } from '../mesa/operacoes.ts'
 import type { Biblioteca } from '../zotero/biblioteca.ts'
@@ -46,6 +46,12 @@ function lerSugestoes(texto: string): { a: string; b: string; rel: string; nota:
   throw new Error('não achei')
 }
 
+/** Já existe uma associação entre essas duas fichas na coleção atual (ou geral)? */
+const jaExiste = (s: Pick<Associacao, 'a' | 'b'>) =>
+  mesa.associacoes.some(
+    (x) => associacaoNaColecao(x, mesa.colecao) && ((x.a === s.a && x.b === s.b) || (x.a === s.b && x.b === s.a)),
+  )
+
 export function DialogoImportar({ bib, aoFechar, avisar }: { bib: Biblioteca; aoFechar: () => void; avisar: (t: string) => void }) {
   const rf = useReactFlow<NoMesa, ArestaAssoc>()
   const [texto, setTexto] = useState('')
@@ -57,7 +63,7 @@ export function DialogoImportar({ bib, aoFechar, avisar }: { bib: Biblioteca; ao
     try {
       const lista = lerSugestoes(texto).map((s) => {
         const faltam = [s.a, s.b].filter((k) => !fichas.has(k))
-        const repetida = mesa.associacoes.some((x) => (x.a === s.a && x.b === s.b) || (x.a === s.b && x.b === s.a))
+        const repetida = jaExiste(s)
         return {
           ...s,
           problema: faltam.length ? t('imp.naoEncontrada', { k: faltam.join(', ') }) : null,
@@ -81,7 +87,7 @@ export function DialogoImportar({ bib, aoFechar, avisar }: { bib: Biblioteca; ao
       const lista = lerSugestoes(conteudo)
       const ok = new Set<number>()
       lista.forEach((s, i) => {
-        const existe = mesa.associacoes.some((x) => (x.a === s.a && x.b === s.b) || (x.a === s.b && x.b === s.a))
+        const existe = jaExiste(s)
         if (fichas.has(s.a) && fichas.has(s.b) && !existe) ok.add(i)
       })
       setMarcadas(ok)

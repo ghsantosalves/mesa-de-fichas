@@ -2,7 +2,7 @@
 // As operações mudam ao mesmo tempo a tela e o estado salvo.
 
 import type { Edge, ReactFlowInstance } from '@xyflow/react'
-import { alterarMesa, type Associacao } from '../estado/mesa.ts'
+import { alterarMesa, mesa, type Associacao } from '../estado/mesa.ts'
 import type { NoMesa } from './operacoes.ts'
 import { idioma } from '../i18n.ts'
 
@@ -22,7 +22,8 @@ export function arestaDe(a: Associacao): ArestaAssoc {
 }
 
 export function criarAssociacao(rf: Mesa, a: string, b: string): string {
-  const assoc: Associacao = { id: crypto.randomUUID().slice(0, 8), a, b, rel: '', nota: '' }
+  // A associação nova vale para a coleção escolhida na barra ('*' = geral).
+  const assoc: Associacao = { id: crypto.randomUUID().slice(0, 8), a, b, rel: '', nota: '', colecao: mesa.colecao }
   rf.setEdges((es) => [...es, arestaDe(assoc)])
   alterarMesa((e) => {
     e.associacoes.push(assoc)
@@ -54,7 +55,7 @@ export function mudarAssociacao(rf: Mesa, id: string, m: Mudanca, tirar: Caixa[]
  * fica guardada e aparece quando a ficha for colocada.
  */
 export function importarAssociacoes(rf: Mesa, lista: { a: string; b: string; rel: string; nota: string }[]) {
-  const novas: Associacao[] = lista.map((x) => ({ id: crypto.randomUUID().slice(0, 8), ...x }))
+  const novas: Associacao[] = lista.map((x) => ({ id: crypto.randomUUID().slice(0, 8), ...x, colecao: mesa.colecao }))
   const naMesa = (k: string) => !!rf.getNode(k)
   rf.setEdges((es) => [...es, ...novas.filter((a) => naMesa(a.a) && naMesa(a.b)).map(arestaDe)])
   alterarMesa((e) => {

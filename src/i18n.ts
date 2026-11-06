@@ -53,6 +53,9 @@ const TEXTOS = {
   'barra.expandirTodas': ['Expandir todas', 'Expand all'],
   'barra.diminuirZoom': ['Diminuir zoom', 'Zoom out'],
   'barra.aumentarZoom': ['Aumentar zoom', 'Zoom in'],
+  'assoc.colecao': ['Coleção', 'Collection'],
+  'assoc.geral': ['Geral (aparece em todas as coleções)', 'General (shown in every collection)'],
+  'aviso.assocMovida': ['Associação movida para “{col}”', 'Link moved to “{col}”'],
   'barra.mapa': ['Mapa', 'Map'],
   'barra.mapaDica': [
     'Recolhe as fichas visíveis e as arruma pelas relações: as ligadas ficam perto, as soltas ficam longe',

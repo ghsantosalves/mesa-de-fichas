@@ -22,7 +22,7 @@ import { Legenda } from './mesa/Legenda.tsx'
 import { chaveRelacao } from './mesa/relacoes.ts'
 import { Contexto, normalizar, type ContextoMesa, type Ferramenta } from './mesa/contexto.ts'
 import type { NoMesa } from './mesa/operacoes.ts'
-import { alterarMesa, mesa, useSituacao, type Tema } from './estado/mesa.ts'
+import { alterarMesa, associacaoNaColecao, mesa, useSituacao, type Tema } from './estado/mesa.ts'
 import { aoMudarSistema, aplicarTema } from './tema.ts'
 import { DialogoTema } from './dialogos/DialogoTema.tsx'
 import { DialogoExportar } from './dialogos/DialogoExportar.tsx'
@@ -208,8 +208,12 @@ function Interior() {
     }
     setEscolhida(null)
     if (escolhida === chave) return
+    // Só conta a associação que aparece nesta coleção: em outra coleção, o mesmo par
+    // pode ter outra relação.
     const existente = mesa.associacoes.find(
-      (x) => (x.a === escolhida && x.b === chave) || (x.a === chave && x.b === escolhida),
+      (x) =>
+        associacaoNaColecao(x, mesa.colecao) &&
+        ((x.a === escolhida && x.b === chave) || (x.a === chave && x.b === escolhida)),
     )
     if (existente) abrirAssoc(existente.id)
     else abrirAssoc(criarAssociacao(rf, escolhida, chave), true)

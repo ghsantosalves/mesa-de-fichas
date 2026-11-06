@@ -3,7 +3,7 @@
 
 import { getNodesBounds, getViewportForBounds, type ReactFlowInstance } from '@xyflow/react'
 import { toPng } from 'html-to-image'
-import { mesa, type Associacao } from './estado/mesa.ts'
+import { associacaoNaColecao, lugarNaColecao, mesa, type Associacao } from './estado/mesa.ts'
 import { comSubcolecoes, type Biblioteca, type Ficha } from './zotero/biblioteca.ts'
 import type { NoMesa } from './mesa/operacoes.ts'
 import { normalizar } from './mesa/contexto.ts'
@@ -109,7 +109,7 @@ function fichasVisiveis(bib: Biblioteca, colecao: string): Ficha[] {
 
 /** Título da área (visível na coleção) em que está a ficha, pelo topo-centro dela. */
 function areaDe(f: Ficha, colecao: string): string {
-  const p = mesa.fichas[f.chave]
+  const p = lugarNaColecao(mesa.fichas[f.chave], colecao)
   if (!p) return ''
   const cx = p.x + (p.recolhida ? 120 : 150)
   const cy = p.y + 40
@@ -150,7 +150,9 @@ export function pacoteParaClaude(bib: Biblioteca, colecao: string): string {
     if (area) t += `- ${tr('md.area')}: ${area}\n`
   }
 
-  const existentes = mesa.associacoes.filter((a) => porChave.has(a.a) && porChave.has(a.b))
+  const existentes = mesa.associacoes.filter(
+    (a) => porChave.has(a.a) && porChave.has(a.b) && associacaoNaColecao(a, colecao),
+  )
   t += `\n${tr('md.existentes')}\n\n`
   if (!existentes.length) t += `${tr('md.nenhumaAinda')}\n`
   for (const a of existentes) {
@@ -163,7 +165,9 @@ export function pacoteParaClaude(bib: Biblioteca, colecao: string): string {
 /** Resumo das associações visíveis, em Markdown. */
 export function resumoAssociacoes(bib: Biblioteca, colecao: string, completa: boolean): string {
   const visiveis = new Map(fichasVisiveis(bib, colecao).map((f) => [f.chave, f]))
-  const lista = mesa.associacoes.filter((a) => visiveis.has(a.a) && visiveis.has(a.b))
+  const lista = mesa.associacoes.filter(
+    (a) => visiveis.has(a.a) && visiveis.has(a.b) && associacaoNaColecao(a, colecao),
+  )
   const nomeColecao = colecao === '*' ? tr('md.todas') : bib.colecoes.find((c) => c.chave === colecao)?.nome
   const data = dataNoIdioma(new Date())
 

@@ -25,7 +25,20 @@ export const CAMPOS_GRIFO = ['tese', 'conceitos', 'lembrar', 'dialogos', 'ref'] 
 export type CampoGrifo = (typeof CAMPOS_GRIFO)[number]
 /** Trecho grifado num campo: posição no texto e o próprio trecho (para achar de novo se o texto mudar). */
 export type Grifo = { campo: CampoGrifo; inicio: number; fim: number; trecho: string; cor: string }
-export type EstadoFicha = Posicao & { cor?: Cor; recolhida?: boolean; ocultos?: Campo[]; grifos?: Grifo[] }
+/** Lugar de uma ficha numa arrumação: posição e se está recolhida. */
+export type Arrumacao = Posicao & { recolhida?: boolean }
+/**
+ * Estado de uma ficha na mesa. x, y e recolhida são a arrumação de "Todas as coleções";
+ * porColecao guarda a arrumação própria de cada coleção (chave da coleção no Zotero).
+ * Uma coleção sem arrumação própria usa a de "Todas". Cor, campos ocultos e grifos
+ * valem para todas as coleções.
+ */
+export type EstadoFicha = Arrumacao & {
+  cor?: Cor
+  ocultos?: Campo[]
+  grifos?: Grifo[]
+  porColecao?: Record<string, Arrumacao>
+}
 /** Traço feito à mão na mesa (caneta ou marcador). Pontos em coordenadas da mesa: x1, y1, x2, y2… */
 export type Traco = {
   id: string
@@ -41,7 +54,8 @@ export type Area = { id: string; x: number; y: number; w: number; h: number; tit
 /**
  * Associação da ficha `a` para a ficha `b` (chaves das notas no Zotero), com relação
  * em texto livre e anotação. dx/dy deslocam a caixa a partir do meio da seta; w/h
- * fixam seu tamanho. Nunca é apagada quando uma ficha some do Zotero.
+ * fixam seu tamanho. Nunca é apagada quando uma ficha some do Zotero. Cada coleção
+ * tem suas próprias associações; as gerais (colecao '*') aparecem em todas.
  */
 export type Associacao = {
   id: string
@@ -49,6 +63,8 @@ export type Associacao = {
   b: string
   rel: string
   nota: string
+  /** Coleção em que a associação vale ('*' = geral, aparece em todas). */
+  colecao: string
   dx?: number
   dy?: number
   w?: number
@@ -81,8 +97,8 @@ export type EstadoMesa = {
   notas: boolean
   vista: Vista | null
   colecao: string
-  /** Arrumação das fichas antes do "Mapa" (para poder voltar). null = não há mapa. */
-  antesDoMapa: Record<string, { x: number; y: number; recolhida: boolean }> | null
+  /** Por coleção: a arrumação das fichas antes do "Mapa", para poder voltar a ela. */
+  mapas: Record<string, Record<string, Arrumacao>>
 }
 
 export type Situacao =
@@ -93,6 +109,18 @@ export type Situacao =
   | { tipo: 'recuperado'; copia: string }
 
 const numero = (v: unknown, padrao: number) => (typeof v === 'number' && Number.isFinite(v) ? v : padrao)
+
+/** Lê um objeto { chave: { x, y, recolhida } }, descartando o que não estiver certo. */
+function lerArrumacoes(v: unknown): Record<string, Arrumacao> {
+  const r: Record<string, Arrumacao> = {}
+  if (!v || typeof v !== 'object') return r
+  for (const [k, q] of Object.entries(v as Record<string, Record<string, unknown> | null>)) {
+    if (!q || typeof q !== 'object') continue
+    r[k] = { x: numero(q.x, 0), y: numero(q.y, 0) }
+    if (q.recolhida === true) r[k].recolhida = true
+  }
+  return r
+}
 
 function vazio(): EstadoMesa {
   return {
@@ -106,7 +134,7 @@ function vazio(): EstadoMesa {
     notas: true,
     vista: null,
     colecao: '*',
-    antesDoMapa: null,
+    mapas: {},
   }
 }
 
@@ -139,6 +167,8 @@ function validar(d: unknown): EstadoMesa {
         )
         if (grifos.length) f.grifos = grifos
       }
+      const porColecao = lerArrumacoes(q.porColecao)
+      if (Object.keys(porColecao).length) f.porColecao = porColecao
       e.fichas[k] = f
     }
   }
@@ -166,6 +196,8 @@ function validar(d: unknown): EstadoMesa {
         b: x.b,
         rel: typeof x.rel === 'string' ? x.rel : '',
         nota: typeof x.nota === 'string' ? x.nota : '',
+        // Associações de antes das coleções separadas viram gerais.
+        colecao: typeof x.colecao === 'string' && x.colecao ? x.colecao : '*',
       }
       for (const k of ['dx', 'dy', 'w', 'h'] as const) {
         if (typeof x[k] === 'number' && Number.isFinite(x[k])) s[k] = x[k] as number
@@ -214,12 +246,11 @@ function validar(d: unknown): EstadoMesa {
   }
   const v = o.vista as Record<string, unknown> | null
   if (v && typeof v === 'object') e.vista = { x: numero(v.x, 0), y: numero(v.y, 0), zoom: numero(v.zoom, 1) }
-  if (o.antesDoMapa && typeof o.antesDoMapa === 'object') {
-    const antes: NonNullable<EstadoMesa['antesDoMapa']> = {}
-    for (const [k, q] of Object.entries(o.antesDoMapa as Record<string, Record<string, unknown> | null>)) {
-      if (q && typeof q === 'object') antes[k] = { x: numero(q.x, 0), y: numero(q.y, 0), recolhida: q.recolhida === true }
+  if (o.mapas && typeof o.mapas === 'object') {
+    for (const [c, lista] of Object.entries(o.mapas as Record<string, unknown>)) {
+      const antes = lerArrumacoes(lista)
+      if (Object.keys(antes).length) e.mapas[c] = antes
     }
-    if (Object.keys(antes).length) e.antesDoMapa = antes
   }
   if (typeof o.colecao === 'string') e.colecao = o.colecao
   return e
@@ -322,7 +353,33 @@ export function useSituacao(): Situacao {
 
 export const arredondar = (p: Posicao): Posicao => ({ x: Math.round(p.x), y: Math.round(p.y) })
 
-/** Muda a posição de uma ficha sem perder a cor e o recolhimento. */
-export function posicionarFicha(e: EstadoMesa, chave: string, p: Posicao) {
-  e.fichas[chave] = { ...e.fichas[chave], ...arredondar(p) }
+/** Arrumação de uma ficha na coleção dada (a própria, ou a de "Todas" se ainda não tiver). */
+export function lugarNaColecao(f: EstadoFicha | undefined, colecao: string): Required<Arrumacao> | undefined {
+  if (!f) return undefined
+  const l = (colecao !== '*' && f.porColecao?.[colecao]) || f
+  return { x: l.x, y: l.y, recolhida: !!l.recolhida }
 }
+
+/** Arrumação da coleção atual que vai ser mudada (cria a da coleção, se preciso). */
+function arrumacaoAtual(e: EstadoMesa, chave: string, p: Posicao): Arrumacao {
+  const f = (e.fichas[chave] ??= arredondar(p))
+  if (e.colecao === '*') return f
+  f.porColecao ??= {}
+  return (f.porColecao[e.colecao] ??= { x: f.x, y: f.y, ...(f.recolhida ? { recolhida: true } : {}) })
+}
+
+/** Muda a posição de uma ficha na coleção atual, sem perder a cor e o recolhimento. */
+export function posicionarFicha(e: EstadoMesa, chave: string, p: Posicao) {
+  Object.assign(arrumacaoAtual(e, chave, p), arredondar(p))
+}
+
+/** Recolhe ou abre uma ficha na coleção atual. */
+export function recolherFicha(e: EstadoMesa, chave: string, recolhida: boolean, p: Posicao) {
+  const a = arrumacaoAtual(e, chave, p)
+  if (recolhida) a.recolhida = true
+  else delete a.recolhida
+}
+
+/** A associação aparece na coleção dada? (as gerais aparecem em todas) */
+export const associacaoNaColecao = (a: Pick<Associacao, 'colecao'>, colecao: string) =>
+  a.colecao === '*' || a.colecao === colecao

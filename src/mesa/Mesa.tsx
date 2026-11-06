@@ -15,7 +15,16 @@ import { ArestaAssocMemo } from './ArestaAssoc.tsx'
 import { arestaDe, type ArestaAssoc } from './assoc.ts'
 import '@xyflow/react/dist/style.css'
 import { comSubcolecoes, type Biblioteca, type Ficha } from '../zotero/biblioteca.ts'
-import { alterarMesa, mesa, posicionarFicha, type Area, type FichaRemovida, type Posicao } from '../estado/mesa.ts'
+import {
+  alterarMesa,
+  associacaoNaColecao,
+  lugarNaColecao,
+  mesa,
+  posicionarFicha,
+  type Area,
+  type FichaRemovida,
+  type Posicao,
+} from '../estado/mesa.ts'
 import { LARGURA_FICHA, NoFichaMemo, type DadosFicha } from './NoFicha.tsx'
 import { NoAreaMemo } from './NoArea.tsx'
 import { noDeArea, type NoMesa } from './operacoes.ts'
@@ -90,6 +99,7 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
   const noDeFicha = useCallback(
     (f: Ficha, posicao: Posicao, extra?: Partial<DadosFicha>): NoMesa => {
       const salvo = mesa.fichas[f.chave]
+      const lugar = lugarNaColecao(salvo, colecao)
       return {
         id: f.chave,
         type: 'ficha',
@@ -98,7 +108,7 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
           ficha: f,
           colecoes: f.colecoes.map((k) => nomeColecao.get(k) ?? '?'),
           cor: salvo?.cor,
-          recolhida: !!salvo?.recolhida,
+          recolhida: !!lugar?.recolhida,
           ocultos: salvo?.ocultos ?? [],
           grifos: salvo?.grifos ?? [],
           ...extra,
@@ -106,13 +116,20 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
         hidden: !passa(f, filtro),
       }
     },
-    [nomeColecao, filtro],
+    [nomeColecao, filtro, colecao],
   )
 
-  /** Desenha as associações cujas duas fichas estão na mesa. As outras continuam guardadas. */
+  /**
+   * Desenha as associações da coleção atual (e as gerais) cujas duas fichas estão na
+   * mesa. As outras continuam guardadas.
+   */
   const atualizarArestas = useCallback(() => {
     const naMesa = new Set(getNodes().map((n) => n.id))
-    setArestas(mesa.associacoes.filter((a) => naMesa.has(a.a) && naMesa.has(a.b)).map(arestaDe))
+    setArestas(
+      mesa.associacoes
+        .filter((a) => naMesa.has(a.a) && naMesa.has(a.b) && associacaoNaColecao(a, mesa.colecao))
+        .map(arestaDe),
+    )
   }, [getNodes, setArestas])
 
   // Fichas vindas do Zotero. Ficam na mesa as que já tinham lugar (nesta sessão ou
@@ -126,7 +143,8 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
     const naMesa: NoMesa[] = []
     const foraDaMesa: Ficha[] = []
     for (const f of bib.fichas) {
-      const posicao = atuais.get(f.chave)?.position ?? mesa.fichas[f.chave]
+      const lugar = lugarNaColecao(mesa.fichas[f.chave], colecao)
+      const posicao = atuais.get(f.chave)?.position ?? (lugar && { x: lugar.x, y: lugar.y })
       if (posicao) naMesa.push(noDeFicha(f, posicao))
       else if (primeiraVez) {
         semLugar.current.add(f.chave)
@@ -135,11 +153,12 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
     }
     // Fichas com lugar na mesa que não existem mais no Zotero (nem como "com problema").
     const noZotero = new Set([...bib.fichas, ...bib.problemas].map((f) => f.chave))
-    for (const [chave, p] of Object.entries(mesa.fichas)) {
+    for (const [chave, salvo] of Object.entries(mesa.fichas)) {
       if (noZotero.has(chave)) continue
+      const p = lugarNaColecao(salvo, colecao)!
       const r = mesa.removidas[chave]
       const associacoes = mesa.associacoes.filter((a) => a.a === chave || a.b === chave).length
-      naMesa.push(noDeFicha(fichaRemovida(chave, r), p, { removida: { em: r?.em ?? '', associacoes } }))
+      naMesa.push(noDeFicha(fichaRemovida(chave, r), { x: p.x, y: p.y }, { removida: { em: r?.em ?? '', associacoes } }))
     }
     // Áreas primeiro: são desenhadas antes, ficando atrás das fichas.
     setNos([...areas, ...naMesa])
@@ -247,21 +266,29 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
     colocar([f], { x: Math.round(p.x - LARGURA_FICHA / 2), y: Math.round(p.y - 20) })
   }
 
-  // Trocar a coleção: esconde fichas e áreas de fora e enquadra o que ficou.
+  // Trocar a coleção: esconde fichas e áreas de fora, põe as fichas na arrumação
+  // própria da coleção, troca as associações e enquadra o que ficou.
   // Ao abrir a mesa, não enquadra: a vista salva é que vale.
   const colecaoAnterior = useRef(colecao)
   useEffect(() => {
+    const trocou = colecaoAnterior.current !== colecao
     setNos((ns) =>
-      ns.map((n) => ({
-        ...n,
-        hidden: n.type === 'ficha' ? !passa(n.data.ficha, filtro) : !areaPassa(n.data.area, colecao),
-      })),
+      ns.map((n) => {
+        if (n.type !== 'ficha') return { ...n, hidden: !areaPassa(n.data.area, colecao) }
+        const lugar = trocou ? lugarNaColecao(mesa.fichas[n.id], colecao) : undefined
+        return {
+          ...n,
+          hidden: !passa(n.data.ficha, filtro),
+          ...(lugar && { position: { x: lugar.x, y: lugar.y }, data: { ...n.data, recolhida: lugar.recolhida } }),
+        }
+      }),
     )
-    if (colecaoAnterior.current === colecao) return
+    if (!trocou) return
     colecaoAnterior.current = colecao
+    requestAnimationFrame(atualizarArestas)
     const t = setTimeout(() => fitView(VER_TUDO), 60)
     return () => clearTimeout(t)
-  }, [filtro, colecao, setNos, fitView])
+  }, [filtro, colecao, setNos, fitView, atualizarArestas])
 
   // Arrastar uma área leva junto as fichas visíveis cujo topo-centro está dentro dela.
   const aoComecarArrastar: OnNodeDrag<NoMesa> = (_, no) => {

@@ -1,4 +1,4 @@
-// Desenho de uma associação: seta da borda da ficha A até a borda da ficha B e,
+// Desenho de uma associação: seta curva da borda da ficha A até a borda da ficha B e,
 // no meio, a caixa com a relação e a anotação. A caixa pode ser arrastada
 // (ligada à seta por um tracejado) e redimensionada pelo canto.
 
@@ -10,23 +10,13 @@ import { Contexto } from './contexto.ts'
 import type { NoMesa } from './operacoes.ts'
 import { t } from '../i18n.ts'
 import { chaveRelacao, corDaRelacao } from './relacoes.ts'
-
-type Retangulo = { w: number; h: number; cx: number; cy: number }
+import { caminho, curva, meioDaCurva, type Retangulo } from './geometria.ts'
 
 function retangulo(n: InternalNode<NoMesa>): Retangulo {
   const w = n.measured.width ?? 300
   const h = n.measured.height ?? 200
   const p = n.internals.positionAbsolute
   return { w, h, cx: p.x + w / 2, cy: p.y + h / 2 }
-}
-
-/** Ponto onde a reta do centro de `c` até (tx, ty) sai do retângulo, com uma folga. */
-function borda(c: Retangulo, tx: number, ty: number, folga: number) {
-  const dx = tx - c.cx
-  const dy = ty - c.cy
-  if (!dx && !dy) return { x: c.cx, y: c.cy }
-  const s = Math.min((c.w / 2 + folga) / Math.abs(dx || 1e-9), (c.h / 2 + folga) / Math.abs(dy || 1e-9))
-  return { x: c.cx + dx * s, y: c.cy + dy * s }
 }
 
 function Aresta({ id, source, target, data }: EdgeProps<ArestaAssoc>) {
@@ -37,12 +27,8 @@ function Aresta({ id, source, target, data }: EdgeProps<ArestaAssoc>) {
   // Relação escondida pela legenda: não desenha nada.
   if (ocultas.length && ocultas.includes(chaveRelacao(data.assoc.rel))) return null
 
-  const ra = retangulo(A)
-  const rb = retangulo(B)
-  const a = borda(ra, rb.cx, rb.cy, 4)
-  const b = borda(rb, ra.cx, ra.cy, 6)
-  const mx = (a.x + b.x) / 2
-  const my = (a.y + b.y) / 2
+  const c = curva(retangulo(A), retangulo(B))
+  const { x: mx, y: my } = meioDaCurva(c)
   const assoc = data.assoc
   const ehAtiva = ativa === id
   const seta = `seta-${id}`
@@ -61,7 +47,7 @@ function Aresta({ id, source, target, data }: EdgeProps<ArestaAssoc>) {
       <path
         className={`fio${ehAtiva ? ' ativo' : ''}${fora ? ' apagado' : ''}${comFoco ? ' em-foco' : ''}`}
         style={{ stroke: cor }}
-        d={`M${a.x},${a.y} L${b.x},${b.y}`}
+        d={caminho(c)}
         markerEnd={`url(#${seta})`}
       />
       <EdgeLabelRenderer>

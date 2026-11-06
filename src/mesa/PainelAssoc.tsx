@@ -3,8 +3,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useReactFlow, useStore } from '@xyflow/react'
-import { mesa } from '../estado/mesa.ts'
-import type { Biblioteca, Ficha } from '../zotero/biblioteca.ts'
+import { associacaoNaColecao, mesa } from '../estado/mesa.ts'
+import { comSubcolecoes, type Biblioteca, type Ficha } from '../zotero/biblioteca.ts'
 import {
   inverterAssociacao,
   mudarAssociacao,
@@ -56,6 +56,27 @@ export function PainelAssoc({ bib, id, focarRelacao, aoFechar, avisar }: Props) 
   const sugestoes = [...new Set([...usadas.split('\n').filter(Boolean), ...RELACOES_PADRAO])]
   const rel = assoc.rel.trim()
 
+  // Coleções com fichas, em árvore (como no seletor da barra), para escolher onde a associação vale.
+  const colecoes: { chave: string; nome: string; nivel: number }[] = []
+  const percorrer = (pai: string | null, nivel: number) => {
+    for (const c of bib.colecoes.filter((x) => x.pai === pai)) {
+      const chaves = comSubcolecoes(c.chave, bib.colecoes)
+      const temFichas = bib.fichas.some((f) => f.colecoes.some((k) => chaves.has(k)))
+      if (temFichas || c.chave === assoc.colecao) colecoes.push({ chave: c.chave, nome: c.nome, nivel })
+      percorrer(c.chave, nivel + 1)
+    }
+  }
+  percorrer(null, 0)
+  const mudarColecao = (colecao: string) => {
+    mudarAssociacao(rf, id, { colecao })
+    // Se ela deixou de valer para a coleção que está na tela, sai da mesa (continua guardada).
+    if (!associacaoNaColecao({ colecao }, mesa.colecao)) {
+      rf.setEdges((es) => es.filter((e) => e.id !== id))
+      aoFechar()
+      avisar(t('aviso.assocMovida', { col: bib.colecoes.find((c) => c.chave === colecao)?.nome ?? '' }))
+    }
+  }
+
   return (
     <aside className="painel" aria-label={t('assoc.painel')}>
       <div className="p-topo">
@@ -102,6 +123,19 @@ export function PainelAssoc({ bib, id, focarRelacao, aoFechar, avisar }: Props) 
         value={assoc.nota}
         onChange={(e) => mudarAssociacao(rf, id, { nota: e.target.value })}
       />
+
+      <label className="p-rot" htmlFor="p-col">
+        {t('assoc.colecao')}
+      </label>
+      <select id="p-col" className="rel-input" value={assoc.colecao} onChange={(e) => mudarColecao(e.target.value)}>
+        <option value="*">{t('assoc.geral')}</option>
+        {colecoes.map((c) => (
+          <option key={c.chave} value={c.chave}>
+            {'   '.repeat(c.nivel)}
+            {c.nome}
+          </option>
+        ))}
+      </select>
 
       <div className="p-acoes">
         <button className="btn" onClick={() => inverterAssociacao(rf, assoc)}>
