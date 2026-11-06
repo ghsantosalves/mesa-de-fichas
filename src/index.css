@@ -1805,3 +1805,100 @@ a.btn {
   margin-top: 6px;
   width: 240px;
 }
+
+/* Formulário da Nova ficha: cada campo num bloco alinhado */
+.nf-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+.nf-campo > .rel-input,
+.nf-campo > .d-area,
+.nf-paginas .rel-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.nf-rotulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nf-rotulo label {
+  font: 600 13.5px/1.2 var(--sans);
+  color: var(--rotulo);
+}
+.nf-obrigatorio {
+  color: var(--rotulo);
+}
+.nf-ajuda-btn {
+  all: unset;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--borda);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 12px/1 var(--sans);
+  color: var(--tinta-2);
+  cursor: pointer;
+}
+.nf-ajuda-btn:hover,
+.nf-ajuda-btn[aria-expanded='true'] {
+  border-color: var(--linha);
+  color: var(--linha);
+}
+.nf-ajuda-btn:focus-visible {
+  outline: 2px solid var(--linha);
+}
+.nf-ajuda {
+  background: color-mix(in srgb, var(--linha) 9%, transparent);
+  border-left: 3px solid var(--linha);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font: 400 13px/1.45 var(--sans);
+}
+.nf-ajuda p {
+  margin: 0 0 4px;
+}
+.nf-ajuda p:last-child {
+  margin: 0;
+}
+.nf-paginas {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.nf-paginas label {
+  font: 500 12.5px/1.2 var(--sans);
+  color: var(--tinta-2);
+}
+/* Linha de dois campos + Adicionar: mesma altura */
+.cd-linha {
+  align-items: stretch;
+}
+.cd-linha .btn {
+  flex: none;
+}
+.nf-campo .d-dica {
+  margin: 0;
+}
+/* Sem a margem de baixo dos campos dentro do formulário (o espaço vem do bloco). */
+.nf-campo .rel-input,
+.nf-campo .d-area {
+  margin: 0;
+}
+.cd-linha {
+  align-items: center;
+}
+.cd-linha .rel-input {
+  width: auto;
+}
+.cd-linha .btn {
+  padding: 9px 14px;
+  font-size: 14px;
+  line-height: 1.2;
+}

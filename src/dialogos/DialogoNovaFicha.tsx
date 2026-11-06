@@ -23,6 +23,7 @@ import { normalizar } from '../mesa/contexto.ts'
 import { nomeCampo } from '../estado/mesa.ts'
 import { Dialogo } from './Dialogo.tsx'
 import { CampoDuplo } from './CampoDuplo.tsx'
+import { CampoFicha } from './CampoFicha.tsx'
 import { idioma, t } from '../i18n.ts'
 
 const RELACOES =
@@ -231,81 +232,74 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
             )}
           </div>
 
-          <label className="d-rot" htmlFor="nf-cab">
-            {t('nova.cabecalho')}
-          </label>
-          <input id="nf-cab" className="rel-input" value={campos.cabecalho} onChange={mudar('cabecalho')} />
-          <p className="d-dica">{t('nova.cabecalhoDica')}</p>
+          <CampoFicha rotulo={t('nova.cabecalho')} htmlFor="nf-cab" ajuda="cab" dica={t('nova.cabecalhoDica')}>
+            <input id="nf-cab" className="rel-input" value={campos.cabecalho} onChange={mudar('cabecalho')} />
+          </CampoFicha>
 
-          <label className="d-rot" htmlFor="nf-ref">
-            {t('nova.ref')}
-          </label>
-          <textarea id="nf-ref" className="d-area baixa" value={campos.ref} onChange={mudar('ref')} />
-          <p className="d-dica">{t('nova.refDica')}</p>
+          <CampoFicha rotulo={t('nova.ref')} htmlFor="nf-ref" ajuda="ref" dica={t('nova.refDica')}>
+            <textarea id="nf-ref" className="d-area baixa" value={campos.ref} onChange={mudar('ref')} />
+          </CampoFicha>
 
-          <label className="d-rot" htmlFor="nf-tese">
-            {nomeCampo('tese')} *
-          </label>
-          <textarea id="nf-tese" className="d-area baixa" value={campos.tese} onChange={mudar('tese')} />
-          <input
-            className="rel-input estreito"
-            placeholder={t('tese.paginas')}
-            aria-label={t('tese.paginasRotulo')}
-            value={paginaTese}
-            onChange={(e) => setPaginaTese(e.target.value)}
-          />
+          <CampoFicha rotulo={nomeCampo('tese')} htmlFor="nf-tese" ajuda="tese" obrigatorio>
+            <textarea id="nf-tese" className="d-area baixa" value={campos.tese} onChange={mudar('tese')} />
+            <div className="nf-paginas">
+              <label htmlFor="nf-tese-pag">{t('tese.paginasRotulo')}</label>
+              <input
+                id="nf-tese-pag"
+                className="rel-input"
+                placeholder={t('tese.paginas')}
+                value={paginaTese}
+                onChange={(e) => setPaginaTese(e.target.value)}
+              />
+            </div>
+          </CampoFicha>
 
-          <label className="d-rot" htmlFor="nf-conc">
-            {nomeCampo('conceitos')}
-          </label>
-          <CampoDuplo
-            id="nf-conc"
-            itens={conceitos}
-            aoMudar={setConceitos}
-            aoMudarRascunho={setRascConceitos}
-            primeiro={{ placeholder: t('conc.conceito'), rotulo: t('conc.conceitoRotulo') }}
-            segundo={{ placeholder: t('conc.paginas'), rotulo: t('conc.paginasRotulo'), largura: 'estreito' }}
-            formatar={conceitoComPaginas}
-          />
-          <p className="d-dica">{t('nova.listaDica')}</p>
+          <CampoFicha rotulo={nomeCampo('conceitos')} htmlFor="nf-conc" ajuda="conc" dica={t('nova.listaDica')}>
+            <CampoDuplo
+              id="nf-conc"
+              itens={conceitos}
+              aoMudar={setConceitos}
+              aoMudarRascunho={setRascConceitos}
+              primeiro={{ placeholder: t('conc.conceito'), rotulo: t('conc.conceitoRotulo') }}
+              segundo={{ placeholder: t('conc.paginas'), rotulo: t('conc.paginasRotulo'), largura: 'estreito' }}
+              formatar={conceitoComPaginas}
+            />
+          </CampoFicha>
 
-          <label className="d-rot" htmlFor="nf-lemb">
-            {nomeCampo('lembrar')}
-          </label>
-          <input id="nf-lemb" className="rel-input" value={campos.lembrar} onChange={mudar('lembrar')} />
+          <CampoFicha rotulo={nomeCampo('lembrar')} htmlFor="nf-lemb" ajuda="lemb">
+            <input id="nf-lemb" className="rel-input" value={campos.lembrar} onChange={mudar('lembrar')} />
+          </CampoFicha>
 
-          <label className="d-rot" htmlFor="nf-dial">
-            {nomeCampo('dialogos')}
-          </label>
-          <CampoDuplo
-            id="nf-dial"
-            itens={dialogos}
-            aoMudar={setDialogos}
-            aoMudarRascunho={setRascDialogos}
-            primeiro={{ placeholder: t('dial.autor'), rotulo: t('dial.autorRotulo') }}
-            segundo={{ placeholder: t('dial.relacao'), rotulo: t('dial.relacaoRotulo') }}
-            formatar={autorComRelacao}
-            sugestoes={RELACOES}
-          />
-          <p className="d-dica">{t('nova.dialogosDica')}</p>
+          <CampoFicha rotulo={nomeCampo('dialogos')} htmlFor="nf-dial" ajuda="dial" dica={t('nova.dialogosDica')}>
+            <CampoDuplo
+              id="nf-dial"
+              itens={dialogos}
+              aoMudar={setDialogos}
+              aoMudarRascunho={setRascDialogos}
+              primeiro={{ placeholder: t('dial.autor'), rotulo: t('dial.autorRotulo') }}
+              segundo={{ placeholder: t('dial.relacao'), rotulo: t('dial.relacaoRotulo') }}
+              formatar={autorComRelacao}
+              sugestoes={RELACOES}
+            />
+          </CampoFicha>
 
-          <p className="d-rot">{nomeCampo('usos')}</p>
-          <div className="rels">
-            {USOS.map((u) => (
-              <button key={u} className="btn" aria-pressed={usos.includes(u)} onClick={() => alternarUso(u)}>
-                {u}
-              </button>
-            ))}
-          </div>
+          <CampoFicha rotulo={nomeCampo('usos')} ajuda="uso">
+            <div className="rels">
+              {USOS.map((u) => (
+                <button key={u} className="btn" aria-pressed={usos.includes(u)} onClick={() => alternarUso(u)}>
+                  {u}
+                </button>
+              ))}
+            </div>
+          </CampoFicha>
 
-          <label className="d-rot" htmlFor="nf-video">
-            {t('ficha.video')}
-          </label>
-          <input id="nf-video" className="rel-input" placeholder="—" value={campos.video} onChange={mudar('video')} />
-          <label className="d-rot" htmlFor="nf-fich">
-            {t('ficha.fichamento')}
-          </label>
-          <input id="nf-fich" className="rel-input" placeholder="—" value={campos.fichamento} onChange={mudar('fichamento')} />
+          <CampoFicha rotulo={t('ficha.video')} htmlFor="nf-video" ajuda="video">
+            <input id="nf-video" className="rel-input" placeholder="—" value={campos.video} onChange={mudar('video')} />
+          </CampoFicha>
+
+          <CampoFicha rotulo={t('ficha.fichamento')} htmlFor="nf-fich" ajuda="fich">
+            <input id="nf-fich" className="rel-input" placeholder="—" value={campos.fichamento} onChange={mudar('fichamento')} />
+          </CampoFicha>
 
           <p className="d-rot">{t('nova.previa')}</p>
           <pre className="nf-previa">{textoFinal}</pre>
