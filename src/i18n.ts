@@ -89,9 +89,15 @@ const TEXTOS = {
   'nova.ref': ['Referência', 'Reference'],
   'nova.refDica': ['Montada com os dados do Zotero; confira e acrescente o capítulo ou as páginas.', 'Built from Zotero data; check it and add the chapter or pages.'],
   'nova.listaDica': [
-    'Escreva um conceito e clique em Adicionar (ou aperte Enter) para passar ao próximo. O × tira um item.',
-    'Type a concept and click Add (or press Enter) to move to the next. The × removes an item.',
+    'Escreva o conceito e a(s) página(s) onde ele aparece e clique em Adicionar (ou aperte Enter). O app põe os colchetes. O × tira um item.',
+    'Type the concept and the page(s) where it appears, then click Add (or press Enter). The app adds the brackets. The × removes an item.',
   ],
+  'conc.conceito': ['Conceito (ex.: lugar social)', 'Concept (e.g. social place)'],
+  'conc.conceitoRotulo': ['Conceito', 'Concept'],
+  'conc.paginas': ['Página(s), ex.: 66-77', 'Page(s), e.g. 66-77'],
+  'conc.paginasRotulo': ['Páginas onde o conceito aparece', 'Pages where the concept appears'],
+  'tese.paginas': ['Página(s) da tese, ex.: 51 ou 64-65', 'Page(s) of the thesis, e.g. 51 or 64-65'],
+  'tese.paginasRotulo': ['Páginas da tese', 'Pages of the thesis'],
   'nova.dialogosDica': [
     'Escreva o autor e a relação dele com o texto, e clique em Adicionar (ou aperte Enter). A relação é livre: use uma sugestão ou escreva a sua.',
     'Type the author and their relation to the text, then click Add (or press Enter). The relation is free text: use a suggestion or write your own.',

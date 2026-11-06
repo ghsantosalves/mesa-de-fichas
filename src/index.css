@@ -1795,3 +1795,13 @@ a.btn {
   padding: 2px 8px;
   font-size: 12px;
 }
+
+/* Campo estreito (páginas) ao lado do campo principal */
+.rel-input.estreito {
+  flex: 0 1 170px;
+  min-width: 120px;
+}
+.d-area + .rel-input.estreito {
+  margin-top: 6px;
+  width: 240px;
+}

@@ -7,7 +7,10 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Biblioteca } from '../zotero/biblioteca.ts'
 import {
   autorAno,
+  autorComRelacao,
+  conceitoComPaginas,
   criarNotaFilha,
+  marcaDePaginas,
   listarTextos,
   podeEscrever,
   referenciaABNT,
@@ -19,9 +22,13 @@ import { MODO_LOCAL } from '../zotero/credenciais.ts'
 import { normalizar } from '../mesa/contexto.ts'
 import { nomeCampo } from '../estado/mesa.ts'
 import { Dialogo } from './Dialogo.tsx'
-import { CampoLista } from './CampoLista.tsx'
-import { CampoDialogos } from './CampoDialogos.tsx'
+import { CampoDuplo } from './CampoDuplo.tsx'
 import { idioma, t } from '../i18n.ts'
+
+const RELACOES =
+  idioma === 'en'
+    ? ['builds on', 'critiques', 'extends', 'dialogues with', 'contrasts with', 'mentions', 'object']
+    : ['apoia-se em', 'critica', 'amplia', 'dialoga com', 'contrasta com', 'menciona', 'objeto']
 
 const USOS =
   idioma === 'en'
@@ -60,6 +67,8 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
   const [usos, setUsos] = useState<string[]>([])
   // Conceitos e diálogos: listas de itens (o " · " entre eles é posto pelo app).
   const [conceitos, setConceitos] = useState<string[]>([])
+  /** Página(s) da tese (o app acrescenta "[p. …]" ao fim da tese). */
+  const [paginaTese, setPaginaTese] = useState('')
   const [rascConceitos, setRascConceitos] = useState('')
   const [dialogos, setDialogos] = useState<string[]>([])
   const [rascDialogos, setRascDialogos] = useState('')
@@ -119,6 +128,7 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
     setCampos({ ...camposVazios(), cabecalho: `${autorAno(x)}, ${x.data.title ?? ''}`.trim(), ref: referenciaABNT(x) })
     setUsos([])
     setConceitos([])
+    setPaginaTese('')
     setRascConceitos('')
     setDialogos([])
     setRascDialogos('')
@@ -128,8 +138,10 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
   const mudar = (k: keyof CamposNovaFicha) => (e: { target: { value: string } }) => setCampos({ ...campos, [k]: e.target.value })
   const alternarUso = (u: string) => setUsos(usos.includes(u) ? usos.filter((x) => x !== u) : [...usos, u])
   const juntar = (itens: string[], rascunho: string) => [...itens, rascunho.trim()].filter(Boolean).join(' · ')
+  const tese = [campos.tese.trim(), campos.tese.trim() ? marcaDePaginas(paginaTese) : ''].filter(Boolean).join(' ')
   const textoFinal = textoDaFicha({
     ...campos,
+    tese,
     conceitos: juntar(conceitos, rascConceitos),
     dialogos: juntar(dialogos, rascDialogos),
     uso: usos.join(' · '),
@@ -235,17 +247,25 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
             {nomeCampo('tese')} *
           </label>
           <textarea id="nf-tese" className="d-area baixa" value={campos.tese} onChange={mudar('tese')} />
+          <input
+            className="rel-input estreito"
+            placeholder={t('tese.paginas')}
+            aria-label={t('tese.paginasRotulo')}
+            value={paginaTese}
+            onChange={(e) => setPaginaTese(e.target.value)}
+          />
 
           <label className="d-rot" htmlFor="nf-conc">
             {nomeCampo('conceitos')}
           </label>
-          <CampoLista
+          <CampoDuplo
             id="nf-conc"
             itens={conceitos}
             aoMudar={setConceitos}
-            rascunho={rascConceitos}
             aoMudarRascunho={setRascConceitos}
-            exemplo={t('nova.exConceitos')}
+            primeiro={{ placeholder: t('conc.conceito'), rotulo: t('conc.conceitoRotulo') }}
+            segundo={{ placeholder: t('conc.paginas'), rotulo: t('conc.paginasRotulo'), largura: 'estreito' }}
+            formatar={conceitoComPaginas}
           />
           <p className="d-dica">{t('nova.listaDica')}</p>
 
@@ -257,7 +277,16 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
           <label className="d-rot" htmlFor="nf-dial">
             {nomeCampo('dialogos')}
           </label>
-          <CampoDialogos id="nf-dial" itens={dialogos} aoMudar={setDialogos} aoMudarRascunho={setRascDialogos} />
+          <CampoDuplo
+            id="nf-dial"
+            itens={dialogos}
+            aoMudar={setDialogos}
+            aoMudarRascunho={setRascDialogos}
+            primeiro={{ placeholder: t('dial.autor'), rotulo: t('dial.autorRotulo') }}
+            segundo={{ placeholder: t('dial.relacao'), rotulo: t('dial.relacaoRotulo') }}
+            formatar={autorComRelacao}
+            sugestoes={RELACOES}
+          />
           <p className="d-dica">{t('nova.dialogosDica')}</p>
 
           <p className="d-rot">{nomeCampo('usos')}</p>

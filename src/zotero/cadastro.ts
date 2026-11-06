@@ -186,6 +186,26 @@ export function textoDaFicha(c: CamposNovaFicha): string {
   ].join('\n')
 }
 
+/**
+ * Página(s) no formato da ficha: "66", "66-77" ou "85, 89" viram "[p. 66]" etc.
+ * (aceita "p. 66" e tira o "p."). Sem número, devolve ''.
+ */
+export const marcaDePaginas = (s: string) => {
+  const limpo = s
+    .trim()
+    .replace(/^p(?:ág|ag|p)?\.?\s*/i, '')
+    .trim()
+  return limpo ? `[p. ${limpo}]` : ''
+}
+
+/** "conceito [p. 66]" (ou só o conceito, sem página). */
+export const conceitoComPaginas = (conceito: string, pags: string) =>
+  conceito.trim() ? [conceito.trim(), marcaDePaginas(pags)].filter(Boolean).join(' ') : ''
+
+/** "Autor (relação)" (ou só o autor, sem relação). */
+export const autorComRelacao = (autor: string, rel: string) =>
+  autor.trim() ? (rel.trim() ? `${autor.trim()} (${rel.trim()})` : autor.trim()) : ''
+
 const escapar = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 /** HTML da nota: um parágrafo por linha (as linhas em branco separam os blocos). */
