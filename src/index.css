@@ -1496,3 +1496,54 @@ a.btn {
   display: inline-flex;
   align-items: center;
 }
+
+/* Campo de lista (conceitos, diálogos): itens como etiquetas */
+.campo-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--cartao);
+  cursor: text;
+}
+.campo-lista.com-foco {
+  outline: 2px solid var(--linha);
+  outline-offset: 0;
+}
+.cl-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 9px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--linha) 15%, transparent);
+  font: 400 13px/1.3 var(--sans);
+}
+.cl-tirar {
+  all: unset;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  text-align: center;
+  line-height: 18px;
+  border-radius: 9px;
+  color: var(--tinta-2);
+}
+.cl-tirar:hover,
+.cl-tirar:focus-visible {
+  background: color-mix(in srgb, var(--tinta) 12%, transparent);
+  color: var(--tinta);
+}
+.cl-entrada {
+  flex: 1;
+  min-width: 160px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--tinta);
+  font: 400 13.5px/1.4 var(--sans);
+  padding: 3px 2px;
+}

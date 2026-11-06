@@ -19,6 +19,7 @@ import { MODO_LOCAL } from '../zotero/credenciais.ts'
 import { normalizar } from '../mesa/contexto.ts'
 import { nomeCampo } from '../estado/mesa.ts'
 import { Dialogo } from './Dialogo.tsx'
+import { CampoLista } from './CampoLista.tsx'
 import { idioma, t } from '../i18n.ts'
 
 const USOS =
@@ -56,6 +57,11 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
   const [texto, setTexto] = useState<TextoZotero | null>(null)
   const [campos, setCampos] = useState<CamposNovaFicha>(camposVazios)
   const [usos, setUsos] = useState<string[]>([])
+  // Conceitos e diálogos: listas de itens (o " · " entre eles é posto pelo app).
+  const [conceitos, setConceitos] = useState<string[]>([])
+  const [rascConceitos, setRascConceitos] = useState('')
+  const [dialogos, setDialogos] = useState<string[]>([])
+  const [rascDialogos, setRascDialogos] = useState('')
   const [escrita, setEscrita] = useState<boolean | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [msg, setMsg] = useState<{ texto: string; erro?: boolean } | null>(null)
@@ -111,12 +117,22 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
     setTexto(x)
     setCampos({ ...camposVazios(), cabecalho: `${autorAno(x)}, ${x.data.title ?? ''}`.trim(), ref: referenciaABNT(x) })
     setUsos([])
+    setConceitos([])
+    setRascConceitos('')
+    setDialogos([])
+    setRascDialogos('')
     setMsg(null)
     setSalva(false)
   }
   const mudar = (k: keyof CamposNovaFicha) => (e: { target: { value: string } }) => setCampos({ ...campos, [k]: e.target.value })
   const alternarUso = (u: string) => setUsos(usos.includes(u) ? usos.filter((x) => x !== u) : [...usos, u])
-  const textoFinal = textoDaFicha({ ...campos, uso: usos.join(' · ') })
+  const juntar = (itens: string[], rascunho: string) => [...itens, rascunho.trim()].filter(Boolean).join(' · ')
+  const textoFinal = textoDaFicha({
+    ...campos,
+    conceitos: juntar(conceitos, rascConceitos),
+    dialogos: juntar(dialogos, rascDialogos),
+    uso: usos.join(' · '),
+  })
 
   const copiar = async () => {
     try {
@@ -222,7 +238,14 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
           <label className="d-rot" htmlFor="nf-conc">
             {nomeCampo('conceitos')}
           </label>
-          <input id="nf-conc" className="rel-input" value={campos.conceitos} onChange={mudar('conceitos')} />
+          <CampoLista
+            id="nf-conc"
+            itens={conceitos}
+            aoMudar={setConceitos}
+            rascunho={rascConceitos}
+            aoMudarRascunho={setRascConceitos}
+            exemplo={t('nova.exConceitos')}
+          />
           <p className="d-dica">{t('nova.listaDica')}</p>
 
           <label className="d-rot" htmlFor="nf-lemb">
@@ -233,7 +256,15 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
           <label className="d-rot" htmlFor="nf-dial">
             {nomeCampo('dialogos')}
           </label>
-          <input id="nf-dial" className="rel-input" value={campos.dialogos} onChange={mudar('dialogos')} />
+          <CampoLista
+            id="nf-dial"
+            itens={dialogos}
+            aoMudar={setDialogos}
+            rascunho={rascDialogos}
+            aoMudarRascunho={setRascDialogos}
+            exemplo={t('nova.exDialogos')}
+          />
+          <p className="d-dica">{t('nova.dialogosDica')}</p>
 
           <p className="d-rot">{nomeCampo('usos')}</p>
           <div className="rels">
