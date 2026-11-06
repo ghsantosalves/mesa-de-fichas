@@ -32,7 +32,7 @@ jobs:
       - run: npm run build
       # Plugin do Zotero, baixável em .../mesa-de-fichas/mesa-de-fichas.xpi
       - name: Empacotar o plugin do Zotero
-        run: cd zotero-plugin && zip -r -X ../dist/mesa-de-fichas.xpi manifest.json bootstrap.js locale
+        run: cd zotero-plugin && zip -r -X ../dist/mesa-de-fichas.xpi manifest.json bootstrap.js locale icon-48.png icon-96.png
       # Skills do Claude, baixáveis em .../mesa-de-fichas/<nome>.zip
       - name: Empacotar as skills do Claude
         run: cd skill && for s in */; do zip -r -X "../dist/${s%/}.zip" "$s"; done

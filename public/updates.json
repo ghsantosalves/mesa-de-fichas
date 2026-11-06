@@ -3,7 +3,7 @@
     "mesa-de-fichas@ghsantosalves.github.io": {
       "updates": [
         {
-          "version": "1.0.4",
+          "version": "1.0.5",
           "update_link": "https://ghsantosalves.github.io/mesa-de-fichas/mesa-de-fichas.xpi",
           "applications": {
             "zotero": {
