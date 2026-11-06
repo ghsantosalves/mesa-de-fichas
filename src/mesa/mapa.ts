@@ -16,13 +16,24 @@ import type { Edge, InternalNode, ReactFlowInstance } from '@xyflow/react'
 import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type SimulationNodeDatum } from 'd3-force'
 import { alterarMesa, associacaoNaColecao, mesa, posicionarFicha, type Associacao, type Posicao } from '../estado/mesa.ts'
 import { LARGURA_FICHA, LARGURA_RECOLHIDA } from './opcoes.ts'
-import { mudarFichas, type NoMesa } from './operacoes.ts'
+import { mudarArea, mudarFichas, type NoMesa } from './operacoes.ts'
+import { ALTURA_MIN_AREA, LARGURA_MIN_AREA } from '../estado/mesa.ts'
 import { mudarAssociacao, type ArestaAssoc, type DadosAresta } from './assoc.ts'
 import { curva, meioDaCurva, type Retangulo } from './geometria.ts'
 
 type Mesa = ReactFlowInstance<NoMesa>
-/** Peça da mesa: ficha ou caixa de associação, com centro (x, y) e tamanho. */
-type Peca = SimulationNodeDatum & { id: string; w: number; h: number; caixa: boolean; fixa?: boolean }
+/** Peça da mesa: ficha, caixa de associação ou área, com centro (x, y) e tamanho. */
+type Peca = SimulationNodeDatum & {
+  id: string
+  w: number
+  h: number
+  caixa: boolean
+  fixa?: boolean
+  /** Ponto invisível que mantém juntas as fichas de uma área (não ocupa espaço). */
+  virtual?: boolean
+  /** Para áreas: as fichas que ficam dentro dela (elas não são empurradas para fora). */
+  membros?: Set<string>
+}
 
 /** Altura de uma ficha recolhida, se ainda não foi medida. */
 const ALTURA_RECOLHIDA = 80
@@ -60,16 +71,17 @@ export function tamanhoDaCaixa(id: string): { w: number; h: number } {
 
 /**
  * Afasta as peças que ainda se encostam, empurrando pelo lado em que entram menos uma
- * na outra. Peças fixas não se mexem: a outra sai do caminho sozinha.
+ * na outra. Peças fixas não se mexem: a outra sai do caminho sozinha. `ignorar` diz
+ * quais pares podem ficar um sobre o outro (ex.: uma área e as fichas de dentro dela).
  */
-function afastar(pecas: Peca[]) {
+function afastar(pecas: Peca[], ignorar: (a: Peca, b: Peca) => boolean = () => false) {
   for (let volta = 0; volta < 300; volta++) {
     let mexeu = false
     for (let i = 0; i < pecas.length; i++) {
       for (let j = i + 1; j < pecas.length; j++) {
         const a = pecas[i]
         const b = pecas[j]
-        if (a.fixa && b.fixa) continue
+        if ((a.fixa && b.fixa) || ignorar(a, b)) continue
         const dx = b.x! - a.x!
         const dy = b.y! - a.y!
         const ox = (a.w + b.w) / 2 + FOLGA - Math.abs(dx)
@@ -97,6 +109,20 @@ function afastar(pecas: Peca[]) {
 /** Retângulo (centro e tamanho) de uma ficha na posição dada. */
 const retangulo = (p: Posicao, w: number, h: number): Retangulo => ({ cx: p.x + w / 2, cy: p.y + h / 2, w, h })
 
+/** Áreas visíveis (com o id da área e o retângulo). */
+function areasVisiveis(rf: Mesa) {
+  return rf
+    .getNodes()
+    .filter((n) => n.type === 'area' && !n.hidden)
+    .map((n) => {
+      const a = (n as NoMesa & { type: 'area' }).data.area
+      return { id: a.id, x: n.position.x, y: n.position.y, w: n.measured?.width ?? a.w, h: n.measured?.height ?? a.h }
+    })
+}
+
+/** Margens da área em volta das fichas de dentro (em cima fica o título). */
+const MARGEM_AREA = { lado: 30, topo: 58, baixo: 30 }
+
 /** Arruma as fichas visíveis como mapa. Devolve false se não há o que arrumar. */
 export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
   const fichas = rf.getNodes().filter((n) => n.type === 'ficha' && !n.hidden)
@@ -106,15 +132,20 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
   const assocs = mesa.associacoes.filter(
     (a) => naMesa.has(a.a) && naMesa.has(a.b) && a.a !== a.b && associacaoNaColecao(a, mesa.colecao),
   )
+  const areas = areasVisiveis(rf)
 
-  // Guarda a arrumação de antes, nesta coleção (só das fichas que ainda não estavam
-  // guardadas, para que apertar "Mapa" de novo não apague o ponto de volta).
+  // Guarda a arrumação de antes, nesta coleção (fichas e áreas; só o que ainda não
+  // estava guardado, para que apertar "Mapa" de novo não apague o ponto de volta).
   alterarMesa((e) => {
     const antes = (e.mapas[e.colecao] ??= {})
     for (const n of fichas) {
       if (antes[n.id] || n.type !== 'ficha') continue
       antes[n.id] = { x: Math.round(n.position.x), y: Math.round(n.position.y) }
       if (n.data.recolhida) antes[n.id].recolhida = true
+    }
+    for (const a of areas) {
+      const k = `area:${a.id}`
+      if (!antes[k]) antes[k] = { x: Math.round(a.x), y: Math.round(a.y), w: Math.round(a.w), h: Math.round(a.h) }
     }
   })
   // As fichas ficam como estão (abertas ou recolhidas). As caixas voltam ao tamanho
@@ -125,9 +156,25 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
   /** Tamanho medido de cada ficha (aberta ou recolhida). */
   const tamanho = (id: string) => tamanhoDaFicha(rf, id)
 
+  // Em que área está cada ficha (pelo topo-centro, como ao arrastar a área; na menor, se houver mais de uma).
+  const areaDe = new Map<string, string>()
+  for (const n of fichas) {
+    const cx = n.position.x + tamanho(n.id).w / 2
+    const cy = n.position.y + 40
+    const dentro = areas.filter((a) => cx > a.x && cx < a.x + a.w && cy > a.y && cy < a.y + a.h)
+    dentro.sort((a, b) => a.w * a.h - b.w * b.h)
+    if (dentro[0]) areaDe.set(n.id, dentro[0].id)
+  }
+  const membros = new Map<string, Set<string>>()
+  areaDe.forEach((area, ficha) => {
+    if (!membros.has(area)) membros.set(area, new Set())
+    membros.get(area)!.add(ficha)
+  })
+
   const ligadas = new Set(assocs.flatMap((a) => [a.a, a.b]))
-  const noMapa = ids.filter((k) => ligadas.has(k))
-  const soltas = ids.filter((k) => !ligadas.has(k))
+  // No mapa: as fichas ligadas e as que estão em áreas (estas ficam juntas, com a área).
+  const noMapa = ids.filter((k) => ligadas.has(k) || areaDe.has(k))
+  const soltas = ids.filter((k) => !ligadas.has(k) && !areaDe.has(k))
 
   // Peças: começam num círculo (na ordem atual), o que dá resultados estáveis.
   const x0 = Math.min(...fichas.map((n) => n.position.x))
@@ -144,6 +191,8 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
     const t = tamanhoDaCaixa(a.id)
     pecas.set(`caixa:${a.id}`, { id: `caixa:${a.id}`, ...t, caixa: true, x: (pa.x! + pb.x!) / 2, y: (pa.y! + pb.y!) / 2 })
   }
+  // Um ponto invisível por área, preso às fichas dela: assim elas ficam juntas.
+  for (const area of membros.keys()) pecas.set(`grupo:${area}`, { id: `grupo:${area}`, w: 0, h: 0, caixa: false, virtual: true, x: 0, y: 0 })
   const lista = [...pecas.values()]
   type Ligacao = { source: string; target: string; d: number; forca: number }
   const ligacoes: Ligacao[] = assocs.flatMap((a) => {
@@ -153,6 +202,9 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
       { source: a.a, target: c.id, d: d(a.a), forca: 0.8 },
       { source: c.id, target: a.b, d: d(a.b), forca: 0.8 },
     ]
+  })
+  membros.forEach((fs, area) => {
+    for (const k of fs) ligacoes.push({ source: k, target: `grupo:${area}`, d: raio(pecas.get(k)!) + 20, forca: 0.6 })
   })
 
   if (lista.length) {
@@ -164,34 +216,74 @@ export async function arrumarComoMapa(rf: Mesa): Promise<boolean> {
           .distance((l) => l.d)
           .strength((l) => l.forca),
       )
-      .force('repulsao', forceManyBody<Peca>().strength((p) => (p.caixa ? -500 : -2000)))
-      .force('colisao', forceCollide<Peca>((p) => raio(p) + FOLGA / 2).strength(0.9).iterations(3))
+      .force('repulsao', forceManyBody<Peca>().strength((p) => (p.virtual ? 0 : p.caixa ? -500 : -2000)))
+      .force('colisao', forceCollide<Peca>((p) => (p.virtual ? 0 : raio(p) + FOLGA / 2)).strength(0.9).iterations(3))
       .force('x', forceX(0).strength(0.03))
       .force('y', forceY(0).strength(0.05))
       .stop()
     for (let i = 0; i < 700; i++) simulacao.tick()
-    afastar(lista)
   }
+  const reais = lista.filter((p) => !p.virtual)
+  afastar(reais)
 
-  // Posições finais das fichas (o mapa começa onde começava a arrumação de antes).
-  const minX = Math.min(0, ...lista.map((p) => p.x! - p.w / 2))
-  const minY = Math.min(0, ...lista.map((p) => p.y! - p.h / 2))
-  const lugar = new Map<string, Posicao>()
-  for (const k of noMapa) {
-    const p = pecas.get(k)!
-    lugar.set(k, { x: Math.round(x0 + p.x! - p.w / 2 - minX), y: Math.round(y0 + p.y! - p.h / 2 - minY) })
-  }
   // Fichas soltas: numa grade abaixo do mapa (cada linha tão alta quanto a maior ficha dela).
-  let y = noMapa.length ? Math.max(...noMapa.map((k) => lugar.get(k)!.y + tamanho(k).h)) + 160 : y0
+  const fundo = (ps: Peca[]) => (ps.length ? Math.max(...ps.map((p) => p.y! + p.h / 2)) : 0)
+  const esquerda = reais.length ? Math.min(...reais.map((p) => p.x! - p.w / 2)) : 0
+  let y = reais.length ? fundo(reais) + 160 : 0
   const porLinha = Math.max(3, Math.ceil(Math.sqrt(soltas.length * 2)))
   const largCol = Math.max(LARGURA_RECOLHIDA, ...soltas.map((k) => tamanho(k).w)) + 40
   for (let i = 0; i < soltas.length; i += porLinha) {
     const linha = soltas.slice(i, i + porLinha)
-    linha.forEach((k, j) => lugar.set(k, { x: Math.round(x0 + j * largCol), y: Math.round(y) }))
+    linha.forEach((k, j) => {
+      const t = tamanho(k)
+      const peca: Peca = { id: k, ...t, caixa: false, x: esquerda + j * largCol + t.w / 2, y: y + t.h / 2 }
+      pecas.set(k, peca)
+      reais.push(peca)
+    })
     y += Math.max(...linha.map((k) => tamanho(k).h)) + 50
   }
+
+  // Áreas: cada uma em volta das suas fichas; o que não é dela sai de dentro.
+  const pecasDeArea: Peca[] = []
+  membros.forEach((fs, area) => {
+    const ps = [...fs].map((k) => pecas.get(k)!)
+    const esq = Math.min(...ps.map((p) => p.x! - p.w / 2)) - MARGEM_AREA.lado
+    const dir = Math.max(...ps.map((p) => p.x! + p.w / 2)) + MARGEM_AREA.lado
+    const cima = Math.min(...ps.map((p) => p.y! - p.h / 2)) - MARGEM_AREA.topo
+    const baixo = Math.max(...ps.map((p) => p.y! + p.h / 2)) + MARGEM_AREA.baixo
+    const w = Math.max(LARGURA_MIN_AREA, dir - esq)
+    const h = Math.max(ALTURA_MIN_AREA, baixo - cima)
+    pecasDeArea.push({ id: `area:${area}`, w, h, x: esq + w / 2, y: cima + h / 2, caixa: false, fixa: true, membros: fs })
+  })
+  // Pares que podem ficar um sobre o outro: a área e as fichas dela; a área e as caixas
+  // das associações entre duas fichas dela.
+  const pontas = new Map(assocs.map((a) => [`caixa:${a.id}`, [a.a, a.b]]))
+  const daArea = (area: Peca, outra: Peca) => {
+    if (outra.membros || !area.membros) return false
+    if (area.membros.has(outra.id)) return true
+    const pp = pontas.get(outra.id)
+    return !!pp && area.membros.has(pp[0]) && area.membros.has(pp[1])
+  }
+  afastar([...reais, ...pecasDeArea], (a, b) => daArea(a, b) || daArea(b, a))
+  // Áreas vazias (sem fichas): abaixo de tudo, para não cobrir nada.
+  const vazias = areas.filter((a) => !membros.has(a.id))
+  let xVazia = esquerda
+  const yVazia = fundo([...reais, ...pecasDeArea]) + 120
+  for (const a of vazias) {
+    pecasDeArea.push({ id: `area:${a.id}`, w: a.w, h: a.h, x: xVazia + a.w / 2, y: yVazia + a.h / 2, caixa: false, fixa: true })
+    xVazia += a.w + 40
+  }
+
+  // Posições finais (o mapa começa onde começava a arrumação de antes).
+  const todas = [...reais, ...pecasDeArea]
+  const minX = Math.min(0, ...todas.map((p) => p.x! - p.w / 2))
+  const minY = Math.min(0, ...todas.map((p) => p.y! - p.h / 2))
+  const final = (p: Peca) => ({ x: Math.round(x0 + p.x! - p.w / 2 - minX), y: Math.round(y0 + p.y! - p.h / 2 - minY) })
+  const lugar = new Map<string, Posicao>()
+  for (const k of ids) lugar.set(k, final(pecas.get(k)!))
   rf.setNodes((ns) => ns.map((n) => (lugar.has(n.id) ? { ...n, position: lugar.get(n.id)! } : n)))
   alterarMesa((e) => lugar.forEach((p, id) => posicionarFicha(e, id, p)))
+  for (const p of pecasDeArea) mudarArea(rf, p.id.slice('area:'.length), { ...final(p), w: Math.round(p.w), h: Math.round(p.h) })
 
   // Caixas: onde o mapa as deixou. A posição é guardada como deslocamento a partir do
   // meio da curva entre as duas fichas (o mesmo ponto que a mesa usa para desenhar).
@@ -272,8 +364,13 @@ export function desfazerMapa(rf: Mesa) {
   const antes = mesa.mapas[mesa.colecao]
   if (!antes) return
   const existe = new Set(rf.getNodes().map((n) => n.id))
-  const chaves = Object.keys(antes).filter((k) => existe.has(k))
-  rf.setNodes((ns) => ns.map((n) => (antes[n.id] ? { ...n, position: { x: antes[n.id].x, y: antes[n.id].y } } : n)))
+  const chaves = Object.keys(antes).filter((k) => existe.has(k) && !k.startsWith('area:'))
+  // Áreas guardadas como "area:<id>", com posição e tamanho.
+  for (const [k, a] of Object.entries(antes)) {
+    if (!k.startsWith('area:') || !existe.has(k)) continue
+    mudarArea(rf, k.slice('area:'.length), { x: a.x, y: a.y, ...(a.w && a.h ? { w: a.w, h: a.h } : {}) })
+  }
+  rf.setNodes((ns) => ns.map((n) => (n.type === 'ficha' && antes[n.id] ? { ...n, position: { x: antes[n.id].x, y: antes[n.id].y } } : n)))
   mudarFichas(rf, chaves.filter((k) => antes[k].recolhida), { recolhida: true })
   mudarFichas(rf, chaves.filter((k) => !antes[k].recolhida), { recolhida: false })
   alterarMesa((e) => {

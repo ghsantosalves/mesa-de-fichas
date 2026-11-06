@@ -126,6 +126,9 @@ const TEXTOS = {
   'menu.grupoZotero': ['Zotero', 'Zotero'],
   'menu.grupoMesa': ['Mesa', 'Table'],
   'menu.grupoAparencia': ['Aparência', 'Appearance'],
+  'lt.ver': ['Ver', 'View'],
+  'lt.ferramentas': ['Ferramentas da mesa', 'Table tools'],
+  'lt.zoom': ['Zoom', 'Zoom'],
   'menu.copia': ['Cópia da mesa no Zotero…', 'Table backup in Zotero…'],
   'copia.titulo': ['Cópia da mesa no Zotero', 'Table backup in Zotero'],
   'copia.explica': [

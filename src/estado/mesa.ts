@@ -26,7 +26,7 @@ export type CampoGrifo = (typeof CAMPOS_GRIFO)[number]
 /** Trecho grifado num campo: posição no texto e o próprio trecho (para achar de novo se o texto mudar). */
 export type Grifo = { campo: CampoGrifo; inicio: number; fim: number; trecho: string; cor: string }
 /** Lugar de uma ficha numa arrumação: posição e se está recolhida. */
-export type Arrumacao = Posicao & { recolhida?: boolean }
+export type Arrumacao = Posicao & { recolhida?: boolean; /** Só para áreas guardadas antes do mapa. */ w?: number; h?: number }
 /**
  * Estado de uma ficha na mesa. x, y e recolhida são a arrumação de "Todas as coleções";
  * porColecao guarda a arrumação própria de cada coleção (chave da coleção no Zotero).
@@ -118,6 +118,7 @@ function lerArrumacoes(v: unknown): Record<string, Arrumacao> {
     if (!q || typeof q !== 'object') continue
     r[k] = { x: numero(q.x, 0), y: numero(q.y, 0) }
     if (q.recolhida === true) r[k].recolhida = true
+    if (typeof q.w === 'number' && typeof q.h === 'number') Object.assign(r[k], { w: numero(q.w, 0), h: numero(q.h, 0) })
   }
   return r
 }
@@ -363,7 +364,10 @@ export function useSituacao(): Situacao {
 export const arredondar = (p: Posicao): Posicao => ({ x: Math.round(p.x), y: Math.round(p.y) })
 
 /** Arrumação de uma ficha na coleção dada (a própria, ou a de "Todas" se ainda não tiver). */
-export function lugarNaColecao(f: EstadoFicha | undefined, colecao: string): Required<Arrumacao> | undefined {
+export function lugarNaColecao(
+  f: EstadoFicha | undefined,
+  colecao: string,
+): { x: number; y: number; recolhida: boolean } | undefined {
   if (!f) return undefined
   const l = (colecao !== '*' && f.porColecao?.[colecao]) || f
   return { x: l.x, y: l.y, recolhida: !!l.recolhida }

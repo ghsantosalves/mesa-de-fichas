@@ -1584,20 +1584,87 @@ a.btn {
   flex-direction: column;
   position: relative;
 }
-.menu-lateral {
+.lateral {
   flex: none;
-  width: var(--menu-w, 50px);
+  width: var(--menu-w, 52px);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 10px 7px;
-  overflow-y: auto;
-  overflow-x: hidden;
   background: var(--barra);
   border-right: 1px solid var(--barra-borda);
   z-index: 4;
   transition: width 0.15s ease;
+}
+.lt-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 10px 8px 10px 12px;
+  border-bottom: 1px solid var(--barra-borda);
+}
+.lateral:not(.aberta) .lt-topo {
+  justify-content: center;
+  padding: 10px 0;
+}
+.lt-conteudo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px 7px 64px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.lt-campos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 2px 6px;
+}
+.lt-campos .sel-bib,
+.lt-campos .busca {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+.lt-zoom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+}
+.ml-item[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--linha) 16%, transparent);
+  font-weight: 600;
+}
+.ml-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+/* Celular: a lateral vira gaveta, por cima da mesa. */
+.lateral.gaveta {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(300px, 86vw);
+  z-index: 60;
+  box-shadow: var(--sombra-alta);
+}
+.lateral-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 59;
+  background: rgba(0, 0, 0, 0.35);
+}
+.botao-gaveta {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 40;
+  background: var(--cartao);
+  box-shadow: var(--sombra);
 }
 .ml-grupo {
   display: flex;
@@ -1625,7 +1692,7 @@ a.btn {
   font: 500 13.5px/1.2 var(--sans);
   white-space: nowrap;
 }
-.menu-lateral:not(.aberto) .ml-item {
+.lateral:not(.aberta) .ml-item {
   justify-content: center;
   padding: 8px 0;
 }

@@ -1,21 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ReactFlowProvider, useReactFlow, useStore } from '@xyflow/react'
 import {
+  AlertTriangle,
   Archive,
   FileDown,
   FilePlus2,
   FileUp,
   Languages,
+  LayoutDashboard,
+  Library,
+  Link2,
+  List,
   LogOut,
   Palette,
-  PanelLeftClose,
-  PanelLeftOpen,
   Pencil,
   RefreshCw,
   RotateCcw,
   Save,
+  Search,
+  StickyNote,
 } from 'lucide-react'
-import { MenuLateral, type GrupoMenu } from './MenuLateral.tsx'
+import { Item, Lateral, Secao } from './Lateral.tsx'
+import { useTelaEstreita } from './lateralContexto.ts'
 import { NOME_APP, idioma, mudarIdioma, t, tn } from './i18n.ts'
 import {
   carregarBiblioteca,
@@ -182,6 +188,16 @@ function Interior() {
     } catch {
       /* sem espaço: só não lembra */
     }
+  }
+  // Celular (tela estreita): a lateral vira gaveta, fechada até tocar no ☰.
+  const telaEstreita = useTelaEstreita()
+  const [gavetaAberta, setGavetaAberta] = useState(false)
+  /** A lateral mostra os nomes (aberta no computador, ou gaveta no celular). */
+  const comNomes = telaEstreita || menuAberto
+  /** Na faixa de ícones: abre a lateral e põe o cursor no campo (coleção ou busca). */
+  const abrirEFocar = (id: string) => {
+    if (!menuAberto) alternarMenu()
+    setTimeout(() => document.getElementById(id)?.focus(), 60)
   }
   /** A janela da cópia no Zotero foi aberta sozinha (navegador sem mesa, cópia no Zotero). */
   const [ofertaCopia, setOfertaCopia] = useState(false)
@@ -431,7 +447,8 @@ function Interior() {
     const aoTeclar = (e: KeyboardEvent) => {
       if (document.querySelector('dialog[open]')) return
       if (e.key === 'Escape') {
-        if (ferramenta) setFerramenta(null)
+        if (telaEstreita && gavetaAberta) setGavetaAberta(false)
+        else if (ferramenta) setFerramenta(null)
         else if (ligando) {
           setLigando(false)
           setEscolhida(null)
@@ -531,7 +548,7 @@ function Interior() {
   )
 
   // Itens do menu lateral, em grupos.
-  const gruposDoMenu: GrupoMenu[] = [
+  const gruposDoMenu: { titulo: string; itens: { icone: typeof Save; nome: string; acao: () => void }[] }[] = [
     {
       titulo: t('menu.grupoZotero'),
       itens: [
@@ -560,101 +577,106 @@ function Interior() {
 
   return (
     <Contexto.Provider value={contexto}>
-      <div className="app" style={{ ['--menu-w' as string]: bib ? (menuAberto ? '232px' : '50px') : '0px' }}>
-        <header className="barra">
-          {bib && (
-            <button
-              className="btn icone"
-              aria-expanded={menuAberto}
-              aria-label={menuAberto ? t('menu.fechar') : t('menu.abrir')}
-              title={menuAberto ? t('menu.fechar') : t('menu.abrir')}
-              onClick={alternarMenu}
-            >
-              {menuAberto ? <PanelLeftClose size={18} aria-hidden="true" /> : <PanelLeftOpen size={18} aria-hidden="true" />}
-            </button>
-          )}
-          <div className="marca">
-            <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="24" height="24" />
-            {NOME_APP}
-            <span className="subtitulo">{t('app.subtitulo')}</span>
-          </div>
-          {bib && (
-            <>
-              {/* O que ver: coleção e busca. */}
-              <div className="grupo">
-                <SeletorColecao bib={bib} valor={colecao} aoMudar={escolherColecao} />
-                {modo === 'mesa' && (
-                  <input
-                    className="busca"
-                    type="search"
-                    placeholder={t('barra.busca')}
-                    aria-label={t('barra.buscaRotulo')}
-                    value={busca}
-                    onChange={(e) => setBusca(e.target.value)}
-                  />
-                )}
-                <button className="btn com-icone" onClick={() => setJanela('nova')}>
-                  <FilePlus2 size={16} aria-hidden="true" />
-                  {t('nova.botao')}
-                </button>
-              </div>
-              <span className="divisor" aria-hidden="true" />
-              {/* Como ver: mesa ou lista. */}
-              <div className="grupo">
-                <div className="segmentado" role="group" aria-label={t('barra.modoVer')}>
-                  <button className="btn" aria-pressed={modo === 'mesa'} onClick={() => setModo('mesa')}>
-                    {t('barra.mesa')}
-                  </button>
-                  <button className="btn" aria-pressed={modo === 'lista'} onClick={() => setModo('lista')}>
-                    {t('barra.lista')}
-                  </button>
-                </div>
-                {bib.problemas.length > 0 && (
-                  <button className="btn alerta" onClick={() => setModo('lista')}>
-                    {t('barra.problemas', { n: bib.problemas.length })}
-                  </button>
-                )}
-              </div>
-              {modo === 'mesa' && (
-                <>
-                  <span className="divisor" aria-hidden="true" />
-                  {/* Ferramentas da mesa. */}
-                  <div className="grupo">
-                    <BarraMesa colecao={colecao} avisar={avisar} emRecorte={!!recorte} />
-                    <button className="btn" aria-pressed={ligando} onClick={() => alternarLigando(!ligando)}>
-                      {t('barra.associar')}
-                    </button>
-                    <button
-                      className="btn icone"
-                      aria-pressed={!!ferramenta}
-                      aria-label={t('barra.desenhar')}
-                      title={t('barra.desenharDica')}
-                      onClick={() => mudarFerramenta(ferramenta ? null : 'caneta')}
-                    >
-                      <Pencil size={17} strokeWidth={2} aria-hidden="true" />
-                    </button>
-                    <button
-                      className="btn"
-                      aria-pressed={notas}
-                      onClick={() => {
-                        setNotas(!notas)
-                        alterarMesa((e) => (e.notas = !notas))
-                      }}
-                    >
-                      {t('barra.anotacoes')}
-                    </button>
-                  </div>
-                </>
-              )}
-              <div className="grupo direita">
-                {modo === 'mesa' && <BarraZoom />}
-              </div>
-            </>
-          )}
-        </header>
+      <div className="app" style={{ ['--menu-w' as string]: bib && !telaEstreita ? (menuAberto ? '264px' : '52px') : '0px' }}>
+        {!bib && (
+          <header className="barra">
+            <div className="marca">
+              <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="24" height="24" />
+              {NOME_APP}
+              <span className="subtitulo">{t('app.subtitulo')}</span>
+            </div>
+          </header>
+        )}
 
         <div className="corpo">
-        {conectado && bib && <MenuLateral aberto={menuAberto} grupos={gruposDoMenu} rotulo={t('menu.rotulo')} />}
+        {conectado && bib && (
+          <Lateral
+            aberta={menuAberto}
+            aoAlternar={alternarMenu}
+            gaveta={telaEstreita}
+            gavetaAberta={gavetaAberta}
+            aoMudarGaveta={setGavetaAberta}
+          >
+            {/* O que ver: coleção, busca, mesa ou lista. */}
+            <Secao titulo={t('lt.ver')}>
+              {comNomes ? (
+                <div className="lt-campos">
+                  <SeletorColecao
+                    id="lt-colecao"
+                    bib={bib}
+                    valor={colecao}
+                    aoMudar={(c) => {
+                      escolherColecao(c)
+                      if (telaEstreita) setGavetaAberta(false)
+                    }}
+                  />
+                  {modo === 'mesa' && (
+                    <input
+                      id="lt-busca"
+                      className="busca"
+                      type="search"
+                      placeholder={t('barra.busca')}
+                      aria-label={t('barra.buscaRotulo')}
+                      value={busca}
+                      onChange={(e) => setBusca(e.target.value)}
+                    />
+                  )}
+                </div>
+              ) : (
+                <>
+                  <Item icone={Library} nome={t('barra.colecao')} acao={() => abrirEFocar('lt-colecao')} manterAberta />
+                  {modo === 'mesa' && (
+                    <Item icone={Search} nome={t('barra.buscaRotulo')} acao={() => abrirEFocar('lt-busca')} manterAberta />
+                  )}
+                </>
+              )}
+              <Item icone={LayoutDashboard} nome={t('barra.mesa')} ligado={modo === 'mesa'} acao={() => setModo('mesa')} />
+              <Item icone={List} nome={t('barra.lista')} ligado={modo === 'lista'} acao={() => setModo('lista')} />
+              {bib.problemas.length > 0 && (
+                <Item
+                  icone={AlertTriangle}
+                  nome={t('barra.problemas', { n: bib.problemas.length })}
+                  acao={() => setModo('lista')}
+                />
+              )}
+              <Item icone={FilePlus2} nome={t('nova.botao')} acao={() => setJanela('nova')} />
+            </Secao>
+            {modo === 'mesa' && (
+              <>
+                <Secao titulo={t('lt.ferramentas')}>
+                  <BarraMesa colecao={colecao} avisar={avisar} emRecorte={!!recorte} />
+                  <Item icone={Link2} nome={t('barra.associar')} ligado={ligando} acao={() => alternarLigando(!ligando)} />
+                  <Item
+                    icone={Pencil}
+                    nome={t('barra.desenhar')}
+                    dica={t('barra.desenharDica')}
+                    ligado={!!ferramenta}
+                    acao={() => mudarFerramenta(ferramenta ? null : 'caneta')}
+                  />
+                  <Item
+                    icone={StickyNote}
+                    nome={t('barra.anotacoes')}
+                    ligado={notas}
+                    acao={() => {
+                      setNotas(!notas)
+                      alterarMesa((e) => (e.notas = !notas))
+                    }}
+                  />
+                </Secao>
+                <Secao titulo={t('lt.zoom')}>
+                  <BarraZoom />
+                </Secao>
+              </>
+            )}
+            {gruposDoMenu.map((g) => (
+              <Secao key={g.titulo} titulo={g.titulo}>
+                {g.itens.map((i) => (
+                  <Item key={i.nome} icone={i.icone} nome={i.nome} acao={i.acao} />
+                ))}
+              </Secao>
+            ))}
+          </Lateral>
+        )}
         <div className="corpo-principal">
         {!conectado ? (
           <Conectar
@@ -828,7 +850,7 @@ function SituacaoSalvamento({ aoSalvarArquivo }: { aoSalvarArquivo: () => void }
 }
 
 /** Lista de coleções com fichas, em árvore, com a contagem (incluindo subcoleções). */
-function SeletorColecao({ bib, valor, aoMudar }: { bib: Biblioteca; valor: string; aoMudar: (c: string) => void }) {
+function SeletorColecao({ id, bib, valor, aoMudar }: { id?: string; bib: Biblioteca; valor: string; aoMudar: (c: string) => void }) {
   const opcoes: { c: Colecao; nivel: number; n: number }[] = []
   const percorrer = (pai: string | null, nivel: number) => {
     for (const c of bib.colecoes.filter((x) => x.pai === pai)) {
@@ -840,7 +862,7 @@ function SeletorColecao({ bib, valor, aoMudar }: { bib: Biblioteca; valor: strin
   }
   percorrer(null, 0)
   return (
-    <select className="sel-bib" value={valor} onChange={(e) => aoMudar(e.target.value)} aria-label={t('barra.colecao')}>
+    <select id={id} className="sel-bib" value={valor} onChange={(e) => aoMudar(e.target.value)} aria-label={t('barra.colecao')}>
       <option value="*">{t('barra.todasColecoes', { n: bib.fichas.length })}</option>
       {opcoes.map(({ c, nivel, n }) => (
         <option key={c.chave} value={c.chave}>
