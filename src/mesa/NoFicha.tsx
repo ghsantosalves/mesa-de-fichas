@@ -7,7 +7,6 @@ import { linkZotero, type Ficha } from '../zotero/biblioteca.ts'
 import { CAMPOS, CORES, nomeCampo, type Campo, type CampoGrifo, type Cor, type Grifo } from '../estado/mesa.ts'
 import { data as dataNoIdioma, t, tn, type Chave } from '../i18n.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
-import { acomodarMesa } from './mapa.ts'
 import { LARGURA_FICHA, LARGURA_RECOLHIDA } from './opcoes.ts'
 export { LARGURA_FICHA, LARGURA_RECOLHIDA }
 import { tirarFichaDaMesa, type ArestaAssoc } from './assoc.ts'
@@ -139,12 +138,8 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
   // Apagada: fora da busca, ou fora do foco (nem é a ficha em foco nem está ligada a ela).
   const foraDoFoco = !!foco && foco !== id && !vizinhos.includes(id)
   const apagada = (busca !== '' && !textoBusca.includes(busca)) || foraDoFoco
-  const alternar = () => {
-    const expandir = data.recolhida
-    mudarFichas(rf, [id], { recolhida: !data.recolhida })
-    // Ao expandir, a ficha cresce: as vizinhas se afastam o necessário (ela fica parada).
-    if (expandir) setTimeout(() => acomodarMesa(rf, [id]), 150)
-  }
+  // Ao expandir, a mesa se reajusta sozinha (veja Mesa.tsx).
+  const alternar = () => mudarFichas(rf, [id], { recolhida: !data.recolhida })
   const ve = (c: Campo) => !data.ocultos.includes(c)
   const alternarCampo = (c: Campo) =>
     mudarFichas(rf, [id], { ocultos: ve(c) ? [...data.ocultos, c] : data.ocultos.filter((x) => x !== c) })

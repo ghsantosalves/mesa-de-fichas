@@ -136,7 +136,7 @@ The top bar, left to right: **collection** and **search** · **Table | List** ·
 - **Collection:** the bar menu shows only the cards in one collection (and its subcollections).
 - **Search:** the "Highlight concept, author…" field dims the cards that don't contain the typed text, in any field, ignoring accents and case.
 - **List:** shows the cards as text, to check how each note was read.
-- **Collapse a card:** the ▾ button on the card. Collapsed, it shows only author and title. **Collapse all / Expand all** acts on the visible cards. When you expand a card (or all of them), neighboring cards and boxes move aside just enough so nothing overlaps; the expanded card stays put.
+- **Collapse a card:** the ▾ button on the card. Collapsed, it shows only author and title. **Collapse all / Expand all** acts on the visible cards. Whenever a card or box changes size (expanding cards, opening the table, switching collection, showing notes), the table readjusts by itself: whatever is touching moves aside just enough so nothing overlaps, and the card that grew stays put.
 - **Card color and fields:** the **⋯** button at the bottom of the card. Choose the border color and, under "Fields shown on this card", uncheck what you don't want to see on that card.
 - **Areas:** **New area** creates a rectangle in the middle of the screen, with the title ready to type. Drag it by the title (or ⠿) to move it: the cards inside go along. Drag the bottom-right corner to resize. The × removes the area (asks for a second click); the cards stay on the table.
 - **Link cards:** turn on **Link cards**, click the card the relation starts from, then the other one. An arrow appears with a box in the middle, and the link panel opens. Esc leaves link mode.

@@ -9,10 +9,12 @@ import {
   useNodesInitialized,
   useNodesState,
   useReactFlow,
+  useStore,
   type OnNodeDrag,
 } from '@xyflow/react'
 import { ArestaAssocMemo } from './ArestaAssoc.tsx'
-import { arestaDe, type ArestaAssoc } from './assoc.ts'
+import { arestaDe, type ArestaAssoc, type DadosAresta } from './assoc.ts'
+import { acomodarMesa } from './mapa.ts'
 import '@xyflow/react/dist/style.css'
 import { comSubcolecoes, type Biblioteca, type Ficha } from '../zotero/biblioteca.ts'
 import {
@@ -289,6 +291,35 @@ export function Mesa({ bib, colecao, ligando, notas, ferramenta, aoMudarFerramen
     const t = setTimeout(() => fitView(VER_TUDO), 60)
     return () => clearTimeout(t)
   }, [filtro, colecao, setNos, fitView, atualizarArestas])
+
+  // Reajuste automático: quando muda o tamanho de alguma ficha visível (ao expandir,
+  // ao abrir a mesa, ao trocar de coleção) ou o texto das caixas das associações,
+  // afasta o que estiver encostando. As fichas que mudaram de tamanho ficam paradas.
+  const rf = useReactFlow<NoMesa>()
+  const tamanhos = useStore((s) => {
+    const fichas = s.nodes.filter((n) => n.type === 'ficha' && !n.hidden)
+    if (fichas.some((n) => !n.measured?.width)) return ''
+    return fichas.map((n) => `${n.id}=${Math.round(n.measured!.width!)}x${Math.round(n.measured!.height ?? 0)}`).join('|')
+  })
+  const textoCaixas = useStore((s) =>
+    s.edges
+      .map((e) => {
+        const a = (e.data as DadosAresta | undefined)?.assoc
+        return a ? `${a.id}:${a.rel.length}:${a.nota.length}:${a.w ?? ''}:${a.h ?? ''}` : ''
+      })
+      .join('|'),
+  )
+  const tamanhosAntes = useRef(new Map<string, string>())
+  useEffect(() => {
+    if (!tamanhos) return
+    const agora = new Map(tamanhos.split('|').map((x) => x.split('=') as [string, string]))
+    const fixas = [...agora]
+      .filter(([id, tam]) => tamanhosAntes.current.has(id) && tamanhosAntes.current.get(id) !== tam)
+      .map(([id]) => id)
+    tamanhosAntes.current = agora
+    const espera = setTimeout(() => acomodarMesa(rf, fixas), 200)
+    return () => clearTimeout(espera)
+  }, [tamanhos, textoCaixas, notas, rf])
 
   // Arrastar uma área leva junto as fichas visíveis cujo topo-centro está dentro dela.
   const aoComecarArrastar: OnNodeDrag<NoMesa> = (_, no) => {
