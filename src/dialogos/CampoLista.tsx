@@ -88,6 +88,16 @@ export function CampoLista({ id, itens, aoMudar, rascunho, aoMudarRascunho, exem
           confirmar()
         }}
       />
+      <button
+        type="button"
+        className="btn cl-adicionar"
+        disabled={!rascunho.trim()}
+        // Não tira o cursor do campo ao clicar (o item é adicionado e já dá para digitar o próximo).
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => confirmar()}
+      >
+        {t('lista.adicionar')}
+      </button>
     </div>
   )
 }

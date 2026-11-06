@@ -33,7 +33,14 @@ export type Arrumacao = Posicao & { recolhida?: boolean; /** Só para áreas gua
  * Uma coleção sem arrumação própria usa a de "Todas". Cor, campos ocultos e grifos
  * valem para todas as coleções.
  */
+/**
+ * Onde as páginas impressas caem no PDF do texto: a página impressa `pagina` está na
+ * folha `folha` do PDF; `duplas` = duas páginas impressas por folha (digitalização aberta).
+ */
+export type CalibracaoPdf = { pagina: number; folha: number; duplas?: boolean }
 export type EstadoFicha = Arrumacao & {
+  /** Calibração das páginas do PDF (feita pelo usuário no menu ⋯ da ficha). */
+  pdf?: CalibracaoPdf
   cor?: Cor
   ocultos?: Campo[]
   grifos?: Grifo[]
@@ -167,6 +174,10 @@ function validar(d: unknown): EstadoMesa {
             COR_VALIDA.test(g.cor),
         )
         if (grifos.length) f.grifos = grifos
+      }
+      const cal = q.pdf as Record<string, unknown> | undefined
+      if (cal && typeof cal.pagina === 'number' && typeof cal.folha === 'number') {
+        f.pdf = { pagina: numero(cal.pagina, 1), folha: numero(cal.folha, 1), ...(cal.duplas === true ? { duplas: true } : {}) }
       }
       const porColecao = lerArrumacoes(q.porColecao)
       if (Object.keys(porColecao).length) f.porColecao = porColecao
@@ -391,6 +402,16 @@ export function recolherFicha(e: EstadoMesa, chave: string, recolhida: boolean, 
   const a = arrumacaoAtual(e, chave, p)
   if (recolhida) a.recolhida = true
   else delete a.recolhida
+}
+
+/** Guarda (ou tira, com null) a calibração das páginas do PDF de uma ficha. */
+export function calibrarPdf(chave: string, cal: CalibracaoPdf | null) {
+  alterarMesa((e) => {
+    const f = e.fichas[chave]
+    if (!f) return
+    if (cal) f.pdf = cal
+    else delete f.pdf
+  })
 }
 
 /** A associação aparece na coleção dada? (as gerais aparecem em todas) */

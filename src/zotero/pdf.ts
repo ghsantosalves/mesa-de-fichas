@@ -9,6 +9,7 @@
 // dos dois (livros inteiros), usa o próprio número.
 
 import { buscarJson, caminhoUsuario } from './api.ts'
+import type { CalibracaoPdf } from '../estado/mesa.ts'
 
 type Anexo = { key: string; data: { itemType: string; contentType?: string; linkMode?: string } }
 type Texto = { data: { pages?: string } }
@@ -34,15 +35,21 @@ async function pdfDoTexto(chavePai: string): Promise<{ chave: string | null; pri
  * Abre no Zotero o PDF do texto, na página dada. Se o texto não tiver PDF (ou o
  * Zotero não responder), abre o próprio texto no Zotero.
  */
-export async function abrirPagina(chavePai: string, pagina: number, refDaFicha = '') {
+export async function abrirPagina(chavePai: string, pagina: number, refDaFicha = '', cal?: CalibracaoPdf) {
   let endereco = `zotero://select/library/items/${chavePai}`
   try {
     const pdf = await pdfDoTexto(chavePai)
-    // Sem "Páginas" no Zotero: o intervalo da linha Ref. da ficha (o último que aparecer).
-    const daRef = [...refDaFicha.matchAll(/p\.\s*(\d+)\s*[-–]\s*\d+/g)].pop()?.[1]
-    const primeira = pdf.primeira > 1 ? pdf.primeira : Number(daRef ?? 1) || 1
-    // Página impressa → posição no PDF (se o PDF começa na página "primeira").
-    const folha = pagina >= primeira ? pagina - primeira + 1 : pagina
+    let folha: number
+    if (cal) {
+      // Calibrado pelo usuário: "a página impressa X está na folha Y" (e talvez duas por folha).
+      const passo = cal.duplas ? Math.floor((pagina - cal.pagina) / 2) : pagina - cal.pagina
+      folha = Math.max(1, cal.folha + passo)
+    } else {
+      // Palpite: o campo "Páginas" do Zotero ou o intervalo da linha Ref. da ficha.
+      const daRef = [...refDaFicha.matchAll(/p\.\s*(\d+)\s*[-–]\s*\d+/g)].pop()?.[1]
+      const primeira = pdf.primeira > 1 ? pdf.primeira : Number(daRef ?? 1) || 1
+      folha = pagina >= primeira ? pagina - primeira + 1 : pagina
+    }
     if (pdf.chave) endereco = `zotero://open-pdf/library/items/${pdf.chave}?page=${folha}`
   } catch {
     /* sem resposta do Zotero: abre o texto mesmo */

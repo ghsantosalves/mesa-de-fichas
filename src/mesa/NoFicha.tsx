@@ -5,7 +5,7 @@ import { Handle, Position, useReactFlow, type Node, type NodeProps } from '@xyfl
 import { Contexto, normalizar } from './contexto.ts'
 import { linkZotero, type Ficha } from '../zotero/biblioteca.ts'
 import { abrirPagina, separarPaginas } from '../zotero/pdf.ts'
-import { CAMPOS, CORES, nomeCampo, type Campo, type CampoGrifo, type Cor, type Grifo } from '../estado/mesa.ts'
+import { CAMPOS, CORES, calibrarPdf, mesa, nomeCampo, type Campo, type CampoGrifo, type Cor, type Grifo } from '../estado/mesa.ts'
 import { data as dataNoIdioma, t, tn, type Chave } from '../i18n.ts'
 import { mudarFichas, type NoMesa } from './operacoes.ts'
 import { LARGURA_FICHA, LARGURA_RECOLHIDA } from './opcoes.ts'
@@ -42,7 +42,17 @@ function link(url: string, texto: string) {
  * Texto com as referências de página clicáveis: "[p. 66]" abre o PDF do texto no
  * Zotero, naquela página. (Ao grifar, o texto fica comum, para a seleção funcionar.)
  */
-function ComPaginas({ texto, chavePai, refDaFicha }: { texto: string; chavePai: string | null; refDaFicha: string }) {
+function ComPaginas({
+  texto,
+  chavePai,
+  refDaFicha,
+  chaveFicha,
+}: {
+  texto: string
+  chavePai: string | null
+  refDaFicha: string
+  chaveFicha: string
+}) {
   if (!chavePai) return <>{texto}</>
   return (
     <>
@@ -56,7 +66,7 @@ function ComPaginas({ texto, chavePai, refDaFicha }: { texto: string; chavePai: 
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              abrirPagina(chavePai, p.pagina!, refDaFicha)
+              abrirPagina(chavePai, p.pagina!, refDaFicha, mesa.fichas[chaveFicha]?.pdf)
             }}
           >
             {p.texto}
@@ -76,6 +86,7 @@ function TextoGrifado({
   aoTirar,
   chavePai,
   refDaFicha,
+  chaveFicha,
 }: {
   texto: string
   grifos: Grifo[]
@@ -83,9 +94,10 @@ function TextoGrifado({
   aoTirar: (g: Grifo) => void
   chavePai: string | null
   refDaFicha: string
+  chaveFicha: string
 }) {
   const comum = (s: string, key?: string) =>
-    grifando ? s : <ComPaginas key={key} texto={s} chavePai={chavePai} refDaFicha={refDaFicha} />
+    grifando ? s : <ComPaginas key={key} texto={s} chavePai={chavePai} refDaFicha={refDaFicha} chaveFicha={chaveFicha} />
   if (!grifos.length) return <>{comum(texto)}</>
   const posicionados = grifos
     .map((g) => {
@@ -194,6 +206,7 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
       aoTirar={tirarGrifo}
       chavePai={f.chavePai}
       refDaFicha={f.ref}
+      chaveFicha={id}
     />
   )
   const campo = (c: Campo & CampoGrifo, v: string) =>
@@ -305,11 +318,72 @@ function CartaoNormal({ id, data, selected, dragging }: NodeProps<NoFicha>) {
                   </label>
                 ))}
               </fieldset>
+              {f.chavePai && <CalibrarPaginas chave={id} />}
             </div>
           )}
         </>
       )}
     </article>
+  )
+}
+
+/**
+ * "Páginas do PDF": diz em que folha do PDF está uma página impressa, para os links
+ * "[p. …]" desta ficha abrirem no lugar certo (cada digitalização é diferente).
+ */
+function CalibrarPaginas({ chave }: { chave: string }) {
+  const atual = mesa.fichas[chave]?.pdf
+  const [pagina, setPagina] = useState(atual ? String(atual.pagina) : '')
+  const [folha, setFolha] = useState(atual ? String(atual.folha) : '')
+  const [duplas, setDuplas] = useState(!!atual?.duplas)
+  const [msg, setMsg] = useState('')
+  const valido = Number(pagina) > 0 && Number(folha) > 0
+  return (
+    <fieldset className="calibrar-pdf">
+      <legend>{t('pdf.titulo')}</legend>
+      <p className="calibrar-dica">{t('pdf.dica')}</p>
+      <div className="calibrar-linha">
+        <label>
+          {t('pdf.pagina')}
+          <input type="number" min={1} value={pagina} onChange={(e) => setPagina(e.target.value)} />
+        </label>
+        <label>
+          {t('pdf.folha')}
+          <input type="number" min={1} value={folha} onChange={(e) => setFolha(e.target.value)} />
+        </label>
+      </div>
+      <label className="calibrar-duplas">
+        <input type="checkbox" checked={duplas} onChange={(e) => setDuplas(e.target.checked)} />
+        {t('pdf.duplas')}
+      </label>
+      <div className="calibrar-botoes">
+        <button
+          className="btn"
+          disabled={!valido}
+          onClick={() => {
+            calibrarPdf(chave, { pagina: Number(pagina), folha: Number(folha), ...(duplas ? { duplas: true } : {}) })
+            setMsg(t('pdf.guardado'))
+          }}
+        >
+          {t('pdf.guardar')}
+        </button>
+        {atual && (
+          <button
+            className="btn"
+            onClick={() => {
+              calibrarPdf(chave, null)
+              setPagina('')
+              setFolha('')
+              setDuplas(false)
+              setMsg(t('pdf.limpo'))
+            }}
+          >
+            {t('pdf.limpar')}
+          </button>
+        )}
+        {msg && <span className="calibrar-msg">{msg}</span>}
+      </div>
+    </fieldset>
   )
 }
 

@@ -20,6 +20,7 @@ import { normalizar } from '../mesa/contexto.ts'
 import { nomeCampo } from '../estado/mesa.ts'
 import { Dialogo } from './Dialogo.tsx'
 import { CampoLista } from './CampoLista.tsx'
+import { CampoDialogos } from './CampoDialogos.tsx'
 import { idioma, t } from '../i18n.ts'
 
 const USOS =
@@ -256,14 +257,7 @@ export function DialogoNovaFicha({ bib, colecaoInicial, aoFechar, aoSalvar }: Pr
           <label className="d-rot" htmlFor="nf-dial">
             {nomeCampo('dialogos')}
           </label>
-          <CampoLista
-            id="nf-dial"
-            itens={dialogos}
-            aoMudar={setDialogos}
-            rascunho={rascDialogos}
-            aoMudarRascunho={setRascDialogos}
-            exemplo={t('nova.exDialogos')}
-          />
+          <CampoDialogos id="nf-dial" itens={dialogos} aoMudar={setDialogos} aoMudarRascunho={setRascDialogos} />
           <p className="d-dica">{t('nova.dialogosDica')}</p>
 
           <p className="d-rot">{nomeCampo('usos')}</p>
