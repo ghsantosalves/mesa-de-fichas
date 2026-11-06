@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ReactFlowProvider, useReactFlow, useStore } from '@xyflow/react'
-import { Pencil } from 'lucide-react'
+import { FilePlus2, Pencil } from 'lucide-react'
 import { NOME_APP, idioma, mudarIdioma, t, tn } from './i18n.ts'
 import {
   carregarBiblioteca,
@@ -29,6 +29,7 @@ import { DialogoTema } from './dialogos/DialogoTema.tsx'
 import { DialogoExportar } from './dialogos/DialogoExportar.tsx'
 import { DialogoArquivo } from './dialogos/DialogoArquivo.tsx'
 import { DialogoImportar } from './dialogos/DialogoImportar.tsx'
+import { DialogoNovaFicha } from './dialogos/DialogoNovaFicha.tsx'
 
 // Aplica o tema salvo antes de desenhar qualquer coisa.
 aplicarTema(mesa.tema)
@@ -142,7 +143,7 @@ function Interior() {
   // --- Tema, busca e janelas ---
   const [tema, setTema] = useState<Tema>(mesa.tema)
   const [busca, setBusca] = useState('')
-  const [janela, setJanela] = useState<'tema' | 'exportar' | 'arquivo' | 'importar' | null>(null)
+  const [janela, setJanela] = useState<'tema' | 'exportar' | 'arquivo' | 'importar' | 'nova' | null>(null)
   const mudarTema = (t: Tema) => {
     setTema(t)
     aplicarTema(t)
@@ -360,6 +361,10 @@ function Interior() {
                     onChange={(e) => setBusca(e.target.value)}
                   />
                 )}
+                <button className="btn com-icone" onClick={() => setJanela('nova')}>
+                  <FilePlus2 size={16} aria-hidden="true" />
+                  {t('nova.botao')}
+                </button>
               </div>
               <span className="divisor" aria-hidden="true" />
               {/* Como ver: mesa ou lista. */}
@@ -501,6 +506,9 @@ function Interior() {
           <DialogoExportar bib={bib} colecao={colecao} aoFechar={() => setJanela(null)} />
         )}
         {janela === 'arquivo' && <DialogoArquivo aoFechar={() => setJanela(null)} />}
+        {janela === 'nova' && bib && (
+          <DialogoNovaFicha bib={bib} colecaoInicial={colecao} aoFechar={() => setJanela(null)} aoSalvar={() => recarregar()} />
+        )}
         {janela === 'importar' && bib && (
           <DialogoImportar bib={bib} aoFechar={() => setJanela(null)} avisar={avisar} />
         )}

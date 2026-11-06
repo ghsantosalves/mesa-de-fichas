@@ -31,7 +31,7 @@ text you read ──► Claude (reading-card skill) ──► Zotero note tagged
 2. You paste the card as a **child note** of the item in Zotero and add the tag `ficha`.
 3. Cordatril fetches those notes from Zotero and shows each one as a card on a table where you drag, group into areas and link texts to each other.
 
-Card contents live in Zotero (to fix a card, edit the note there). The table layout (positions, colors, areas, links, notes, drawings) lives in your browser. Cordatril **only reads** Zotero: it never changes anything there.
+Card contents live in Zotero (to fix a card, edit the note there). The table layout (positions, colors, areas, links, notes, drawings) lives in your browser. Cordatril reads Zotero and never changes or deletes anything there; the only write is optional, when you create a new card with the **New card** button.
 
 You need a **Zotero** account with your library synced to the cloud (in Zotero: Edit → Settings → Sync).
 
@@ -44,11 +44,11 @@ The key is what lets Cordatril read your notes.
 3. Click **Create new private key** and check **only**:
    - Personal Library → **Allow library access**
    - Personal Library → **Allow notes access**
-   - Leave **Allow write access** unchecked.
+   - **Allow write access**: leave it unchecked if you want the app to only read. Check it only if you want to use the **New card** button to create cards from the app (see [Create a card from the app](#create-a-card-from-the-app)).
    - Default Group Permissions → **None**.
 4. Give it a name (e.g. "Cordatril"), click **Save Key** and copy the key shown. Keep it somewhere safe: Zotero shows it only once.
 
-A read-only key means that even if it leaks, nobody can change your library.
+A read-only key means that even if it leaks, nobody can change your library. A key with write access is handier (creates cards from the app), but keep it safer: if it leaks, whoever has it can change your library. To switch keys, use **Menu → Disconnect from Zotero** and connect again.
 
 ## 2. Install the button in Zotero
 
@@ -127,6 +127,17 @@ Full notes: link or "—"
 
 The tag is always `ficha`. Notes tagged `ficha` that don't follow the format don't disappear: they show up under **Cards with problems**, with the reason.
 
+## Create a card from the app
+
+The **New card** button, in the top bar, builds a card from a text already in Zotero:
+
+1. Choose the **collection** and the **text** (search by author, title or year; in "All collections", type at least 2 letters). Texts that already have a card are marked.
+2. What Zotero knows about the text is filled in: **Author (year), title** and the **reference** (built from publisher, place, journal, volume, pages…). Check it and add the chapter or pages.
+3. Fill in **Thesis** (required), **Concepts**, **To remember**, **Dialogues** (separate items with " · "), tick the **Use in the project** and, if any, the video and full-notes links. Below, the note appears exactly as it will be saved.
+4. **Save to Zotero** creates the note on the text, tagged `ficha`; it shows up in the **New cards** strip a moment later. This only works with a key with **Allow write access**. With a read-only key, use **Copy text** and paste it as a note on the text in Zotero (the **Open the text in Zotero** button takes you there), tagged `ficha`.
+
+The app never changes or deletes existing notes: to fix a card, edit the note in Zotero.
+
 ## Using the table
 
 The top bar, left to right: **collection** and **search** · **Table | List** · table tools (**New area**, **Collapse all**, **Map**, **Link cards**, **✏ Draw**, **Notes visible**) · zoom and **Menu**.
@@ -176,7 +187,7 @@ Imported links are just like the ones made by hand: you can edit, reverse, move 
 
 ## Where your data lives
 
-- **Cards:** in Zotero. Cordatril only reads them.
+- **Cards:** in Zotero. Cordatril reads them; it only writes when you create a new card with **New card**.
 - **Zotero user ID and key:** only in your browser; sent only to Zotero (api.zotero.org).
 - **Table layout:** saved automatically **in the browser** shortly after each change ("Table saved in this browser", in the corner). So:
   - in another browser or computer, the table starts empty. To move the layout, use **Menu → Save or open…**;

@@ -13,11 +13,11 @@ App para organizar visualmente fichas de leitura acadêmicas, como fichas físic
 
 ## Fonte dos dados: Zotero
 - Zotero Web API v3 (`https://api.zotero.org`), biblioteca pessoal: `/users/{userID}/...`.
-- O app é publicado como site no GitHub Pages (https://ghsantosalves.github.io/mesa-de-fichas/). No site, cada pessoa digita número de usuário e chave (só leitura) na tela "Conectar ao seu Zotero"; ficam só no navegador dela (`src/zotero/credenciais.ts`) e vão só para api.zotero.org.
+- O app é publicado como site no GitHub Pages (https://ghsantosalves.github.io/mesa-de-fichas/). No site, cada pessoa digita número de usuário e chave (só leitura, ou com escrita para usar "Nova ficha") na tela "Conectar ao seu Zotero"; ficam só no navegador dela (`src/zotero/credenciais.ts`) e vão só para api.zotero.org.
 - Em `npm run dev`, as credenciais podem vir de `.env.local` (`ZOTERO_USER_ID`, `ZOTERO_API_KEY`); a chave fica no proxy do Vite e nunca vai para o navegador nem para o build. Nunca versionar esse arquivo; incluir no `.gitignore`.
 - `zotero-plugin/` é um plugin do Zotero que só abre o site (menu Ferramentas); é empacotado e publicado junto com o site.
 - Cabeçalhos: `Zotero-API-Key` e `Zotero-API-Version: 3`. Paginar com `limit=100` e `start`; respeitar `Backoff` e `Retry-After`.
-- O app NUNCA escreve no Zotero. O Zotero é a fonte de verdade do conteúdo das fichas.
+- O app só escreve no Zotero numa situação: "Nova ficha" cria uma nota filha nova, com a tag `ficha`, no texto escolhido pelo usuário (`src/zotero/cadastro.ts`). Nunca altera nem apaga itens ou notas existentes. Isso exige uma chave com "Allow write access"; com chave só de leitura, o app avisa e oferece copiar o texto. O Zotero é a fonte de verdade do conteúdo das fichas.
 
 ### Como achar as fichas
 1. Fichas são notas filhas (`itemType=note`) com a tag `ficha`: `GET /users/{id}/items?itemType=note&tag=ficha`.

@@ -1,4 +1,6 @@
-// Comunicação com a Zotero Web API v3. O app só lê: nenhuma função aqui escreve no Zotero.
+// Comunicação com a Zotero Web API v3. O app só lê, com UMA exceção: criarNotaFilha
+// (em cadastro.ts) cria uma nota nova com a tag "ficha" num texto escolhido pelo
+// usuário. Nada aqui altera nem apaga o que já existe na biblioteca.
 // O endereço e a chave vêm de credenciais.ts (servidor local ou direto do navegador).
 
 import { destino, lerCredenciais, MODO_LOCAL } from './credenciais.ts'
@@ -22,17 +24,24 @@ export function caminhoUsuario(): string {
   return `/users/${encodeURIComponent(c.userId)}`
 }
 
-async function pedir(caminho: string): Promise<Response> {
+type Opcoes = { method?: 'GET' | 'POST'; body?: string; headers?: Record<string, string> }
+
+async function pedir(caminho: string, opcoes: Opcoes = {}): Promise<Response> {
   const c = lerCredenciais()
   if (!c) throw new ErroAcesso(t('api.faltaConectar'))
   const { base, cabecalhos } = destino(c)
+  const escrita = opcoes.method === 'POST'
   for (let tentativa = 0; ; tentativa++) {
     const falta = liberadoEm - Date.now()
     if (falta > 0) await esperar(falta)
 
     let r: Response
     try {
-      r = await fetch(base + caminho, { headers: cabecalhos })
+      r = await fetch(base + caminho, {
+        method: opcoes.method ?? 'GET',
+        body: opcoes.body,
+        headers: { ...cabecalhos, ...opcoes.headers },
+      })
     } catch {
       throw new ErroZotero(
         MODO_LOCAL ? t('api.erroRedeLocal') : t('con.erroRede'),
@@ -47,6 +56,8 @@ async function pedir(caminho: string): Promise<Response> {
       await esperar((retryAfter > 0 ? retryAfter : 2 ** (tentativa + 1)) * 1000)
       continue
     }
+    // Ao escrever, 403 quer dizer que a chave é só de leitura (não que ela sumiu).
+    if (r.status === 403 && escrita) throw new ErroZotero(t('nova.semEscrita'))
     if (r.status === 403) {
       throw new ErroAcesso(
         MODO_LOCAL ? t('api.recusouLocal') : t('api.recusou'),
@@ -80,6 +91,16 @@ export async function buscarTodos<T>(caminho: string): Promise<{ itens: T[]; ver
 export async function buscarJson<T>(caminho: string): Promise<{ dados: T; versao: number }> {
   const r = await pedir(caminho)
   return { dados: (await r.json()) as T, versao: versaoDe(r) }
+}
+
+/** Envia JSON ao Zotero (POST) e devolve a resposta em JSON. */
+export async function enviarJson<T>(caminho: string, corpo: unknown, cabecalhos: Record<string, string> = {}): Promise<T> {
+  const r = await pedir(caminho, {
+    method: 'POST',
+    body: JSON.stringify(corpo),
+    headers: { 'Content-Type': 'application/json', ...cabecalhos },
+  })
+  return (await r.json()) as T
 }
 
 /** Um pedido só, com resposta em texto (ex.: format=keys, uma chave por linha). */

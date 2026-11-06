@@ -463,6 +463,8 @@ export function Mesa({
         zoomOnPinch
         zoomOnDoubleClick={false}
         deleteKeyCode={null}
+        // As setas do teclado servem para caminhar no recorte, não para mover fichas.
+        disableKeyboardA11y
         nodesConnectable={false}
         // Ao grifar texto, as fichas não se arrastam (o mouse seleciona o texto).
         nodesDraggable={ferramenta !== 'grifar'}

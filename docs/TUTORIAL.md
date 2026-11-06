@@ -12,7 +12,7 @@ A interface está em português e em inglês: **Menu → English (idioma)** troc
 2. [Criar a chave do Zotero](#1-criar-a-chave-do-zotero)
 3. [Instalar o botão no Zotero](#2-instalar-o-botão-no-zotero)
 4. [Abrir a mesa e conectar](#3-abrir-a-mesa-e-conectar)
-5. [Instalar a skill de fichas no Claude](#4-instalar-a-skill-de-fichas-no-claude)
+5. [Instalar as skills no Claude](#4-instalar-as-skills-no-claude)
 6. [Criar fichas e colocá-las no Zotero](#5-criar-fichas-e-colocá-las-no-zotero)
 7. [Usando a mesa](#usando-a-mesa)
 8. [Fichas novas e fichas removidas](#fichas-novas-e-fichas-removidas)
@@ -30,7 +30,7 @@ texto lido ──► Claude (skill ficha-academica) ──► nota no Zotero com
 2. Cola a ficha como **nota filha** do item no Zotero e coloca a tag `ficha`.
 3. O Cordatril busca essas notas no Zotero e mostra cada uma como um cartão, numa mesa onde você arrasta, agrupa em áreas e liga os textos entre si.
 
-O conteúdo das fichas mora no Zotero (para corrigir uma ficha, edite a nota lá). A arrumação da mesa (posições, cores, áreas, associações, anotações) mora no seu navegador. O Cordatril **só lê** o Zotero: nunca muda nada lá.
+O conteúdo das fichas mora no Zotero (para corrigir uma ficha, edite a nota lá). A arrumação da mesa (posições, cores, áreas, associações, anotações) mora no seu navegador. O Cordatril lê o Zotero e nunca altera nem apaga nada lá; a única escrita é opcional, ao cadastrar uma ficha nova pelo botão **Nova ficha**.
 
 Você precisa de uma conta no **Zotero** com a biblioteca sincronizada na nuvem (no Zotero: Editar → Configurações → Sincronização).
 
@@ -43,11 +43,11 @@ A chave é o que deixa o Cordatril ler suas notas.
 3. Clique em **Create new private key** e marque **apenas**:
    - Personal Library → **Allow library access**
    - Personal Library → **Allow notes access**
-   - Deixe **Allow write access** desmarcado.
+   - **Allow write access**: deixe desmarcado se quiser que o app só leia. Marque apenas se quiser usar o botão **Nova ficha** para criar as fichas pelo app (veja [Cadastrar uma ficha pelo app](#cadastrar-uma-ficha-pelo-app)).
    - Default Group Permissions → **None**.
 4. Dê um nome (ex.: "Cordatril"), clique em **Save Key** e copie a chave que aparece. Guarde-a num lugar seguro: o site do Zotero só a mostra uma vez.
 
-A chave só de leitura garante que, mesmo se ela vazar, ninguém consegue alterar sua biblioteca.
+A chave só de leitura garante que, mesmo se ela vazar, ninguém consegue alterar sua biblioteca. Uma chave com escrita é mais prática (cadastra fichas pelo app), mas guarde-a com mais cuidado: se vazar, quem a tiver pode mexer na biblioteca. Para trocar de chave, use **Menu → Desconectar do Zotero** e conecte de novo.
 
 ## 2. Instalar o botão no Zotero
 
@@ -118,6 +118,17 @@ Os rótulos também podem estar em inglês (`CARD ·`, `Thesis:`, `Concepts:`, `
 
 Notas com a tag `ficha` que estiverem fora desse formato não somem: aparecem no botão **Fichas com problema**, com o motivo.
 
+## Cadastrar uma ficha pelo app
+
+O botão **Nova ficha**, na barra do topo, monta a ficha a partir de um texto que já está no Zotero:
+
+1. Escolha a **coleção** e o **texto** (dá para buscar por autor, título ou ano; em "Todas as coleções", digite ao menos 2 letras). Os textos que já têm ficha aparecem marcados.
+2. O que o Zotero sabe do texto já vem preenchido: **Autor (ano), título** e a **referência ABNT** (montada com editora, local, revista, volume, páginas…). Confira e acrescente o capítulo ou as páginas.
+3. Preencha **Tese** (obrigatória), **Conceitos**, **Para lembrar**, **Diálogos** (separe os itens com " · "), marque o **Uso no projeto** e, se tiver, os links do vídeo e do fichamento. Embaixo aparece a nota exatamente como vai ficar.
+4. **Salvar no Zotero** cria a nota no texto, com a tag `ficha`; em instantes ela aparece na faixa **Novas fichas**. Isso só funciona com uma chave com **Allow write access**. Com a chave só de leitura, use **Copiar texto** e cole como nota do texto no Zotero (o botão **Abrir o texto no Zotero** leva até ele), com a tag `ficha`.
+
+O app nunca altera nem apaga notas que já existem: para corrigir uma ficha, edite a nota no Zotero.
+
 ## Usando a mesa
 
 A barra do topo, da esquerda para a direita: **coleção** e **busca** · **Mesa | Lista** · ferramentas da mesa (**Nova área**, **Recolher todas**, **Mapa**, **Associar fichas**, **✏ Desenhar**, **Anotações visíveis**) · zoom e **Menu**.
@@ -174,7 +185,7 @@ As associações importadas são iguais às feitas à mão: dá para editar a re
 
 ## Onde ficam os dados
 
-- **Fichas:** no Zotero. O Cordatril só lê.
+- **Fichas:** no Zotero. O Cordatril lê; só escreve quando você cadastra uma ficha nova pelo **Nova ficha**.
 - **Número e chave do Zotero:** só no seu navegador; são enviados só para o Zotero (api.zotero.org).
 - **Arrumação da mesa:** salva sozinha **no navegador**, um instante depois de cada mudança ("Mesa salva neste navegador", no canto). Por isso:
   - em outro navegador ou computador, a mesa começa vazia. Para levar a arrumação, use **Menu → Salvar ou abrir**: salve o arquivo num e abra no outro;
